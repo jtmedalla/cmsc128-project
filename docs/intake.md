@@ -23,7 +23,22 @@ The first message creates a `pending` report straight away, so it reaches the fe
 
 `report:created` is emitted only when `created` is true.
 
-`ChatIntakeService` registers this as a `ChannelsService.onMessage` handler, so every resident message goes through it. It replies with `RECEIVED_REPLY` only when the message created a report; follow-ups get no reply.
+`ChatIntakeService` registers this as a `ChannelsService.onMessage` handler, so every resident message goes through it.
+
+## Questions
+
+After the first message, the bot asks for the details the report still lacks, one at a time, in `INTAKE_FIELDS` order:
+
+| Field           | Asked as                                | Answer                                                   |
+| --------------- | --------------------------------------- | -------------------------------------------------------- |
+| `incidentType`  | What happened?                          | Tap or type an active incident type's name or code       |
+| `barangay`      | Which barangay is it in?                | Typed; matched by `BarangayService.findByName`           |
+| `severity`      | How serious is it?                      | Tap or type a level (`parseSeverity`)                    |
+| `contactNumber` | What number can responders call you on? | PH mobile (`contactNumberSchema`); saved on the resident |
+
+No question state is stored. Each follow-up message answers the first field still missing (`IntakeService.missingFields`), so a field filled any other way is never asked. An answer that doesn't fit gets the question again. After the last answer the bot thanks the resident once, then stays quiet.
+
+Answers go through `IntakeService.answer`, which emits `report:updated`. The contact number is saved on the resident, so their next report skips it.
 
 ### From known fields
 

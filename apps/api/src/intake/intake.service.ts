@@ -3,17 +3,22 @@ import {
   REPORT_EVENTS,
   type ReportInput,
   reportCreatedEventSchema,
+  reportUpdatedEventSchema,
   type SourceChannel,
 } from '@repo/shared';
-import { sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import type { Database } from '../database/client.js';
 import { DB } from '../database/database.module.js';
+import { incidentType, resident } from '../database/schema/index.js';
 import { RealtimeService } from '../realtime/realtime.service.js';
 import {
   findFeedItem,
+  findMissingFields,
   findOpenReport,
+  type IntakeAnswers,
   insertReport,
   linkMessage,
+  updateReport,
 } from './reports.js';
 
 export interface IncomingMessage {
@@ -73,6 +78,42 @@ export class IntakeService {
     });
     if (received.created) await this.publishCreated(received.reportId);
     return received;
+  }
+
+  /** Intake fields the report and its resident still lack, in asking order. */
+  missingFields(reportId: string) {
+    return findMissingFields(this.db, reportId);
+  }
+
+  /** Fills in report fields from the resident's answers. */
+  async answer(reportId: string, answers: IntakeAnswers) {
+    await updateReport(this.db, reportId, answers);
+    const item = await findFeedItem(this.db, reportId);
+    this.realtime.toDashboard(
+      REPORT_EVENTS.updated,
+      reportUpdatedEventSchema.encode(item!),
+    );
+  }
+
+  // TODO(#99): save through the profile service once it lands.
+  async saveContactNumber(residentId: string, contactNumber: string) {
+    await this.db
+      .update(resident)
+      .set({ contactNumber })
+      .where(eq(resident.id, residentId));
+  }
+
+  /** Active incident types, by name. */
+  incidentTypes() {
+    return this.db
+      .select({
+        id: incidentType.id,
+        code: incidentType.code,
+        name: incidentType.name,
+      })
+      .from(incidentType)
+      .where(eq(incidentType.isActive, true))
+      .orderBy(incidentType.name);
   }
 
   private async publishCreated(id: string) {

@@ -1,4 +1,6 @@
 import {
+  INTAKE_FIELDS,
+  type IntakeField,
   type ReportFeedItem,
   type ReportInput,
   reportInputSchema,
@@ -104,6 +106,39 @@ export async function linkMessage(
   reportId: string,
 ) {
   await db.update(message).set({ reportId }).where(eq(message.id, messageId));
+}
+
+/** Report fields residents can fill in during intake. */
+export type IntakeAnswers = Partial<
+  Pick<typeof report.$inferInsert, 'incidentTypeId' | 'barangayId' | 'severity'>
+>;
+
+export async function updateReport(
+  db: Executor,
+  id: string,
+  answers: IntakeAnswers,
+) {
+  await db.update(report).set(answers).where(eq(report.id, id));
+}
+
+/** The intake fields a report and its resident still lack, in asking order. */
+export async function findMissingFields(
+  db: Database,
+  id: string,
+): Promise<IntakeField[]> {
+  const row = await db.query.report.findFirst({
+    where: eq(report.id, id),
+    columns: { incidentTypeId: true, barangayId: true, severity: true },
+    with: { resident: { columns: { contactNumber: true } } },
+  });
+  if (!row) throw new Error(`Report ${id} not found`);
+  const known: Record<IntakeField, unknown> = {
+    incidentType: row.incidentTypeId,
+    barangay: row.barangayId,
+    severity: row.severity,
+    contactNumber: row.resident?.contactNumber,
+  };
+  return INTAKE_FIELDS.filter((field) => known[field] == null);
 }
 
 /** Reports as the triage feed shows them, newest first. */
