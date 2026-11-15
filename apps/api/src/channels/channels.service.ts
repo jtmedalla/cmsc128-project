@@ -12,6 +12,7 @@ import {
   MessageLogService,
   type RecordedMessage,
 } from './message-log.service.js';
+import { sendQuickReplies } from './messenger.js';
 
 type Handler = (
   thread: Thread,
@@ -23,6 +24,11 @@ export interface SendOptions {
   reportId?: string;
   /** The responder who wrote it; omit for the bot. */
   senderId?: string;
+  /**
+   * Answers the resident can tap instead of typing; a tap arrives as a
+   * message with that text. Listed in the text where taps aren't supported.
+   */
+  choices?: string[];
 }
 
 /** Messenger shares locations as coordinates, which Chat SDK drops. */
@@ -116,13 +122,21 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy {
     if (!recipient) {
       throw new Error(`Resident ${residentId} has no ${channel} identity`);
     }
-    const sent = await this.bot.thread(`${channel}:${recipient}`).post(text);
+    const { choices, ...record } = options;
+    let externalId: string;
+    if (choices?.length && channel === 'messenger') {
+      externalId = await sendQuickReplies(recipient, text, choices);
+    } else {
+      const body = choices?.length ? `${text}\n${choices.join(' · ')}` : text;
+      externalId = (await this.bot.thread(`${channel}:${recipient}`).post(body))
+        .id;
+    }
     return this.log.recordOutbound({
-      ...options,
+      ...record,
       residentId,
       channel,
       body: text,
-      externalId: sent.id,
+      externalId,
     });
   }
 

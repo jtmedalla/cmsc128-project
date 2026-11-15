@@ -41,6 +41,17 @@ await this.channels.send(residentId, 'messenger', text, { reportId });
 
 `send` posts to the resident's identity on that channel and saves an outbound `Message` row. It throws when the resident has never used the channel or the platform refuses, for example outside Meta's 24-hour window.
 
+Pass `choices` to offer answers the resident can tap instead of typing:
+
+```ts
+await this.channels.send(residentId, 'messenger', 'How serious is it?', {
+  reportId,
+  choices: ['Low', 'Moderate', 'High', 'Critical'],
+});
+```
+
+On Messenger they're quick replies (up to 13, titles cut at 20 characters), sent straight to the Graph API by `channels/messenger.ts` because Chat SDK's adapter doesn't support them. A tap arrives as an ordinary message whose text is the choice, so handlers treat it like typed text. Other channels list the choices under the text.
+
 ## Messenger setup
 
 Messenger is disabled, and its webhook returns 404, unless all three env vars are set:
