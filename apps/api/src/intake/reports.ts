@@ -2,10 +2,21 @@ import {
   type ReportFeedItem,
   type ReportInput,
   reportInputSchema,
+  type SourceChannel,
 } from '@repo/shared';
-import { and, eq, inArray, type SQL } from 'drizzle-orm';
+import { and, desc, eq, gt, inArray, type SQL, sql } from 'drizzle-orm';
 import type { Database } from '../database/client.js';
 import { message, report, victim } from '../database/schema/index.js';
+
+/** The database, or a transaction on it. */
+export type Executor =
+  Database | Parameters<Parameters<Database['transaction']>[0]>[0];
+
+/**
+ * How long a resident's report stays open after their last message.
+ * Messages within it fill in the same report; later ones start a new one.
+ */
+export const OPEN_REPORT_MINUTES = 30;
 
 export interface CreatedReport {
   id: string;
@@ -18,7 +29,7 @@ export interface CreatedReport {
  * Throws if a message isn't the resident's.
  */
 export function insertReport(
-  db: Database,
+  db: Executor,
   input: ReportInput,
 ): Promise<CreatedReport> {
   const { victims, messageIds, ...fields } = reportInputSchema.parse(input);
@@ -55,6 +66,44 @@ export function insertReport(
 
     return created!;
   });
+}
+
+/**
+ * The resident's pending report on a channel that they messaged about within
+ * the last {@link OPEN_REPORT_MINUTES}, or null.
+ */
+export async function findOpenReport(
+  db: Executor,
+  residentId: string,
+  channel: SourceChannel,
+): Promise<string | null> {
+  const [row] = await db
+    .select({ id: report.id })
+    .from(message)
+    .innerJoin(report, eq(message.reportId, report.id))
+    .where(
+      and(
+        eq(message.residentId, residentId),
+        eq(message.channel, channel),
+        eq(message.direction, 'inbound'),
+        eq(report.status, 'pending'),
+        gt(
+          message.createdAt,
+          sql`now() - make_interval(mins => ${OPEN_REPORT_MINUTES})`,
+        ),
+      ),
+    )
+    .orderBy(desc(message.createdAt))
+    .limit(1);
+  return row?.id ?? null;
+}
+
+export async function linkMessage(
+  db: Executor,
+  messageId: string,
+  reportId: string,
+) {
+  await db.update(message).set({ reportId }).where(eq(message.id, messageId));
 }
 
 /** Reports as the triage feed shows them, newest first. */

@@ -1,14 +1,21 @@
 import type { ReportFeedItem } from '@repo/shared';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Database } from '../database/client.js';
 import type { RealtimeService } from '../realtime/realtime.service.js';
 import { IntakeService } from './intake.service.js';
-import { findFeedItem, insertReport } from './reports.js';
+import {
+  findFeedItem,
+  findOpenReport,
+  insertReport,
+  linkMessage,
+} from './reports.js';
 
 vi.mock('../config/env.js', () => ({ env: {} }));
 vi.mock('./reports.js', () => ({
   insertReport: vi.fn(),
   findFeedItem: vi.fn(),
+  findOpenReport: vi.fn(),
+  linkMessage: vi.fn(),
 }));
 
 const id = '0b9a3f4e-8c1d-4e2a-9f6b-1c2d3e4f5a6b';
@@ -53,5 +60,55 @@ describe('IntakeService.createReport', () => {
       createdAt: createdAt.toISOString(),
       updatedAt: createdAt.toISOString(),
     });
+  });
+});
+
+describe('IntakeService.receiveMessage', () => {
+  const tx = { execute: vi.fn() };
+  const db = {
+    transaction: (run: (t: typeof tx) => unknown) => run(tx),
+  } as unknown as Database;
+  const realtime = { toDashboard: vi.fn() };
+  const intake = new IntakeService(db, realtime as unknown as RealtimeService);
+  const input = {
+    residentId: id,
+    messageId: 'a1b2c3d4-0000-4000-8000-000000000001',
+    channel: 'messenger',
+  } as const;
+
+  afterEach(() => vi.clearAllMocks());
+
+  it('starts a pending report from the first message', async () => {
+    vi.mocked(findOpenReport).mockResolvedValue(null);
+    vi.mocked(insertReport).mockResolvedValue({ id, trackingToken: 'tok' });
+    vi.mocked(findFeedItem).mockResolvedValue(item);
+
+    await expect(intake.receiveMessage(input)).resolves.toEqual({
+      reportId: id,
+      created: true,
+    });
+    expect(tx.execute).toHaveBeenCalledOnce();
+    expect(insertReport).toHaveBeenCalledWith(tx, {
+      residentId: id,
+      sourceChannel: 'messenger',
+      messageIds: [input.messageId],
+    });
+    expect(realtime.toDashboard).toHaveBeenCalledWith(
+      'report:created',
+      expect.objectContaining({ id }),
+    );
+  });
+
+  it('files later messages under the open report', async () => {
+    vi.mocked(findOpenReport).mockResolvedValue(id);
+
+    await expect(intake.receiveMessage(input)).resolves.toEqual({
+      reportId: id,
+      created: false,
+    });
+    expect(findOpenReport).toHaveBeenCalledWith(tx, id, 'messenger');
+    expect(linkMessage).toHaveBeenCalledWith(tx, input.messageId, id);
+    expect(insertReport).not.toHaveBeenCalled();
+    expect(realtime.toDashboard).not.toHaveBeenCalled();
   });
 });

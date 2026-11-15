@@ -7,7 +7,23 @@ Turns resident messages and form answers into reports.
 
 ## Creating a report
 
-`IntakeService.createReport` is the only way to create a report. Messenger, web chat, the classifier and the guided form all call it. `IntakeModule` is global:
+`IntakeService` is the only way to create a report: `receiveMessage` for chat messages and `createReport` for everything else. `IntakeModule` is global.
+
+### From a chat message
+
+```ts
+const { reportId, created } = await this.intake.receiveMessage({
+  residentId,
+  messageId,
+  channel: 'messenger',
+});
+```
+
+The first message creates a `pending` report straight away, so it reaches the feed even if the resident stops replying (US40). Later messages are linked to the same report while it's open: still `pending`, on the same channel, and the resident messaged about it in the last `OPEN_REPORT_MINUTES` (30). After that, the next message starts a new report. A per-resident lock makes a burst of messages open one report.
+
+`report:created` is emitted only when `created` is true.
+
+### From known fields
 
 ```ts
 const { id, trackingToken } = await this.intake.createReport({
