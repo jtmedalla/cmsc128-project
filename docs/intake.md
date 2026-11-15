@@ -23,6 +23,8 @@ The first message creates a `pending` report straight away, so it reaches the fe
 
 `report:created` is emitted only when `created` is true.
 
+`ChatIntakeService` registers this as a `ChannelsService.onMessage` handler, so every resident message goes through it. It replies with `RECEIVED_REPLY` only when the message created a report; follow-ups get no reply.
+
 ### From known fields
 
 ```ts

@@ -1,4 +1,5 @@
 import { Global, Module } from '@nestjs/common';
+import { ChatIntakeService } from './chat-intake.service.js';
 import { IntakeService } from './intake.service.js';
 import { REPORT_PARSER, UnavailableParser } from './parser.js';
 
@@ -6,6 +7,7 @@ import { REPORT_PARSER, UnavailableParser } from './parser.js';
 @Module({
   providers: [
     IntakeService,
+    ChatIntakeService,
     { provide: REPORT_PARSER, useClass: UnavailableParser },
   ],
   exports: [IntakeService],
