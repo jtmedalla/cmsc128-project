@@ -1,0 +1,91 @@
+import { Test } from '@nestjs/testing';
+import type { INestApplication } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import type { ReportDetail } from '@repo/shared';
+import { ZodSerializerInterceptor } from 'nestjs-zod';
+import request from 'supertest';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
+import { ReportsController } from './reports.controller.js';
+import { ReportsService } from './reports.service.js';
+
+vi.mock('../config/env.js', () => ({ env: {} }));
+
+const id = '0b9a3f4e-8c1d-4e2a-9f6b-1c2d3e4f5a6b';
+const at = new Date('2026-10-29T08:30:00.000Z');
+
+const detail: ReportDetail = {
+  id,
+  status: 'pending',
+  isProxy: false,
+  incidentType: null,
+  severity: 'high',
+  barangay: null,
+  locationText: null,
+  location: null,
+  incidentAt: null,
+  sourceChannel: 'messenger',
+  parsedAutomatically: false,
+  parseConfidence: null,
+  resident: { id, name: 'Pedro Cruz', contactNumber: '09171234567' },
+  victimCount: 0,
+  victims: [],
+  messages: [{ id, direction: 'inbound', body: 'tulong', createdAt: at }],
+  createdAt: at,
+  updatedAt: at,
+};
+
+describe('GET /triage/reports/:id', () => {
+  let app: INestApplication;
+  const reports = { findDetail: vi.fn() };
+
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({
+      controllers: [ReportsController],
+      providers: [
+        { provide: ReportsService, useValue: reports },
+        { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
+      ],
+    }).compile();
+    app = moduleRef.createNestApplication();
+    await app.init();
+  });
+
+  beforeEach(() => {
+    reports.findDetail.mockReset();
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('returns the report with the contact number and messages', async () => {
+    reports.findDetail.mockResolvedValue(detail);
+    const res = await request(app.getHttpServer()).get(`/triage/reports/${id}`);
+    expect(res.status).toBe(200);
+    expect(res.body.resident.contactNumber).toBe('09171234567');
+    expect(res.body.messages[0].createdAt).toBe(at.toISOString());
+    expect(reports.findDetail).toHaveBeenCalledWith(id);
+  });
+
+  it('returns 404 for an unknown report', async () => {
+    reports.findDetail.mockResolvedValue(null);
+    const res = await request(app.getHttpServer()).get(`/triage/reports/${id}`);
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 400 without querying for a malformed ID', async () => {
+    const res = await request(app.getHttpServer()).get(
+      '/triage/reports/not-a-uuid',
+    );
+    expect(res.status).toBe(400);
+    expect(reports.findDetail).not.toHaveBeenCalled();
+  });
+});
