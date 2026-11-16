@@ -1,8 +1,10 @@
 import { z } from 'zod';
 import { geoPoint, stringToDate } from '../codecs.js';
 import {
+  directionSchema,
   reportStatusSchema,
   severityLevelSchema,
+  sexSchema,
   sourceChannelSchema,
 } from '../enums.js';
 import { parseConfidenceSchema } from './parsed.js';
@@ -56,3 +58,35 @@ export const reportFeedItemSchema = z.object({
   updatedAt: stringToDate,
 });
 export type ReportFeedItem = z.output<typeof reportFeedItemSchema>;
+
+/**
+ * One report as a signed-in responder reviews it. Unlike the feed item, it
+ * carries the resident's contact number, so it must never reach a public page.
+ */
+export const reportDetailSchema = reportFeedItemSchema.extend({
+  resident: z
+    .object({
+      id: z.uuid(),
+      name: z.string().nullable(),
+      contactNumber: z.string().nullable(),
+    })
+    .nullable(),
+  victims: z.array(
+    z.object({
+      id: z.uuid(),
+      sex: sexSchema.nullable(),
+      age: z.int().min(0).nullable(),
+      medicalCondition: z.string().nullable(),
+    }),
+  ),
+  /** The conversation the report came from, oldest first. */
+  messages: z.array(
+    z.object({
+      id: z.uuid(),
+      direction: directionSchema,
+      body: z.string().nullable(),
+      createdAt: stringToDate,
+    }),
+  ),
+});
+export type ReportDetail = z.output<typeof reportDetailSchema>;
