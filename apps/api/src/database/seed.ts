@@ -162,7 +162,12 @@ async function seed() {
 
     const [person] = await db
       .insert(resident)
-      .values({ name: sample.resident, createdAt })
+      .values({
+        name: sample.resident,
+        // Fake but well-formed PH mobile numbers, unique per sample.
+        contactNumber: `0917000${String(i).padStart(4, '0')}`,
+        createdAt,
+      })
       .returning({ id: resident.id });
     await db.insert(residentChannel).values({
       residentId: person!.id,
