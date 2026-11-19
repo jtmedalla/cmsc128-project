@@ -48,7 +48,7 @@ export class IntakeService {
    */
   async createReport(input: ReportInput) {
     const created = await insertReport(this.db, input);
-    await this.publishCreated(created.id);
+    await this.publish('created', created.id);
     return created;
   }
 
@@ -83,7 +83,7 @@ export class IntakeService {
       });
       return { reportId: id, created: true };
     });
-    if (received.created) await this.publishCreated(received.reportId);
+    if (received.created) await this.publish('created', received.reportId);
     return received;
   }
 
@@ -95,11 +95,7 @@ export class IntakeService {
   /** Fills in report fields from the resident's answers. */
   async answer(reportId: string, answers: IntakeAnswers) {
     await updateReport(this.db, reportId, answers);
-    const item = await findFeedItem(this.db, reportId);
-    this.realtime.toDashboard(
-      REPORT_EVENTS.updated,
-      reportUpdatedEventSchema.encode(item!),
-    );
+    await this.publish('updated', reportId);
   }
 
   // TODO(#99): save through the profile service once it lands.
@@ -123,11 +119,11 @@ export class IntakeService {
       .orderBy(incidentType.name);
   }
 
-  private async publishCreated(id: string) {
+  /** Pushes the report's feed item to the dashboard. */
+  private async publish(event: keyof typeof REPORT_EVENTS, id: string) {
     const item = await findFeedItem(this.db, id);
-    this.realtime.toDashboard(
-      REPORT_EVENTS.created,
-      reportCreatedEventSchema.encode(item!),
-    );
+    const schema =
+      event === 'created' ? reportCreatedEventSchema : reportUpdatedEventSchema;
+    this.realtime.toDashboard(REPORT_EVENTS[event], schema.encode(item!));
   }
 }

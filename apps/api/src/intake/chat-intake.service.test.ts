@@ -7,11 +7,10 @@ import {
   DONE_REPLY,
   FOLLOW_UP_REPLY,
   NEW_REPORT_CHOICE,
-  QUESTIONS,
   RECEIVED_REPLY,
-  RETRIES,
 } from './chat-intake.service.js';
 import type { IntakeService } from './intake.service.js';
+import { QUESTIONS } from './questions.js';
 
 vi.mock('../config/env.js', () => ({ env: {} }));
 
@@ -85,11 +84,11 @@ describe('ChatIntakeService', () => {
 
     await service.handle('messenger', recorded, 'may sunog');
 
-    expect(sent()).toEqual([RECEIVED_REPLY, QUESTIONS.incidentType]);
+    expect(sent()).toEqual([RECEIVED_REPLY, QUESTIONS.incidentType.ask]);
     expect(channels.send).toHaveBeenLastCalledWith(
       'resident-1',
       'messenger',
-      QUESTIONS.incidentType,
+      QUESTIONS.incidentType.ask,
       { ...options, choices: ['Fire', 'Flood'] },
     );
     expect(intake.answer).not.toHaveBeenCalled();
@@ -101,7 +100,7 @@ describe('ChatIntakeService', () => {
     expect(intake.answer).toHaveBeenCalledWith('report-1', {
       incidentTypeId: 'type-fire',
     });
-    expect(sent()).toEqual([QUESTIONS.barangay]);
+    expect(sent()).toEqual([QUESTIONS.barangay.ask]);
   });
 
   it('matches the barangay by name', async () => {
@@ -115,7 +114,7 @@ describe('ChatIntakeService', () => {
     expect(channels.send).toHaveBeenLastCalledWith(
       'resident-1',
       'messenger',
-      QUESTIONS.severity,
+      QUESTIONS.severity.ask,
       { ...options, choices: ['Low', 'Moderate', 'High', 'Critical'] },
     );
   });
@@ -124,7 +123,9 @@ describe('ChatIntakeService', () => {
     followUp(['severity', 'contactNumber']);
     await service.handle('messenger', recorded, 'very bad');
     expect(intake.answer).not.toHaveBeenCalled();
-    expect(sent()).toEqual([`${RETRIES.severity} ${QUESTIONS.severity}`]);
+    expect(sent()).toEqual([
+      `${QUESTIONS.severity.retry} ${QUESTIONS.severity.ask}`,
+    ]);
   });
 
   it('saves the contact number on the resident and thanks them', async () => {
@@ -155,7 +156,7 @@ describe('ChatIntakeService', () => {
     expect(intake.receiveMessage).toHaveBeenCalledWith(
       expect.objectContaining({ newReport: true }),
     );
-    expect(sent()).toEqual([RECEIVED_REPLY, QUESTIONS.incidentType]);
+    expect(sent()).toEqual([RECEIVED_REPLY, QUESTIONS.incidentType.ask]);
   });
 
   it('acknowledges messages added to a complete report', async () => {

@@ -21,14 +21,29 @@ export const SEVERITY_LABELS: Record<SeverityLevel, string> = {
   critical: 'Critical',
 };
 
-/** Matches a severity as its value or label, ignoring case. */
-export function parseSeverity(text: string): SeverityLevel | null {
+/**
+ * The option whose names include `text`, ignoring case and surrounding
+ * spaces, or null.
+ */
+export function matchChoice<T>(
+  text: string,
+  options: readonly T[],
+  namesOf: (option: T) => string[],
+): T | null {
   const key = text.trim().toLowerCase();
   return (
-    severityLevelSchema.options.find(
-      (level) => level === key || SEVERITY_LABELS[level].toLowerCase() === key,
+    options.find((option) =>
+      namesOf(option).some((name) => name.toLowerCase() === key),
     ) ?? null
   );
+}
+
+/** Matches a severity as its value or label, ignoring case. */
+export function parseSeverity(text: string): SeverityLevel | null {
+  return matchChoice(text, severityLevelSchema.options, (level) => [
+    level,
+    SEVERITY_LABELS[level],
+  ]);
 }
 
 /**

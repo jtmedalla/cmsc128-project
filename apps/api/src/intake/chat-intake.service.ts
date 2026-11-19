@@ -1,15 +1,10 @@
 import { Injectable, type OnModuleInit } from '@nestjs/common';
-import {
-  contactNumberSchema,
-  type IntakeField,
-  parseSeverity,
-  SEVERITY_LABELS,
-  type SourceChannel,
-} from '@repo/shared';
+import type { IntakeField, SourceChannel } from '@repo/shared';
 import { ChannelsService } from '../channels/channels.service.js';
 import type { RecordedMessage } from '../channels/message-log.service.js';
 import { BarangayService } from '../geo/barangay.service.js';
 import { IntakeService } from './intake.service.js';
+import { QUESTIONS, type QuestionDeps, type Turn } from './questions.js';
 
 export const RECEIVED_REPLY =
   'We received your report. MDRRMO responders can see it now.';
@@ -21,26 +16,6 @@ export const FOLLOW_UP_REPLY =
 /** Starts another report, as a tap or typed in any case. */
 export const NEW_REPORT_CHOICE = 'New report';
 
-export const QUESTIONS: Record<IntakeField, string> = {
-  incidentType: 'What happened?',
-  barangay: 'Which barangay is it in?',
-  severity: 'How serious is it?',
-  contactNumber: 'What number can responders call you on?',
-};
-
-export const RETRIES: Record<IntakeField, string> = {
-  incidentType: 'Please pick the closest one.',
-  barangay: "We couldn't find that barangay. Please check the spelling.",
-  severity: 'Please pick one.',
-  contactNumber: 'Please send a mobile number like 09171234567.',
-};
-
-interface Turn {
-  channel: SourceChannel;
-  residentId: string;
-  reportId: string;
-}
-
 /**
  * Turns residents' chat messages into reports, then asks for the details the
  * report still lacks, one at a time. A message that isn't a report's first is
@@ -49,11 +24,15 @@ interface Turn {
  */
 @Injectable()
 export class ChatIntakeService implements OnModuleInit {
+  private readonly deps: QuestionDeps;
+
   constructor(
     private readonly channels: ChannelsService,
-    private readonly intake: IntakeService,
-    private readonly barangays: BarangayService,
-  ) {}
+    intake: IntakeService,
+    barangays: BarangayService,
+  ) {
+    this.deps = { intake, barangays };
+  }
 
   onModuleInit() {
     this.channels.onMessage((thread, message, recorded) =>
@@ -70,85 +49,46 @@ export class ChatIntakeService implements OnModuleInit {
     recorded: RecordedMessage,
     text: string,
   ) {
-    const { reportId, created } = await this.intake.receiveMessage({
+    const { intake } = this.deps;
+    const { reportId, created } = await intake.receiveMessage({
       ...recorded,
       channel,
       newReport: text.toLowerCase() === NEW_REPORT_CHOICE.toLowerCase(),
     });
     const turn = { channel, residentId: recorded.residentId, reportId };
-    // TODO(#33): reply through confirmReport once it lands.
-    if (created) await this.reply(turn, RECEIVED_REPLY);
+    const missing = await intake.missingFields(reportId);
 
-    const missing = await this.intake.missingFields(reportId);
-    // Nothing was asked yet, or everything is answered.
-    if (created || !missing.length) return this.askNext(turn, missing, created);
-
-    const [field] = missing as [IntakeField, ...IntakeField[]];
-    if (!(await this.answer(turn, field, text))) {
-      return this.ask(turn, field, RETRIES[field]);
+    if (created) {
+      // TODO(#33): reply through confirmReport once it lands.
+      await this.reply(turn, RECEIVED_REPLY);
+      return this.askNext(turn, missing);
     }
-    await this.askNext(turn, missing.slice(1), true);
+
+    const [field, ...rest] = missing;
+    // Thanked already; later messages stay on the report as updates.
+    if (!field) return this.finish(turn, FOLLOW_UP_REPLY);
+
+    if (!(await QUESTIONS[field].answer(text, turn, this.deps))) {
+      return this.ask(turn, field, QUESTIONS[field].retry);
+    }
+    await this.askNext(turn, rest);
   }
 
-  private async askNext(
-    turn: Turn,
-    missing: IntakeField[],
-    justChanged: boolean,
-  ) {
+  /** Asks the first missing field, or thanks the resident if none is. */
+  private async askNext(turn: Turn, missing: IntakeField[]) {
     const [next] = missing;
     if (next) return this.ask(turn, next);
-    // Thank once, right after the last answer; later messages are updates.
-    await this.reply(turn, justChanged ? DONE_REPLY : FOLLOW_UP_REPLY, [
-      NEW_REPORT_CHOICE,
-    ]);
-  }
-
-  /** Saves the answer; false if it doesn't fit the question. */
-  private async answer(turn: Turn, field: IntakeField, text: string) {
-    switch (field) {
-      case 'incidentType': {
-        const key = text.toLowerCase();
-        const type = (await this.intake.incidentTypes()).find(
-          ({ code, name }) => code === key || name.toLowerCase() === key,
-        );
-        if (type)
-          await this.intake.answer(turn.reportId, { incidentTypeId: type.id });
-        return Boolean(type);
-      }
-      case 'barangay': {
-        const barangay = text ? await this.barangays.findByName(text) : null;
-        if (barangay)
-          await this.intake.answer(turn.reportId, { barangayId: barangay.id });
-        return Boolean(barangay);
-      }
-      case 'severity': {
-        const severity = parseSeverity(text);
-        if (severity) await this.intake.answer(turn.reportId, { severity });
-        return Boolean(severity);
-      }
-      case 'contactNumber': {
-        const parsed = contactNumberSchema.safeParse(text);
-        if (parsed.success) {
-          await this.intake.saveContactNumber(turn.residentId, parsed.data);
-        }
-        return parsed.success;
-      }
-    }
+    await this.finish(turn, DONE_REPLY);
   }
 
   private async ask(turn: Turn, field: IntakeField, prefix?: string) {
-    const question = prefix
-      ? `${prefix} ${QUESTIONS[field]}`
-      : QUESTIONS[field];
-    await this.reply(turn, question, await this.choices(field));
+    const { ask, choices } = QUESTIONS[field];
+    const text = prefix ? `${prefix} ${ask}` : ask;
+    await this.reply(turn, text, await choices?.(this.deps));
   }
 
-  private async choices(field: IntakeField) {
-    if (field === 'incidentType') {
-      return (await this.intake.incidentTypes()).map(({ name }) => name);
-    }
-    if (field === 'severity') return Object.values(SEVERITY_LABELS);
-    return undefined;
+  private finish(turn: Turn, text: string) {
+    return this.reply(turn, text, [NEW_REPORT_CHOICE]);
   }
 
   private async reply(turn: Turn, text: string, choices?: string[]) {

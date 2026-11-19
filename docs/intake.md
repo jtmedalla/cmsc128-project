@@ -42,7 +42,7 @@ flowchart TD
     M -->|"Yes, just created"| ASK["Ask first missing field"]
     M -->|"Yes, mid-intake"| ANS{"Message fits<br/>that field?"}
     ANS -->|Yes| SAVE["Save answer"] --> M2{"Any left?"}
-    ANS -->|No| RETRY["RETRIES + same question"]
+    ANS -->|No| RETRY["retry + same question"]
     M2 -->|Yes| ASK
     M2 -->|No| DONE["DONE_REPLY + 'New report'"]
     M -->|No| FU["FOLLOW_UP_REPLY + 'New report'"]
@@ -55,7 +55,7 @@ flowchart TD
 | `severity`      | How serious is it?                      | Tap or type a level (`parseSeverity`)                    |
 | `contactNumber` | What number can responders call you on? | PH mobile (`contactNumberSchema`); saved on the resident |
 
-No question state is stored. Each follow-up message answers the first field still missing (`IntakeService.missingFields`), so a field filled any other way is never asked. An answer that doesn't fit gets the question again. After the last answer the bot thanks the resident once, with a "New report" quick reply. Later messages stay on the report as updates (the victim's condition, say), and each gets `FOLLOW_UP_REPLY` with the same quick reply, so no message goes unanswered.
+Each field's question, retry text, choices and answer parsing live in `QUESTIONS` (`apps/api/src/intake/questions.ts`); add a field there and to `INTAKE_FIELDS`. No question state is stored. Each follow-up message answers the first field still missing (`IntakeService.missingFields`), so a field filled any other way is never asked. An answer that doesn't fit gets the question again. After the last answer the bot thanks the resident once, with a "New report" quick reply. Later messages stay on the report as updates (the victim's condition, say), and each gets `FOLLOW_UP_REPLY` with the same quick reply, so no message goes unanswered.
 
 ### Another report
 
