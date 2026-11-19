@@ -2,11 +2,11 @@ import type { ReportFeedItem } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link, Outlet } from '@tanstack/react-router';
 import { ArrowDownUp } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { formatTime, label } from '@/lib/format';
+import { formatTime } from '@/lib/format';
 import { reportFeedQuery } from '@/lib/reports';
 
 /**
@@ -100,10 +100,8 @@ function ReportCard({ report }: { report: ReportFeedItem }) {
           {report.incidentType?.name ?? 'Unclassified incident'}
         </h3>
         <div className="flex shrink-0 gap-1">
-          {report.severity && (
-            <Badge variant="secondary">{label(report.severity)}</Badge>
-          )}
-          <Badge variant="outline">{label(report.status)}</Badge>
+          {report.severity && <SeverityBadge severity={report.severity} />}
+          <StatusBadge status={report.status} />
         </div>
       </div>
       <p>{report.firstMessage ?? 'No message'}</p>
