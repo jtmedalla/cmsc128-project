@@ -5,6 +5,7 @@ import {
   reportIdParamsSchema,
 } from '@repo/shared';
 import { createZodDto, ZodResponse } from 'nestjs-zod';
+import { Roles } from '../auth/roles.decorator.js';
 import { ReportsService } from './reports.service.js';
 
 // codec: the methods return Dates; the serializer encodes them to ISO strings.
@@ -19,8 +20,8 @@ class ReportDetailDto extends createZodDto(reportDetailSchema, {
 class ReportIdParamsDto extends createZodDto(reportIdParamsSchema) {}
 
 /** Read-only for now; editing arrives with #39. */
-// TODO(PR #110 review): add @Roles(['responder', 'admin']) to both routes.
-// Blocked on confirming the sitemap's roles for /incidents (the doc isn't readable yet).
+// Both routes expose incident and resident data, so the role check runs on the API (#41).
+@Roles(['responder', 'admin'])
 @Controller('triage/reports')
 export class ReportsController {
   constructor(private readonly reports: ReportsService) {}
