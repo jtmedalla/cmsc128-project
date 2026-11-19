@@ -3,29 +3,35 @@
 Lets responders review reports. Read-only for now; editing arrives with #39.
 
 - API: `apps/api/src/triage/`
-- Web: `apps/web/src/components/report-details.tsx`, `apps/web/src/lib/reports.ts`
+- Web: `apps/web/src/components/incidents-workspace.tsx`, `report-details.tsx`, `apps/web/src/lib/reports.ts`
 - Schemas: `packages/shared/src/reports/`
 
-## Report list
+## Endpoints
 
-`GET /triage/reports` returns every report as a `reportFeedItemSchema`, newest first, for any signed-in user. Each item carries `firstMessage`, the text of the message the report came from, for the feed card.
+Both need a signed-in user.
 
-## Report details
-
-`GET /triage/reports/:id` returns one report as `reportDetailSchema`, for any signed-in user. It returns 400 for a malformed ID and 404 when no report has it.
-
-Unlike a feed item, the detail carries the resident's contact number, the victims and the conversation the report came from, oldest first. Keep it off public pages.
-
-`parse_confidence` and `message.attachments` are `jsonb`, so `ReportsService.findDetail` checks them against `parseConfidenceSchema` and `messageAttachmentsSchema` and returns null for a value of the wrong shape instead of failing the response.
+- `GET /triage/reports`: every report as a `reportFeedItemSchema`, newest first. Each item carries `firstMessage`, the text of the message the report came from, for the feed card.
+- `GET /triage/reports/:id`: one report as `reportDetailSchema`; 400 for a malformed ID, 404 when no report has it. Unlike a feed item, it carries the resident's contact number, the victims and the conversation, oldest first. Keep it off public pages.
 
 ## Feed queries
 
-`triage/feed.ts` holds the projection the feed and the detail share: `reportColumns` hides internal links and the tracking token, and `reportRelations` adds the incident type and barangay. `findFeedItems(db, where?)` and `findFeedItem(db, id)` load feed items; intake uses `findFeedItem` to push `report:created`. `checkConfidence` and `checkAttachments` do the jsonb checks for both.
+`triage/feed.ts` holds the projection the list and the detail share: `reportColumns` hides internal links and the tracking token, and `reportRelations` adds the incident type and barangay. `findFeedItems(db, where?)` and `findFeedItem(db, id)` load feed items; intake uses `findFeedItem` to push `report:created`.
+
+`parse_confidence` and `message.attachments` are `jsonb`, so `checkConfidence` and `checkAttachments` validate them against `parseConfidenceSchema` and `messageAttachmentsSchema` and return null for a value of the wrong shape instead of failing the response.
+
+## Incidents workspace
+
+`/dashboard/incidents` follows the wireframe's Incident Feed: report cards on the left, and the selected report's chat and details beside them. Selecting a card opens `/dashboard/incidents/:reportId`; with none selected, both panes prompt to select a report. The Table and Kanban tabs, Sort and the message box are shown disabled until their features exist.
+
+The chat pane labels messages by `direction` and `sender_id`: inbound is the resident, outbound with a sender is a responder, outbound without one is the bot.
+
+The web app caches the list under `['reports', 'feed']` and each report under `['reports', 'detail', id]`, both under the `['reports']` key the feed invalidates (realtime.md).
 
 ## Contracts
 
 | Schema                     | Shape                                                    |
 | -------------------------- | -------------------------------------------------------- |
+| `reportFeedItemSchema`     | A report as the feed lists it (defined with intake's)    |
 | `reportDetailSchema`       | One report as a responder reviews it                     |
 | `reportIdParamsSchema`     | `{ id }` route params for one report                     |
 | `messageAttachmentsSchema` | `message.attachments`, reduced to each attachment's type |

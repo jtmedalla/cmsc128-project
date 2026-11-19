@@ -75,7 +75,7 @@ describe('ReportDetails', () => {
   it('shows the report, contact number and messages', async () => {
     respondWith(200, wire);
     renderDetails();
-    expect(await screen.findByRole('heading', { name: 'Flood' })).toBeDefined();
+    expect(await screen.findByText('Flood')).toBeDefined();
     expect(
       screen.getByRole('link', { name: '09171234567' }).getAttribute('href'),
     ).toBe('tel:09171234567');
@@ -86,7 +86,7 @@ describe('ReportDetails', () => {
   it('sends the session cookie', async () => {
     respondWith(200, wire);
     renderDetails();
-    await screen.findByRole('heading', { name: 'Flood' });
+    await screen.findByText('Flood');
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(`/triage/reports/${id}`),
       { credentials: 'include' },
@@ -133,12 +133,35 @@ describe('ReportDetails', () => {
   });
 
   it('shows "Not given" for an empty field', async () => {
-    respondWith(200, { ...wire, locationText: '' });
+    respondWith(200, {
+      ...wire,
+      resident: { id, name: '', contactNumber: '09171234567' },
+    });
     renderDetails();
-    await screen.findByRole('heading', { name: 'Flood' });
-    expect(screen.getByText('Location').nextSibling?.textContent).toBe(
+    await screen.findByText('Flood');
+    expect(screen.getByText('Reported By').nextSibling?.textContent).toBe(
       'Not given',
     );
+  });
+
+  // Read-only for now: the box is there so the layout matches the wireframe.
+  it('shows the message box disabled', async () => {
+    respondWith(200, wire);
+    renderDetails();
+    await screen.findByText('Flood');
+    expect(
+      screen.getByRole('textbox', { name: 'Message' }).hasAttribute('disabled'),
+    ).toBe(true);
+  });
+
+  // Wireframe "map-section" slot, crossed out until the real map exists.
+  it('shows the crossed-out map slot', async () => {
+    respondWith(200, wire);
+    renderDetails();
+    await screen.findByText('Flood');
+    expect(
+      screen.getByRole('img', { name: 'Map not available yet' }),
+    ).toBeDefined();
   });
 
   it('offers a retry when the API fails', async () => {

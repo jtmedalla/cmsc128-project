@@ -1,6 +1,26 @@
-import { type ReportDetail, reportDetailSchema } from '@repo/shared';
+import {
+  type ReportDetail,
+  reportDetailSchema,
+  type ReportFeedItem,
+  reportFeedItemSchema,
+} from '@repo/shared';
 import { queryOptions } from '@tanstack/react-query';
 import { API_URL } from './env';
+
+/** Every report for the incidents list, newest first. */
+// TODO(#38): invalidate on report:created / report:updated for live updates.
+export const reportFeedQuery = queryOptions({
+  // Under ['reports'], so the feed invalidation in docs/realtime.md covers it.
+  queryKey: ['reports', 'feed'],
+  queryFn: async (): Promise<ReportFeedItem[]> => {
+    const res = await fetch(`${API_URL}/triage/reports`, {
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error(`Couldn't load reports (${res.status})`);
+    // parse() decodes the ISO date strings back into Dates.
+    return reportFeedItemSchema.array().parse(await res.json());
+  },
+});
 
 /** One report for responders, or null when no report has that ID. */
 export function reportDetailQuery(id: string) {
