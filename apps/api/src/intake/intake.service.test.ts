@@ -3,20 +3,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Database } from '../database/client.js';
 import type { RealtimeService } from '../realtime/realtime.service.js';
 import { IntakeService } from './intake.service.js';
-import {
-  findFeedItem,
-  findOpenReport,
-  insertReport,
-  linkMessage,
-} from './reports.js';
+import { findFeedItem } from '../triage/feed.js';
+import { findOpenReport, insertReport, linkMessage } from './reports.js';
 
 vi.mock('../config/env.js', () => ({ env: {} }));
 vi.mock('./reports.js', () => ({
   insertReport: vi.fn(),
-  findFeedItem: vi.fn(),
   findOpenReport: vi.fn(),
   linkMessage: vi.fn(),
 }));
+vi.mock('../triage/feed.js', () => ({ findFeedItem: vi.fn() }));
 
 const id = '0b9a3f4e-8c1d-4e2a-9f6b-1c2d3e4f5a6b';
 const createdAt = new Date('2026-10-29T08:30:00.000Z');

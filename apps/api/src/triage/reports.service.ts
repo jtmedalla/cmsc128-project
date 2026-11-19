@@ -1,11 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
-import {
-  messageAttachmentsSchema,
-  parseConfidenceSchema,
-  type ReportDetail,
-} from '@repo/shared';
+import type { ReportDetail } from '@repo/shared';
 import type { Database } from '../database/client.js';
 import { DB } from '../database/database.module.js';
+import {
+  checkAttachments,
+  checkConfidence,
+  reportColumns,
+  reportRelations,
+} from './feed.js';
 
 @Injectable()
 export class ReportsService {
@@ -15,19 +17,10 @@ export class ReportsService {
   async findDetail(id: string): Promise<ReportDetail | null> {
     const row = await this.db.query.report.findFirst({
       where: (r, { eq }) => eq(r.id, id),
-      // Hide internal links and the tracking token; relations below replace the IDs.
-      columns: {
-        trackingToken: false,
-        residentId: false,
-        createdBy: false,
-        reviewedBy: false,
-        duplicateOfId: false,
-        incidentTypeId: false,
-        barangayId: false,
-      },
+      // Same projection as the feed, plus the contact number, victims and messages.
+      columns: reportColumns,
       with: {
-        incidentType: { columns: { id: true, code: true, name: true } },
-        barangay: { columns: { id: true, name: true } },
+        ...reportRelations,
         resident: { columns: { id: true, name: true, contactNumber: true } },
         // Ordered by ID so the list doesn't reshuffle between loads.
         victims: {
@@ -50,15 +43,12 @@ export class ReportsService {
     });
     if (!row) return null;
 
-    // jsonb columns are unchecked; a bad shape becomes null instead of failing the response with a 500.
     return {
       ...row,
-      parseConfidence:
-        parseConfidenceSchema.safeParse(row.parseConfidence).data ?? null,
+      parseConfidence: checkConfidence(row.parseConfidence),
       messages: row.messages.map((m) => ({
         ...m,
-        attachments:
-          messageAttachmentsSchema.safeParse(m.attachments).data ?? null,
+        attachments: checkAttachments(m.attachments),
       })),
     };
   }

@@ -14,6 +14,10 @@ Unlike a feed item, the detail carries the resident's contact number, the victim
 
 `parse_confidence` and `message.attachments` are `jsonb`, so `ReportsService.findDetail` checks them against `parseConfidenceSchema` and `messageAttachmentsSchema` and returns null for a value of the wrong shape instead of failing the response.
 
+## Feed queries
+
+`triage/feed.ts` holds the projection the feed and the detail share: `reportColumns` hides internal links and the tracking token, and `reportRelations` adds the incident type and barangay. `findFeedItems(db, where?)` and `findFeedItem(db, id)` load feed items; intake uses `findFeedItem` to push `report:created`. `checkConfidence` and `checkAttachments` do the jsonb checks for both.
+
 ## Contracts
 
 | Schema                     | Shape                                                    |
