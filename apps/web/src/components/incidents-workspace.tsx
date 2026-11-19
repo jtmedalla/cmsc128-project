@@ -15,8 +15,10 @@ import { reportFeedQuery } from '@/lib/reports';
  */
 export function IncidentsWorkspace() {
   return (
-    // Fills the dashboard below its header (h-14) and padding (p-4) on large screens.
-    <div className="flex flex-col overflow-hidden lg:h-[calc(100svh-5.5rem)]">
+    // Exactly fills the window on large screens so only the panes scroll, never the page:
+    // 100svh minus the header (h-14, 3.5rem), main's padding (p-4, 2rem) and the
+    // inset panel's margin (m-2 top and bottom, 1rem).
+    <div className="flex flex-col overflow-hidden lg:h-[calc(100svh-6.5rem)]">
       {/* Only Reports exists for now; Table and Kanban are shown disabled, as agreed. */}
       <Tabs value="reports">
         <TabsList variant="line" className="w-full border-b">
