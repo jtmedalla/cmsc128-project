@@ -5,6 +5,7 @@ import type { BarangayService } from '../geo/barangay.service.js';
 import {
   ChatIntakeService,
   DONE_REPLY,
+  FOLLOW_UP_REPLY,
   NEW_REPORT_CHOICE,
   QUESTIONS,
   RECEIVED_REPLY,
@@ -157,9 +158,15 @@ describe('ChatIntakeService', () => {
     expect(sent()).toEqual([RECEIVED_REPLY, QUESTIONS.incidentType]);
   });
 
-  it('stays quiet once everything is answered', async () => {
+  it('acknowledges messages added to a complete report', async () => {
     followUp([]);
     await service.handle('messenger', recorded, 'may naipit pa');
-    expect(channels.send).not.toHaveBeenCalled();
+    expect(intake.answer).not.toHaveBeenCalled();
+    expect(channels.send).toHaveBeenCalledExactlyOnceWith(
+      'resident-1',
+      'messenger',
+      FOLLOW_UP_REPLY,
+      { ...options, choices: [NEW_REPORT_CHOICE] },
+    );
   });
 });

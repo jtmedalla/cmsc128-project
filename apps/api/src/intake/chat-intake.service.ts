@@ -15,6 +15,8 @@ export const RECEIVED_REPLY =
   'We received your report. MDRRMO responders can see it now.';
 export const DONE_REPLY =
   'Thank you. Responders have your report and may call you for details.';
+export const FOLLOW_UP_REPLY =
+  'Added to your report. Tap "New report" if this is a different incident.';
 
 /** Starts another report, as a tap or typed in any case. */
 export const NEW_REPORT_CHOICE = 'New report';
@@ -95,8 +97,10 @@ export class ChatIntakeService implements OnModuleInit {
   ) {
     const [next] = missing;
     if (next) return this.ask(turn, next);
-    // Thank once, right after the last answer, and stay quiet after that.
-    if (justChanged) await this.reply(turn, DONE_REPLY, [NEW_REPORT_CHOICE]);
+    // Thank once, right after the last answer; later messages are updates.
+    await this.reply(turn, justChanged ? DONE_REPLY : FOLLOW_UP_REPLY, [
+      NEW_REPORT_CHOICE,
+    ]);
   }
 
   /** Saves the answer; false if it doesn't fit the question. */
