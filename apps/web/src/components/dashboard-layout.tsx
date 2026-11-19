@@ -4,7 +4,7 @@ import {
   Outlet,
   useMatchRoute,
 } from '@tanstack/react-router';
-import { Activity, LayoutDashboard } from 'lucide-react';
+import { Activity, LayoutDashboard, TriangleAlert } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -27,9 +27,22 @@ import { useRealtimeConnection } from '@/hooks/use-realtime';
 
 const route = getRouteApi('/dashboard/_app');
 
+// Order follows the wireframe's sidebar. fuzzy keeps an item active on its child
+// pages (an open report under Incidents); Home must match exactly.
 const navItems = [
-  { to: '/dashboard', label: 'Home', icon: LayoutDashboard },
-  { to: '/dashboard/health', label: 'System status', icon: Activity },
+  { to: '/dashboard', label: 'Home', icon: LayoutDashboard, fuzzy: false },
+  {
+    to: '/dashboard/incidents',
+    label: 'Incidents',
+    icon: TriangleAlert,
+    fuzzy: true,
+  },
+  {
+    to: '/dashboard/health',
+    label: 'System status',
+    icon: Activity,
+    fuzzy: false,
+  },
 ] as const;
 
 export function DashboardLayout() {
@@ -62,7 +75,9 @@ export function DashboardLayout() {
                     <SidebarMenuItem key={item.to}>
                       <SidebarMenuButton
                         render={<Link to={item.to} />}
-                        isActive={!!matchRoute({ to: item.to })}
+                        isActive={
+                          !!matchRoute({ to: item.to, fuzzy: item.fuzzy })
+                        }
                         tooltip={item.label}
                       >
                         <item.icon />
