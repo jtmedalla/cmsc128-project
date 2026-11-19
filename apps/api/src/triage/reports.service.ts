@@ -1,5 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { ReportDetail } from '@repo/shared';
+import {
+  messageAttachmentsSchema,
+  parseConfidenceSchema,
+  type ReportDetail,
+} from '@repo/shared';
 import type { Database } from '../database/client.js';
 import { DB } from '../database/database.module.js';
 
@@ -11,6 +15,7 @@ export class ReportsService {
   async findDetail(id: string): Promise<ReportDetail | null> {
     const row = await this.db.query.report.findFirst({
       where: (r, { eq }) => eq(r.id, id),
+      // Hide internal links and the tracking token; relations below replace the IDs.
       columns: {
         trackingToken: false,
         residentId: false,
@@ -24,22 +29,37 @@ export class ReportsService {
         incidentType: { columns: { id: true, code: true, name: true } },
         barangay: { columns: { id: true, name: true } },
         resident: { columns: { id: true, name: true, contactNumber: true } },
+        // Ordered by ID so the list doesn't reshuffle between loads.
         victims: {
           columns: { id: true, sex: true, age: true, medicalCondition: true },
+          orderBy: (v, { asc }) => asc(v.id),
         },
+        // senderId tells a responder's reply from the bot's; attachments flag location shares.
         messages: {
-          columns: { id: true, direction: true, body: true, createdAt: true },
+          columns: {
+            id: true,
+            direction: true,
+            senderId: true,
+            body: true,
+            attachments: true,
+            createdAt: true,
+          },
           orderBy: (m, { asc }) => asc(m.createdAt),
         },
       },
     });
     if (!row) return null;
 
-    const { parseConfidence, ...rest } = row;
+    // jsonb columns are unchecked; a bad shape becomes null instead of failing the response with a 500.
     return {
-      ...rest,
-      parseConfidence: parseConfidence as ReportDetail['parseConfidence'],
-      victimCount: row.victims.length,
+      ...row,
+      parseConfidence:
+        parseConfidenceSchema.safeParse(row.parseConfidence).data ?? null,
+      messages: row.messages.map((m) => ({
+        ...m,
+        attachments:
+          messageAttachmentsSchema.safeParse(m.attachments).data ?? null,
+      })),
     };
   }
 }

@@ -1,8 +1,8 @@
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import type { ReportDetail } from '@repo/shared';
-import { ZodSerializerInterceptor } from 'nestjs-zod';
+import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 import request from 'supertest';
 import {
   afterAll,
@@ -35,9 +35,17 @@ const detail: ReportDetail = {
   parsedAutomatically: false,
   parseConfidence: null,
   resident: { id, name: 'Pedro Cruz', contactNumber: '09171234567' },
-  victimCount: 0,
   victims: [],
-  messages: [{ id, direction: 'inbound', body: 'tulong', createdAt: at }],
+  messages: [
+    {
+      id,
+      direction: 'inbound',
+      senderId: null,
+      body: 'tulong',
+      attachments: null,
+      createdAt: at,
+    },
+  ],
   createdAt: at,
   updatedAt: at,
 };
@@ -52,6 +60,8 @@ describe('GET /triage/reports/:id', () => {
       providers: [
         { provide: ReportsService, useValue: reports },
         { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
+        // Same global pipe as AppModule, so the params DTO validates the ID.
+        { provide: APP_PIPE, useClass: ZodValidationPipe },
       ],
     }).compile();
     app = moduleRef.createNestApplication();

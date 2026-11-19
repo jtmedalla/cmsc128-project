@@ -60,33 +60,48 @@ export const reportFeedItemSchema = z.object({
 export type ReportFeedItem = z.output<typeof reportFeedItemSchema>;
 
 /**
+ * `message.attachments`: location payloads and media (docs/database.md). Only
+ * `type` is kept; the page needs just enough to tell a location share apart.
+ */
+export const messageAttachmentsSchema = z.array(z.object({ type: z.string() }));
+
+/**
  * One report as a signed-in responder reviews it. Unlike the feed item, it
  * carries the resident's contact number, so it must never reach a public page.
  */
-export const reportDetailSchema = reportFeedItemSchema.extend({
-  resident: z
-    .object({
-      id: z.uuid(),
-      name: z.string().nullable(),
-      contactNumber: z.string().nullable(),
-    })
-    .nullable(),
-  victims: z.array(
-    z.object({
-      id: z.uuid(),
-      sex: sexSchema.nullable(),
-      age: z.int().min(0).nullable(),
-      medicalCondition: z.string().nullable(),
-    }),
-  ),
-  /** The conversation the report came from, oldest first. */
-  messages: z.array(
-    z.object({
-      id: z.uuid(),
-      direction: directionSchema,
-      body: z.string().nullable(),
-      createdAt: stringToDate,
-    }),
-  ),
-});
+// victimCount is dropped: the detail carries the victims themselves.
+export const reportDetailSchema = reportFeedItemSchema
+  .omit({ victimCount: true })
+  .extend({
+    resident: z
+      .object({
+        id: z.uuid(),
+        name: z.string().nullable(),
+        contactNumber: z.string().nullable(),
+      })
+      .nullable(),
+    victims: z.array(
+      z.object({
+        id: z.uuid(),
+        sex: sexSchema.nullable(),
+        age: z.int().min(0).nullable(),
+        medicalCondition: z.string().nullable(),
+      }),
+    ),
+    /** The conversation the report came from, oldest first. */
+    messages: z.array(
+      z.object({
+        id: z.uuid(),
+        direction: directionSchema,
+        /** `message.sender_id`: the responder who sent it; null for the bot or the resident. */
+        senderId: z.string().nullable(),
+        body: z.string().nullable(),
+        attachments: messageAttachmentsSchema.nullable(),
+        createdAt: stringToDate,
+      }),
+    ),
+  });
 export type ReportDetail = z.output<typeof reportDetailSchema>;
+
+/** Route params for one report, e.g. `GET /triage/reports/:id`. */
+export const reportIdParamsSchema = z.object({ id: z.uuid() });

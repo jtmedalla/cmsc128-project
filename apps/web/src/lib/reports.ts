@@ -5,7 +5,8 @@ import { API_URL } from './env';
 /** One report for responders, or null when no report has that ID. */
 export function reportDetailQuery(id: string) {
   return queryOptions({
-    queryKey: ['reports', id],
+    // 'detail' keeps the feed's ['reports'] invalidation (docs/realtime.md) from refetching open details.
+    queryKey: ['reports', 'detail', id],
     queryFn: async (): Promise<ReportDetail | null> => {
       // The API is on another origin, so send the session cookie explicitly.
       const res = await fetch(`${API_URL}/triage/reports/${id}`, {

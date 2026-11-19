@@ -163,7 +163,6 @@ describe('reportDetailSchema', () => {
       parsedAutomatically: false,
       parseConfidence: null,
       resident: { id: residentId, name: null, contactNumber: '09171234567' },
-      victimCount: 1,
       victims: [
         { id: residentId, sex: 'female', age: 78, medicalCondition: null },
       ],
@@ -171,7 +170,9 @@ describe('reportDetailSchema', () => {
         {
           id: residentId,
           direction: 'inbound',
+          senderId: null,
           body: 'tulong',
+          attachments: null,
           createdAt: '2026-10-29T08:30:00.000Z',
         },
       ],

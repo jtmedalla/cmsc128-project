@@ -1,6 +1,6 @@
 import type { ReportDetail } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
-import { getRouteApi, Link } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,17 +23,30 @@ function Field({ name, value }: { name: string; value: React.ReactNode }) {
   return (
     <div>
       <dt className="text-sm text-muted-foreground">{name}</dt>
-      <dd>{value ?? 'Not given'}</dd>
+      {/* An empty string counts as missing too, not only null/undefined. */}
+      <dd>
+        {value === null || value === undefined || value === ''
+          ? 'Not given'
+          : value}
+      </dd>
     </div>
   );
 }
 
-const route = getRouteApi('/dashboard/_app/incidents/$reportId');
+type Message = ReportDetail['messages'][number];
 
-/** `/dashboard/incidents/:reportId` */
-export function IncidentPage() {
-  const { reportId } = route.useParams();
-  return <ReportDetails reportId={reportId} />;
+/** Outbound with a sender_id is a responder; without one, the bot (docs/database.md). */
+function senderOf(m: Message) {
+  if (m.direction === 'inbound') return 'Resident';
+  return m.senderId ? 'Responder' : 'MIGO';
+}
+
+/** The text, or what an attachment-only message holds. */
+function contentOf(m: Message) {
+  if (m.body !== null) return m.body;
+  return m.attachments?.some((a) => a.type === 'location')
+    ? 'Shared a location'
+    : '(attachment)';
 }
 
 /** Read-only view of one report; editing arrives with #39. */
@@ -184,10 +197,9 @@ function ReportView({ report }: { report: ReportDetail }) {
               {report.messages.map((m) => (
                 <li key={m.id}>
                   <p className="text-sm text-muted-foreground">
-                    {m.direction === 'inbound' ? 'Resident' : 'MIGO'} ·{' '}
-                    {formatTime(m.createdAt)}
+                    {senderOf(m)} · {formatTime(m.createdAt)}
                   </p>
-                  <p>{m.body ?? '(attachment)'}</p>
+                  <p>{contentOf(m)}</p>
                 </li>
               ))}
             </ul>

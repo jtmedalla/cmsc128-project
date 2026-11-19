@@ -1,0 +1,23 @@
+# Triage
+
+Lets responders review reports. Read-only for now; editing arrives with #39.
+
+- API: `apps/api/src/triage/`
+- Web: `apps/web/src/components/report-details.tsx`, `apps/web/src/lib/reports.ts`
+- Schemas: `packages/shared/src/reports/`
+
+## Report details
+
+`GET /triage/reports/:id` returns one report as `reportDetailSchema`, for any signed-in user. It returns 400 for a malformed ID and 404 when no report has it.
+
+Unlike a feed item, the detail carries the resident's contact number, the victims and the conversation the report came from, oldest first. Keep it off public pages.
+
+`parse_confidence` and `message.attachments` are `jsonb`, so `ReportsService.findDetail` checks them against `parseConfidenceSchema` and `messageAttachmentsSchema` and returns null for a value of the wrong shape instead of failing the response.
+
+## Contracts
+
+| Schema                     | Shape                                                    |
+| -------------------------- | -------------------------------------------------------- |
+| `reportDetailSchema`       | One report as a responder reviews it                     |
+| `reportIdParamsSchema`     | `{ id }` route params for one report                     |
+| `messageAttachmentsSchema` | `message.attachments`, reduced to each attachment's type |
