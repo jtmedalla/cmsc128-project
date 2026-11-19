@@ -49,12 +49,19 @@ export async function findFeedItems(
       ...reportRelations,
       resident: { columns: { id: true, name: true } },
       victims: { columns: { id: true } },
+      // The card shows the message the report came from.
+      messages: {
+        columns: { body: true },
+        orderBy: (m, { asc }) => asc(m.createdAt),
+        limit: 1,
+      },
     },
   });
-  return rows.map(({ victims, parseConfidence, ...row }) => ({
+  return rows.map(({ victims, messages, parseConfidence, ...row }) => ({
     ...row,
     parseConfidence: checkConfidence(parseConfidence),
     victimCount: victims.length,
+    firstMessage: messages[0]?.body ?? null,
   }));
 }
 

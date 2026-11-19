@@ -50,9 +50,9 @@ const detail: ReportDetail = {
   updatedAt: at,
 };
 
-describe('GET /triage/reports/:id', () => {
+describe('/triage/reports', () => {
   let app: INestApplication;
-  const reports = { findDetail: vi.fn() };
+  const reports = { findDetail: vi.fn(), findFeed: vi.fn() };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -70,6 +70,7 @@ describe('GET /triage/reports/:id', () => {
 
   beforeEach(() => {
     reports.findDetail.mockReset();
+    reports.findFeed.mockReset();
   });
 
   afterAll(async () => {
@@ -97,5 +98,21 @@ describe('GET /triage/reports/:id', () => {
     );
     expect(res.status).toBe(400);
     expect(reports.findDetail).not.toHaveBeenCalled();
+  });
+
+  it('lists feed items with the first message', async () => {
+    const { resident, victims, messages, ...rest } = detail;
+    reports.findFeed.mockResolvedValue([
+      {
+        ...rest,
+        resident: { id: resident!.id, name: resident!.name },
+        victimCount: victims.length,
+        firstMessage: messages[0]!.body,
+      },
+    ]);
+    const res = await request(app.getHttpServer()).get('/triage/reports');
+    expect(res.status).toBe(200);
+    expect(res.body[0].firstMessage).toBe('tulong');
+    expect(res.body[0].createdAt).toBe(at.toISOString());
   });
 });

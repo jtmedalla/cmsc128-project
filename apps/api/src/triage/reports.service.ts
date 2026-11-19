@@ -1,10 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { ReportDetail } from '@repo/shared';
+import type { ReportDetail, ReportFeedItem } from '@repo/shared';
 import type { Database } from '../database/client.js';
 import { DB } from '../database/database.module.js';
 import {
   checkAttachments,
   checkConfidence,
+  findFeedItems,
   reportColumns,
   reportRelations,
 } from './feed.js';
@@ -12,6 +13,12 @@ import {
 @Injectable()
 export class ReportsService {
   constructor(@Inject(DB) private readonly db: Database) {}
+
+  /** Every report for the feed list, newest first. */
+  // TODO(#38): sort, filters and live updates.
+  findFeed(): Promise<ReportFeedItem[]> {
+    return findFeedItems(this.db);
+  }
 
   /** One report with everything a responder reviews, or null if none. */
   async findDetail(id: string): Promise<ReportDetail | null> {

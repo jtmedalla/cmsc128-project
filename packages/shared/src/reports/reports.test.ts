@@ -115,6 +115,7 @@ describe('reportFeedItemSchema', () => {
       parseConfidence: null,
       resident: { id: residentId, name: null },
       victimCount: 0,
+      firstMessage: null,
       createdAt: '2026-10-29T08:30:00.000Z',
       updatedAt: '2026-10-29T08:30:00.000Z',
     });
@@ -140,6 +141,7 @@ describe('reportFeedItemSchema', () => {
       parseConfidence: null,
       resident: null,
       victimCount: 0,
+      firstMessage: null,
       createdAt: '2026-10-29T08:30:00.000Z',
       updatedAt: '2026-10-29T08:30:00.000Z',
     });

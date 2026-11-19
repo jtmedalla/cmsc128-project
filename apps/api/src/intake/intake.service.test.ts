@@ -31,6 +31,7 @@ const item: ReportFeedItem = {
   parseConfidence: null,
   resident: { id, name: null },
   victimCount: 0,
+  firstMessage: null,
   createdAt,
   updatedAt: createdAt,
 };

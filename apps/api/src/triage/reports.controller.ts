@@ -1,9 +1,16 @@
 import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
-import { reportDetailSchema, reportIdParamsSchema } from '@repo/shared';
+import {
+  reportDetailSchema,
+  reportFeedItemSchema,
+  reportIdParamsSchema,
+} from '@repo/shared';
 import { createZodDto, ZodResponse } from 'nestjs-zod';
 import { ReportsService } from './reports.service.js';
 
-// codec: the method returns Dates; the serializer encodes them to ISO strings.
+// codec: the methods return Dates; the serializer encodes them to ISO strings.
+class ReportFeedItemDto extends createZodDto(reportFeedItemSchema, {
+  codec: true,
+}) {}
 class ReportDetailDto extends createZodDto(reportDetailSchema, {
   codec: true,
 }) {}
@@ -12,12 +19,19 @@ class ReportDetailDto extends createZodDto(reportDetailSchema, {
 class ReportIdParamsDto extends createZodDto(reportIdParamsSchema) {}
 
 /** Read-only for now; editing arrives with #39. */
+// TODO(PR #110 review): add @Roles(['responder', 'admin']) to both routes.
+// Blocked on confirming the sitemap's roles for /incidents (the doc isn't readable yet).
 @Controller('triage/reports')
 export class ReportsController {
   constructor(private readonly reports: ReportsService) {}
 
-  // TODO(PR #110 review): add @Roles(['responder', 'admin']). Blocked on
-  // confirming the sitemap's roles for /incidents/:id (the doc isn't readable yet).
+  /** The feed list for /dashboard/incidents. */
+  @Get()
+  @ZodResponse({ type: [ReportFeedItemDto] })
+  findAll() {
+    return this.reports.findFeed();
+  }
+
   @Get(':id')
   @ZodResponse({ type: ReportDetailDto })
   async findOne(@Param() { id }: ReportIdParamsDto) {

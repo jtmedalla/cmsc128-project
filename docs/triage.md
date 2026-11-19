@@ -6,6 +6,10 @@ Lets responders review reports. Read-only for now; editing arrives with #39.
 - Web: `apps/web/src/components/report-details.tsx`, `apps/web/src/lib/reports.ts`
 - Schemas: `packages/shared/src/reports/`
 
+## Report list
+
+`GET /triage/reports` returns every report as a `reportFeedItemSchema`, newest first, for any signed-in user. Each item carries `firstMessage`, the text of the message the report came from, for the feed card.
+
 ## Report details
 
 `GET /triage/reports/:id` returns one report as `reportDetailSchema`, for any signed-in user. It returns 400 for a malformed ID and 404 when no report has it.

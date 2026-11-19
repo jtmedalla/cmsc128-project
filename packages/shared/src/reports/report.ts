@@ -54,6 +54,8 @@ export const reportFeedItemSchema = z.object({
   /** Null when a responder logged the report for an unknown caller. */
   resident: z.object({ id: z.uuid(), name: z.string().nullable() }).nullable(),
   victimCount: z.int().min(0),
+  /** The message the report came from, for the feed card; null if none or attachment-only. */
+  firstMessage: z.string().nullable(),
   createdAt: stringToDate,
   updatedAt: stringToDate,
 });
@@ -69,9 +71,9 @@ export const messageAttachmentsSchema = z.array(z.object({ type: z.string() }));
  * One report as a signed-in responder reviews it. Unlike the feed item, it
  * carries the resident's contact number, so it must never reach a public page.
  */
-// victimCount is dropped: the detail carries the victims themselves.
+// The detail carries the victims and messages themselves, so it drops the feed's summaries.
 export const reportDetailSchema = reportFeedItemSchema
-  .omit({ victimCount: true })
+  .omit({ victimCount: true, firstMessage: true })
   .extend({
     resident: z
       .object({
