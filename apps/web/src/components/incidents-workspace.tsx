@@ -16,7 +16,7 @@ import { reportFeedQuery } from '@/lib/reports';
 export function IncidentsWorkspace() {
   return (
     // Fills the dashboard below its header (h-14) and padding (p-4) on large screens.
-    <div className="flex flex-col overflow-hidden rounded-xl border lg:h-[calc(100svh-5.5rem)]">
+    <div className="flex flex-col overflow-hidden lg:h-[calc(100svh-5.5rem)]">
       {/* Only Reports exists for now; Table and Kanban are shown disabled, as agreed. */}
       <Tabs value="reports">
         <TabsList variant="line" className="w-full border-b">
