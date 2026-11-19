@@ -31,6 +31,23 @@ Pass `newReport: true` to start a report even when one is open. The old report s
 
 After the first message, the bot asks for the details the report still lacks, one at a time, in `INTAKE_FIELDS` order:
 
+```mermaid
+flowchart TD
+    A(["Resident message"]) --> NR{"'New report'?"}
+    NR -->|Yes| NEW["Start a new report"]
+    NR -->|No| O{"Open report?"}
+    O -->|No| NEW
+    NEW --> ACK["RECEIVED_REPLY"] --> M
+    O -->|Yes| M{"Fields missing?"}
+    M -->|"Yes, just created"| ASK["Ask first missing field"]
+    M -->|"Yes, mid-intake"| ANS{"Message fits<br/>that field?"}
+    ANS -->|Yes| SAVE["Save answer"] --> M2{"Any left?"}
+    ANS -->|No| RETRY["RETRIES + same question"]
+    M2 -->|Yes| ASK
+    M2 -->|No| DONE["DONE_REPLY + 'New report'"]
+    M -->|No| FU["FOLLOW_UP_REPLY + 'New report'"]
+```
+
 | Field           | Asked as                                | Answer                                                   |
 | --------------- | --------------------------------------- | -------------------------------------------------------- |
 | `incidentType`  | What happened?                          | Tap or type an active incident type's name or code       |
