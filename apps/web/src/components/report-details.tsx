@@ -52,8 +52,8 @@ function ReportPanes({
       <section aria-label="Chat" className="flex min-h-0 flex-col">
         <h2 className="p-4 text-lg font-semibold">Chat</h2>
         <div className="min-h-48 flex-1 px-4 lg:overflow-y-auto">{chat}</div>
-        {/* TODO(responder messaging, issue not confirmed): enable replies.
-            Disabled for now so the layout matches the wireframe. */}
+        {/* TODO(#12): enable replies. #12 is the messaging epic; no task issue
+            covers replies yet. Disabled so the layout matches the wireframe. */}
         <div className="border-t p-3">
           <Input
             placeholder="Type your message"

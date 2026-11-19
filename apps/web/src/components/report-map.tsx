@@ -2,7 +2,8 @@
  * The details panel's map slot (Figma "map-section": 220px tall, 16px corners),
  * crossed out until a real map replaces the cross.
  */
-// TODO(map, issue not confirmed): render the report's location here.
+// TODO(#66): render the report's location here. #66 adds MapLibre for /map;
+// no issue covers this panel's map yet.
 export function ReportMap() {
   return (
     <div
