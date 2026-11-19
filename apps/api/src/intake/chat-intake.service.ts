@@ -16,6 +16,9 @@ export const RECEIVED_REPLY =
 export const DONE_REPLY =
   'Thank you. Responders have your report and may call you for details.';
 
+/** Starts another report, as a tap or typed in any case. */
+export const NEW_REPORT_CHOICE = 'New report';
+
 export const QUESTIONS: Record<IntakeField, string> = {
   incidentType: 'What happened?',
   barangay: 'Which barangay is it in?',
@@ -39,7 +42,8 @@ interface Turn {
 /**
  * Turns residents' chat messages into reports, then asks for the details the
  * report still lacks, one at a time. A message that isn't a report's first is
- * read as the answer to the question asked last.
+ * read as the answer to the question asked last. Sending
+ * {@link NEW_REPORT_CHOICE} starts another report.
  */
 @Injectable()
 export class ChatIntakeService implements OnModuleInit {
@@ -67,6 +71,7 @@ export class ChatIntakeService implements OnModuleInit {
     const { reportId, created } = await this.intake.receiveMessage({
       ...recorded,
       channel,
+      newReport: text.toLowerCase() === NEW_REPORT_CHOICE.toLowerCase(),
     });
     const turn = { channel, residentId: recorded.residentId, reportId };
     // TODO(#33): reply through confirmReport once it lands.
@@ -91,7 +96,7 @@ export class ChatIntakeService implements OnModuleInit {
     const [next] = missing;
     if (next) return this.ask(turn, next);
     // Thank once, right after the last answer, and stay quiet after that.
-    if (justChanged) await this.reply(turn, DONE_REPLY);
+    if (justChanged) await this.reply(turn, DONE_REPLY, [NEW_REPORT_CHOICE]);
   }
 
   /** Saves the answer; false if it doesn't fit the question. */

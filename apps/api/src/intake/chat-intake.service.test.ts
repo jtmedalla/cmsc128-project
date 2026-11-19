@@ -5,6 +5,7 @@ import type { BarangayService } from '../geo/barangay.service.js';
 import {
   ChatIntakeService,
   DONE_REPLY,
+  NEW_REPORT_CHOICE,
   QUESTIONS,
   RECEIVED_REPLY,
   RETRIES,
@@ -70,6 +71,7 @@ describe('ChatIntakeService', () => {
     expect(intake.receiveMessage).toHaveBeenCalledWith({
       ...recorded,
       channel: 'messenger',
+      newReport: false,
     });
   });
 
@@ -132,6 +134,27 @@ describe('ChatIntakeService', () => {
       '09171234567',
     );
     expect(sent()).toEqual([DONE_REPLY]);
+    expect(channels.send).toHaveBeenLastCalledWith(
+      'resident-1',
+      'messenger',
+      DONE_REPLY,
+      { ...options, choices: [NEW_REPORT_CHOICE] },
+    );
+  });
+
+  it('starts another report on request', async () => {
+    intake.receiveMessage.mockResolvedValue({
+      reportId: 'report-2',
+      created: true,
+    });
+    intake.missingFields.mockResolvedValue(['incidentType']);
+
+    await service.handle('messenger', recorded, 'new REPORT');
+
+    expect(intake.receiveMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ newReport: true }),
+    );
+    expect(sent()).toEqual([RECEIVED_REPLY, QUESTIONS.incidentType]);
   });
 
   it('stays quiet once everything is answered', async () => {

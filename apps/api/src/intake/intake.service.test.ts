@@ -111,4 +111,17 @@ describe('IntakeService.receiveMessage', () => {
     expect(insertReport).not.toHaveBeenCalled();
     expect(realtime.toDashboard).not.toHaveBeenCalled();
   });
+
+  it('starts a new report on request despite an open one', async () => {
+    vi.mocked(findOpenReport).mockResolvedValue(id);
+    vi.mocked(insertReport).mockResolvedValue({ id, trackingToken: 'tok' });
+    vi.mocked(findFeedItem).mockResolvedValue(item);
+
+    await expect(
+      intake.receiveMessage({ ...input, newReport: true }),
+    ).resolves.toEqual({ reportId: id, created: true });
+    expect(findOpenReport).not.toHaveBeenCalled();
+    expect(linkMessage).not.toHaveBeenCalled();
+    expect(insertReport).toHaveBeenCalledOnce();
+  });
 });

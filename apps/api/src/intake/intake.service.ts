@@ -25,6 +25,8 @@ export interface IncomingMessage {
   residentId: string;
   messageId: string;
   channel: SourceChannel;
+  /** Start a new report even if the resident has an open one. */
+  newReport?: boolean;
 }
 
 export interface ReceivedMessage {
@@ -53,18 +55,23 @@ export class IntakeService {
   /**
    * Files a resident's chat message under their open report, or starts a
    * pending report with it, so even a lone first message reaches the feed.
+   * With `newReport`, it always starts one; the old report then stops taking
+   * messages, since only the newest open report does.
    */
   async receiveMessage({
     residentId,
     messageId,
     channel,
+    newReport = false,
   }: IncomingMessage): Promise<ReceivedMessage> {
     const received = await this.db.transaction(async (tx) => {
       // Serializes a resident's messages so a burst opens one report.
       await tx.execute(
         sql`select pg_advisory_xact_lock(hashtext(${`intake:${residentId}`}))`,
       );
-      const open = await findOpenReport(tx, residentId, channel);
+      const open = newReport
+        ? null
+        : await findOpenReport(tx, residentId, channel);
       if (open) {
         await linkMessage(tx, messageId, open);
         return { reportId: open, created: false };
