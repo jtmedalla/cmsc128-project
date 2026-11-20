@@ -209,4 +209,35 @@ describe('channels', () => {
       externalId: 'm_out',
     });
   });
+
+  it('sends choices as Messenger quick replies', async () => {
+    log.findExternalId.mockResolvedValue('psid-1');
+    log.recordOutbound.mockResolvedValue('msg-4');
+
+    await channels.send('r-1', 'messenger', 'How serious is it?', {
+      reportId: 'report-1',
+      choices: ['Low', 'High'],
+    });
+
+    const [, init] = graph.mock.calls.find(
+      ([url, init]) => url.includes('/me/messages') && init?.method === 'POST',
+    )!;
+    expect(JSON.parse(init!.body as string)).toMatchObject({
+      recipient: { id: 'psid-1' },
+      message: {
+        text: 'How serious is it?',
+        quick_replies: [
+          { content_type: 'text', title: 'Low', payload: 'Low' },
+          { content_type: 'text', title: 'High', payload: 'High' },
+        ],
+      },
+    });
+    expect(log.recordOutbound).toHaveBeenCalledWith({
+      reportId: 'report-1',
+      residentId: 'r-1',
+      channel: 'messenger',
+      body: 'How serious is it?',
+      externalId: 'm_out',
+    });
+  });
 });

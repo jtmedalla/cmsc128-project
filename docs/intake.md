@@ -21,9 +21,47 @@ const { reportId, created } = await this.intake.receiveMessage({
 
 The first message creates a `pending` report straight away, so it reaches the feed even if the resident stops replying (US40). Later messages are linked to the same report while it's open: still `pending`, on the same channel, and the resident messaged about it in the last `OPEN_REPORT_MINUTES` (30). After that, the next message starts a new report. A per-resident lock makes a burst of messages open one report.
 
+Pass `newReport: true` to start a report even when one is open. The old report stops taking messages, since only the report holding the resident's latest message is open.
+
 `report:created` is emitted only when `created` is true.
 
-`ChatIntakeService` registers this as a `ChannelsService.onMessage` handler, so every resident message goes through it. It replies with `RECEIVED_REPLY` only when the message created a report; follow-ups get no reply.
+`ChatIntakeService` registers this as a `ChannelsService.onMessage` handler, so every resident message goes through it.
+
+## Questions
+
+After the first message, the bot asks for the details the report still lacks, one at a time, in `INTAKE_FIELDS` order:
+
+```mermaid
+flowchart TD
+    A(["Resident message"]) --> NR{"'New report'?"}
+    NR -->|Yes| NEW["Start a new report"]
+    NR -->|No| O{"Open report?"}
+    O -->|No| NEW
+    NEW --> ACK["RECEIVED_REPLY"] --> M
+    O -->|Yes| M{"Fields missing?"}
+    M -->|"Yes, just created"| ASK["Ask first missing field"]
+    M -->|"Yes, mid-intake"| ANS{"Message fits<br/>that field?"}
+    ANS -->|Yes| SAVE["Save answer"] --> M2{"Any left?"}
+    ANS -->|No| RETRY["retry + same question"]
+    M2 -->|Yes| ASK
+    M2 -->|No| DONE["DONE_REPLY + 'New report'"]
+    M -->|No| FU["FOLLOW_UP_REPLY + 'New report'"]
+```
+
+| Field           | Asked as                                | Answer                                                   |
+| --------------- | --------------------------------------- | -------------------------------------------------------- |
+| `incidentType`  | What happened?                          | Tap or type an active incident type's name or code       |
+| `barangay`      | Which barangay is it in?                | Typed; matched by `BarangayService.findByName`           |
+| `severity`      | How serious is it?                      | Tap or type a level (`parseSeverity`)                    |
+| `contactNumber` | What number can responders call you on? | PH mobile (`contactNumberSchema`); saved on the resident |
+
+Each field's question, retry text, choices and answer parsing live in `QUESTIONS` (`apps/api/src/intake/questions.ts`); add a field there and to `INTAKE_FIELDS`. No question state is stored. Each follow-up message answers the first field still missing (`IntakeService.missingFields`), so a field filled any other way is never asked. An answer that doesn't fit gets the question again. After the last answer the bot thanks the resident once, with a "New report" quick reply. Later messages stay on the report as updates (the victim's condition, say), and each gets `FOLLOW_UP_REPLY` with the same quick reply, so no message goes unanswered.
+
+### Another report
+
+Sending "New report" (`NEW_REPORT_CHOICE`, tapped or typed in any case) starts a new report through `receiveMessage({ newReport: true })`, even mid-intake. The bot then asks its questions from the start, skipping the contact number it already has. This lets one sender, such as a barangay official, report several incidents in a row.
+
+Answers go through `IntakeService.answer`, which emits `report:updated`. The contact number is saved on the resident, so their next report skips it.
 
 ### From known fields
 
