@@ -44,7 +44,7 @@ const advisories = [
     posted: 'Mar 28, 2026, 6:58 PM',
     title: 'Community Advisory #03',
     message:
-      'Stockpile clean drinking water and non-perishable food for at least three days. Coordinate with black captains.',
+      'Stockpile clean drinking water and non-perishable food for at least three days. Coordinate with barangay captains.',
   },
 ];
 
@@ -68,7 +68,7 @@ export function EmergencyBroadcasts() {
   );
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Page header */}
       <header className="flex h-[61px] items-center justify-between border-b border-border bg-card px-4 md:px-6">
         <h1 className="text-2xl font-semibold">Emergency Broadcasts</h1>
@@ -218,10 +218,7 @@ export function EmergencyBroadcasts() {
                   <Button
                     variant="secondary"
                     className="h-9 text-xs"
-                    onClick={() => {
-                      setTitle('');
-                      setMessage('');
-                    }}
+                    type="button"
                   >
                     Save as template
                   </Button>
@@ -247,6 +244,7 @@ export function EmergencyBroadcasts() {
             <div className="relative mb-2">
               <SearchIcon className="absolute left-2.5 top-1/2 size-3 -translate-y-1/2 text-muted-foreground" />
               <Input
+                aria-label="Filter recent advisories"
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
                 placeholder="Filter by type..."
@@ -280,7 +278,7 @@ export function EmergencyBroadcasts() {
           </CardContent>
         </Card>
       </div>
-    </main>
+    </div>
   );
 }
 
