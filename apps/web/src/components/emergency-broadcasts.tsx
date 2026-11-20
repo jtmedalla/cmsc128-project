@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import { HistoryIcon, SearchIcon } from 'lucide-react';
-
-import { Badge } from '@/components/ui/badge';
+import { SearchIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { BroadcastCard } from '@/components/broadcast-card';
+import { Label } from '@/components/ui/label';
 
 /**
  * Representative advisory records. These can later be replaced with TanStack
@@ -68,35 +67,12 @@ export function EmergencyBroadcasts() {
   );
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Page header */}
-      <header className="flex h-[61px] items-center justify-between border-b border-border bg-card px-4 md:px-6">
-        <h1 className="text-2xl font-semibold">Emergency Broadcasts</h1>
-
-        <div className="flex items-center gap-2">
-          <Badge
-            variant="secondary"
-            className="h-7 gap-1.5 rounded-md px-2.5 text-xs"
-          >
-            <span
-              aria-hidden="true"
-              className="size-1.5 rounded-full bg-success"
-            />
-            Active
-          </Badge>
-
-          <Button variant="ghost" size="sm" className="h-8 text-xs">
-            <HistoryIcon className="size-3.5" />
-            Broadcast history
-          </Button>
-        </div>
-      </header>
-
+    <div className="flex flex-col overflow-hidden lg:h-[calc(100svh-6.5rem)]">
       {/* Main responsive workspace */}
-      <div className="grid min-h-[calc(100vh-61px)] grid-cols-1 gap-3 p-3 lg:grid-cols-[minmax(340px,0.9fr)_minmax(360px,1.1fr)]">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 p-3 lg:grid-cols-[minmax(340px,0.9fr)_minmax(360px,1.1fr)]">
         {/* Compose area */}
-        <div className="flex flex-col gap-3">
-          <Card className="overflow-hidden rounded-lg py-0 shadow-sm">
+        <div className="rounded-lg flex flex-col gap-3 lg:min-h-0 lg:overflow-y-auto">
+          <Card className="overflow-hidden rounded-lg py-0 shadow-sm border border-border">
             <CardHeader className="pb-2 pt-3">
               <CardTitle className="text-xl font-semibold">
                 Target Area
@@ -111,21 +87,24 @@ export function EmergencyBroadcasts() {
                 className="mb-1 h-7 w-full justify-start rounded-md text-xs"
                 onClick={() => setAllResidents(false)}
               >
-                Draw a shape to select residents to target
+                Select target barangay/s
               </Button>
 
-              {/* CSS-rendered map avoids coupling the page to a third-party
-                  map library when only a selection preview is required. */}
               <div
-                className="relative h-[160px] overflow-hidden rounded-md border border-border bg-[linear-gradient(145deg,#bfccaa_0%,#b4c5ad_28%,#ccd5c2_55%,#9bb09d_100%)] md:h-[190px]"
+                className="relative h-[160px] overflow-hidden rounded-md border border-border bg-muted md:h-[190px]"
                 aria-label="Map showing the broadcast target area"
                 role="img"
               >
-                <div className="absolute left-[-12%] top-[32%] h-[7px] w-[125%] rotate-[14deg] bg-white/75 shadow-[0_1px_0_rgba(35,48,82,0.15)]" />
-                <div className="absolute left-[18%] top-[-12%] h-[130%] w-[6px] rotate-[24deg] bg-white/70" />
-                <div className="absolute right-[22%] top-[-18%] h-[140%] w-[5px] rotate-[-14deg] bg-white/60" />
-                <div className="absolute bottom-[18%] left-[-8%] h-[5px] w-[118%] -rotate-[7deg] bg-white/70" />
-                <div className="absolute right-[9%] top-[22%] size-2.5 rounded-full border-2 border-highlight bg-card shadow-sm" />
+                {/* TODO(#66): Replace with the MapLibre target-area map. */}
+                <div className="absolute inset-0 grid place-items-center">
+                  <div
+                    aria-hidden="true"
+                    className="relative h-20 w-32 border border-dashed border-muted-foreground/50"
+                  >
+                    <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 rotate-45 bg-muted-foreground/50" />
+                    <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 -rotate-45 bg-muted-foreground/50" />
+                  </div>
+                </div>
 
                 <div className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-card/95 px-2.5 py-2">
                   <Checkbox
@@ -136,18 +115,18 @@ export function EmergencyBroadcasts() {
                     }
                     className="size-3.5"
                   />
-                  <label
+                  <Label
                     htmlFor="all-residents"
                     className="cursor-pointer text-xs font-medium"
                   >
                     All residents (no selection)
-                  </label>
+                  </Label>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="rounded-lg py-0 shadow-sm">
+          <Card className="rounded-lg border border-border py-0 shadow-sm">
             <CardHeader className="pt-3">
               <CardTitle className="text-lg font-semibold">
                 Compose Advisory
@@ -161,12 +140,12 @@ export function EmergencyBroadcasts() {
 
               <div className="space-y-3">
                 <div className="space-y-1.5">
-                  <label
+                  <Label
                     htmlFor="broadcast-title"
                     className="text-base font-semibold"
                   >
                     Title
-                  </label>
+                  </Label>
                   <Input
                     id="broadcast-title"
                     value={title}
@@ -181,12 +160,12 @@ export function EmergencyBroadcasts() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label
+                  <Label
                     htmlFor="broadcast-message"
                     className="text-base font-semibold"
                   >
                     Message
-                  </label>
+                  </Label>
                   <Textarea
                     id="broadcast-message"
                     value={message}
@@ -230,7 +209,7 @@ export function EmergencyBroadcasts() {
         </div>
 
         {/* Recent advisories */}
-        <Card className="h-fit rounded-lg py-0 shadow-sm lg:h-[calc(100vh-85px)] lg:overflow-hidden">
+        <Card className="rounded-lg py-0 shadow-sm lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden">
           <CardHeader className="pb-2 pt-3">
             <CardTitle className="text-xl font-semibold">
               Recent Advisories
@@ -240,7 +219,7 @@ export function EmergencyBroadcasts() {
             </p>
           </CardHeader>
 
-          <CardContent className="pb-3">
+          <CardContent className="pb-3 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
             <div className="relative mb-2">
               <SearchIcon className="absolute left-2.5 top-1/2 size-3 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -252,7 +231,7 @@ export function EmergencyBroadcasts() {
               />
             </div>
 
-            <div className="space-y-2 lg:max-h-[calc(100vh-172px)] lg:overflow-y-auto lg:pr-0.5">
+            <div className="space-y-2 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-0.5">
               {visibleAdvisories.map((advisory) => (
                 <BroadcastCard
                   key={advisory.id}
@@ -281,5 +260,3 @@ export function EmergencyBroadcasts() {
     </div>
   );
 }
-
-export default EmergencyBroadcasts;
