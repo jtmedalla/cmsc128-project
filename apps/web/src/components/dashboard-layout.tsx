@@ -4,7 +4,7 @@ import {
   Outlet,
   useMatchRoute,
 } from '@tanstack/react-router';
-import { Activity, LayoutDashboard, TriangleAlert } from 'lucide-react';
+import { Activity, LayoutDashboard, TriangleAlert, Radio } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -36,6 +36,12 @@ const navItems = [
     label: 'Incidents',
     icon: TriangleAlert,
     fuzzy: true,
+  },
+  {
+    to: '/dashboard/emergency-broadcasts',
+    label: 'Emergency Broadcasts',
+    icon: Radio,
+    fuzzy: false,
   },
   {
     to: '/dashboard/health',

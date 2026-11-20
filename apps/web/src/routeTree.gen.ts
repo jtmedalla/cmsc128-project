@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ResidentIndexRouteImport } from './routes/_resident/index'
 import { Route as DashboardAppRouteRouteImport } from './routes/dashboard/_app/route'
 import { Route as DashboardAppIndexRouteImport } from './routes/dashboard/_app/index'
+import { Route as DashboardAppEmergencyBroadcastsRouteImport } from './routes/dashboard/_app/emergency-broadcasts'
 import { Route as DashboardAppHealthRouteImport } from './routes/dashboard/_app/health'
 import { Route as DashboardAppIncidentsRouteRouteImport } from './routes/dashboard/_app/incidents/route'
 import { Route as DashboardAppIncidentsIndexRouteImport } from './routes/dashboard/_app/incidents/index'
@@ -43,6 +44,12 @@ const DashboardAppIndexRoute = DashboardAppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardAppRouteRoute,
 } as any)
+const DashboardAppEmergencyBroadcastsRoute =
+  DashboardAppEmergencyBroadcastsRouteImport.update({
+    id: '/emergency-broadcasts',
+    path: '/emergency-broadcasts',
+    getParentRoute: () => DashboardAppRouteRoute,
+  } as any)
 const DashboardAppHealthRoute = DashboardAppHealthRouteImport.update({
   id: '/health',
   path: '/health',
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/dashboard': typeof DashboardAppRouteRouteWithChildren
   '/dashboard/incidents': typeof DashboardAppIncidentsRouteRouteWithChildren
+  '/dashboard/emergency-broadcasts': typeof DashboardAppEmergencyBroadcastsRoute
   '/dashboard/health': typeof DashboardAppHealthRoute
   '/dashboard/': typeof DashboardAppIndexRoute
   '/dashboard/incidents/$reportId': typeof DashboardAppIncidentsReportIdRoute
@@ -80,6 +88,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/': typeof ResidentIndexRoute
+  '/dashboard/emergency-broadcasts': typeof DashboardAppEmergencyBroadcastsRoute
   '/dashboard/health': typeof DashboardAppHealthRoute
   '/dashboard': typeof DashboardAppIndexRoute
   '/dashboard/incidents/$reportId': typeof DashboardAppIncidentsReportIdRoute
@@ -92,6 +101,7 @@ export interface FileRoutesById {
   '/dashboard/_app': typeof DashboardAppRouteRouteWithChildren
   '/_resident/': typeof ResidentIndexRoute
   '/dashboard/_app/incidents': typeof DashboardAppIncidentsRouteRouteWithChildren
+  '/dashboard/_app/emergency-broadcasts': typeof DashboardAppEmergencyBroadcastsRoute
   '/dashboard/_app/health': typeof DashboardAppHealthRoute
   '/dashboard/_app/': typeof DashboardAppIndexRoute
   '/dashboard/_app/incidents/$reportId': typeof DashboardAppIncidentsReportIdRoute
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/dashboard'
     | '/dashboard/incidents'
+    | '/dashboard/emergency-broadcasts'
     | '/dashboard/health'
     | '/dashboard/'
     | '/dashboard/incidents/$reportId'
@@ -112,6 +123,7 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/'
+    | '/dashboard/emergency-broadcasts'
     | '/dashboard/health'
     | '/dashboard'
     | '/dashboard/incidents/$reportId'
@@ -123,6 +135,7 @@ export interface FileRouteTypes {
     | '/dashboard/_app'
     | '/_resident/'
     | '/dashboard/_app/incidents'
+    | '/dashboard/_app/emergency-broadcasts'
     | '/dashboard/_app/health'
     | '/dashboard/_app/'
     | '/dashboard/_app/incidents/$reportId'
@@ -170,6 +183,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardAppIndexRouteImport
+      parentRoute: typeof DashboardAppRouteRoute
+    }
+    '/dashboard/_app/emergency-broadcasts': {
+      id: '/dashboard/_app/emergency-broadcasts'
+      path: '/emergency-broadcasts'
+      fullPath: '/dashboard/emergency-broadcasts'
+      preLoaderRoute: typeof DashboardAppEmergencyBroadcastsRouteImport
       parentRoute: typeof DashboardAppRouteRoute
     }
     '/dashboard/_app/health': {
@@ -233,12 +253,14 @@ const DashboardAppIncidentsRouteRouteWithChildren =
 
 interface DashboardAppRouteRouteChildren {
   DashboardAppIncidentsRouteRoute: typeof DashboardAppIncidentsRouteRouteWithChildren
+  DashboardAppEmergencyBroadcastsRoute: typeof DashboardAppEmergencyBroadcastsRoute
   DashboardAppHealthRoute: typeof DashboardAppHealthRoute
   DashboardAppIndexRoute: typeof DashboardAppIndexRoute
 }
 
 const DashboardAppRouteRouteChildren: DashboardAppRouteRouteChildren = {
   DashboardAppIncidentsRouteRoute: DashboardAppIncidentsRouteRouteWithChildren,
+  DashboardAppEmergencyBroadcastsRoute: DashboardAppEmergencyBroadcastsRoute,
   DashboardAppHealthRoute: DashboardAppHealthRoute,
   DashboardAppIndexRoute: DashboardAppIndexRoute,
 }
