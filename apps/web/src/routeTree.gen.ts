@@ -15,6 +15,9 @@ import { Route as ResidentIndexRouteImport } from './routes/_resident/index'
 import { Route as DashboardAppRouteRouteImport } from './routes/dashboard/_app/route'
 import { Route as DashboardAppIndexRouteImport } from './routes/dashboard/_app/index'
 import { Route as DashboardAppHealthRouteImport } from './routes/dashboard/_app/health'
+import { Route as DashboardAppIncidentsRouteRouteImport } from './routes/dashboard/_app/incidents/route'
+import { Route as DashboardAppIncidentsIndexRouteImport } from './routes/dashboard/_app/incidents/index'
+import { Route as DashboardAppIncidentsReportIdRouteImport } from './routes/dashboard/_app/incidents/$reportId'
 
 const ResidentRouteRoute = ResidentRouteRouteImport.update({
   id: '/_resident',
@@ -45,19 +48,42 @@ const DashboardAppHealthRoute = DashboardAppHealthRouteImport.update({
   path: '/health',
   getParentRoute: () => DashboardAppRouteRoute,
 } as any)
+const DashboardAppIncidentsRouteRoute =
+  DashboardAppIncidentsRouteRouteImport.update({
+    id: '/incidents',
+    path: '/incidents',
+    getParentRoute: () => DashboardAppRouteRoute,
+  } as any)
+const DashboardAppIncidentsIndexRoute =
+  DashboardAppIncidentsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DashboardAppIncidentsRouteRoute,
+  } as any)
+const DashboardAppIncidentsReportIdRoute =
+  DashboardAppIncidentsReportIdRouteImport.update({
+    id: '/$reportId',
+    path: '/$reportId',
+    getParentRoute: () => DashboardAppIncidentsRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof ResidentIndexRoute
   '/login': typeof LoginRoute
   '/dashboard': typeof DashboardAppRouteRouteWithChildren
+  '/dashboard/incidents': typeof DashboardAppIncidentsRouteRouteWithChildren
   '/dashboard/health': typeof DashboardAppHealthRoute
   '/dashboard/': typeof DashboardAppIndexRoute
+  '/dashboard/incidents/$reportId': typeof DashboardAppIncidentsReportIdRoute
+  '/dashboard/incidents/': typeof DashboardAppIncidentsIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/': typeof ResidentIndexRoute
   '/dashboard/health': typeof DashboardAppHealthRoute
   '/dashboard': typeof DashboardAppIndexRoute
+  '/dashboard/incidents/$reportId': typeof DashboardAppIncidentsReportIdRoute
+  '/dashboard/incidents': typeof DashboardAppIncidentsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -65,22 +91,42 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/dashboard/_app': typeof DashboardAppRouteRouteWithChildren
   '/_resident/': typeof ResidentIndexRoute
+  '/dashboard/_app/incidents': typeof DashboardAppIncidentsRouteRouteWithChildren
   '/dashboard/_app/health': typeof DashboardAppHealthRoute
   '/dashboard/_app/': typeof DashboardAppIndexRoute
+  '/dashboard/_app/incidents/$reportId': typeof DashboardAppIncidentsReportIdRoute
+  '/dashboard/_app/incidents/': typeof DashboardAppIncidentsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/dashboard' | '/dashboard/health' | '/dashboard/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/dashboard'
+    | '/dashboard/incidents'
+    | '/dashboard/health'
+    | '/dashboard/'
+    | '/dashboard/incidents/$reportId'
+    | '/dashboard/incidents/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/' | '/dashboard/health' | '/dashboard'
+  to:
+    | '/login'
+    | '/'
+    | '/dashboard/health'
+    | '/dashboard'
+    | '/dashboard/incidents/$reportId'
+    | '/dashboard/incidents'
   id:
     | '__root__'
     | '/_resident'
     | '/login'
     | '/dashboard/_app'
     | '/_resident/'
+    | '/dashboard/_app/incidents'
     | '/dashboard/_app/health'
     | '/dashboard/_app/'
+    | '/dashboard/_app/incidents/$reportId'
+    | '/dashboard/_app/incidents/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -133,6 +179,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAppHealthRouteImport
       parentRoute: typeof DashboardAppRouteRoute
     }
+    '/dashboard/_app/incidents': {
+      id: '/dashboard/_app/incidents'
+      path: '/incidents'
+      fullPath: '/dashboard/incidents'
+      preLoaderRoute: typeof DashboardAppIncidentsRouteRouteImport
+      parentRoute: typeof DashboardAppRouteRoute
+    }
+    '/dashboard/_app/incidents/': {
+      id: '/dashboard/_app/incidents/'
+      path: '/'
+      fullPath: '/dashboard/incidents/'
+      preLoaderRoute: typeof DashboardAppIncidentsIndexRouteImport
+      parentRoute: typeof DashboardAppIncidentsRouteRoute
+    }
+    '/dashboard/_app/incidents/$reportId': {
+      id: '/dashboard/_app/incidents/$reportId'
+      path: '/$reportId'
+      fullPath: '/dashboard/incidents/$reportId'
+      preLoaderRoute: typeof DashboardAppIncidentsReportIdRouteImport
+      parentRoute: typeof DashboardAppIncidentsRouteRoute
+    }
   }
 }
 
@@ -148,12 +215,30 @@ const ResidentRouteRouteWithChildren = ResidentRouteRoute._addFileChildren(
   ResidentRouteRouteChildren,
 )
 
+interface DashboardAppIncidentsRouteRouteChildren {
+  DashboardAppIncidentsReportIdRoute: typeof DashboardAppIncidentsReportIdRoute
+  DashboardAppIncidentsIndexRoute: typeof DashboardAppIncidentsIndexRoute
+}
+
+const DashboardAppIncidentsRouteRouteChildren: DashboardAppIncidentsRouteRouteChildren =
+  {
+    DashboardAppIncidentsReportIdRoute: DashboardAppIncidentsReportIdRoute,
+    DashboardAppIncidentsIndexRoute: DashboardAppIncidentsIndexRoute,
+  }
+
+const DashboardAppIncidentsRouteRouteWithChildren =
+  DashboardAppIncidentsRouteRoute._addFileChildren(
+    DashboardAppIncidentsRouteRouteChildren,
+  )
+
 interface DashboardAppRouteRouteChildren {
+  DashboardAppIncidentsRouteRoute: typeof DashboardAppIncidentsRouteRouteWithChildren
   DashboardAppHealthRoute: typeof DashboardAppHealthRoute
   DashboardAppIndexRoute: typeof DashboardAppIndexRoute
 }
 
 const DashboardAppRouteRouteChildren: DashboardAppRouteRouteChildren = {
+  DashboardAppIncidentsRouteRoute: DashboardAppIncidentsRouteRouteWithChildren,
   DashboardAppHealthRoute: DashboardAppHealthRoute,
   DashboardAppIndexRoute: DashboardAppIndexRoute,
 }

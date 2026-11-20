@@ -11,8 +11,9 @@ import type { Database } from '../database/client.js';
 import { DB } from '../database/database.module.js';
 import { incidentType, resident } from '../database/schema/index.js';
 import { RealtimeService } from '../realtime/realtime.service.js';
+// The feed belongs to triage (docs/intake.md, docs/realtime.md); intake only pushes new reports to it.
+import { findFeedItem } from '../triage/feed.js';
 import {
-  findFeedItem,
   findMissingFields,
   findOpenReport,
   type IntakeAnswers,

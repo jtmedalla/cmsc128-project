@@ -1,12 +1,11 @@
 import {
   INTAKE_FIELDS,
   type IntakeField,
-  type ReportFeedItem,
   type ReportInput,
   reportInputSchema,
   type SourceChannel,
 } from '@repo/shared';
-import { and, desc, eq, gt, inArray, type SQL, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, inArray, sql } from 'drizzle-orm';
 import type { Database } from '../database/client.js';
 import { message, report, victim } from '../database/schema/index.js';
 
@@ -139,40 +138,4 @@ export async function findMissingFields(
     contactNumber: row.resident?.contactNumber,
   };
   return INTAKE_FIELDS.filter((field) => known[field] == null);
-}
-
-/** Reports as the triage feed shows them, newest first. */
-export async function findFeedItems(
-  db: Database,
-  where?: SQL,
-): Promise<ReportFeedItem[]> {
-  const rows = await db.query.report.findMany({
-    where,
-    orderBy: (r, { desc }) => desc(r.createdAt),
-    columns: {
-      trackingToken: false,
-      residentId: false,
-      createdBy: false,
-      reviewedBy: false,
-      duplicateOfId: false,
-      incidentTypeId: false,
-      barangayId: false,
-    },
-    with: {
-      incidentType: { columns: { id: true, code: true, name: true } },
-      barangay: { columns: { id: true, name: true } },
-      resident: { columns: { id: true, name: true } },
-      victims: { columns: { id: true } },
-    },
-  });
-  return rows.map(({ victims, parseConfidence, ...row }) => ({
-    ...row,
-    parseConfidence: parseConfidence as ReportFeedItem['parseConfidence'],
-    victimCount: victims.length,
-  }));
-}
-
-export async function findFeedItem(db: Database, id: string) {
-  const [item] = await findFeedItems(db, eq(report.id, id));
-  return item ?? null;
 }
