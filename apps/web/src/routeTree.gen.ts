@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ResidentIndexRouteImport } from './routes/_resident/index'
 import { Route as DashboardAppRouteRouteImport } from './routes/dashboard/_app/route'
 import { Route as DashboardAppIndexRouteImport } from './routes/dashboard/_app/index'
+import { Route as DashboardAppHealthRouteImport } from './routes/dashboard/_app/health'
 
 const ResidentRouteRoute = ResidentRouteRouteImport.update({
   id: '/_resident',
@@ -39,16 +40,23 @@ const DashboardAppIndexRoute = DashboardAppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardAppRouteRoute,
 } as any)
+const DashboardAppHealthRoute = DashboardAppHealthRouteImport.update({
+  id: '/health',
+  path: '/health',
+  getParentRoute: () => DashboardAppRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof ResidentIndexRoute
   '/login': typeof LoginRoute
   '/dashboard': typeof DashboardAppRouteRouteWithChildren
+  '/dashboard/health': typeof DashboardAppHealthRoute
   '/dashboard/': typeof DashboardAppIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/': typeof ResidentIndexRoute
+  '/dashboard/health': typeof DashboardAppHealthRoute
   '/dashboard': typeof DashboardAppIndexRoute
 }
 export interface FileRoutesById {
@@ -57,19 +65,21 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/dashboard/_app': typeof DashboardAppRouteRouteWithChildren
   '/_resident/': typeof ResidentIndexRoute
+  '/dashboard/_app/health': typeof DashboardAppHealthRoute
   '/dashboard/_app/': typeof DashboardAppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/dashboard' | '/dashboard/'
+  fullPaths: '/' | '/login' | '/dashboard' | '/dashboard/health' | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/' | '/dashboard'
+  to: '/login' | '/' | '/dashboard/health' | '/dashboard'
   id:
     | '__root__'
     | '/_resident'
     | '/login'
     | '/dashboard/_app'
     | '/_resident/'
+    | '/dashboard/_app/health'
     | '/dashboard/_app/'
   fileRoutesById: FileRoutesById
 }
@@ -116,6 +126,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAppIndexRouteImport
       parentRoute: typeof DashboardAppRouteRoute
     }
+    '/dashboard/_app/health': {
+      id: '/dashboard/_app/health'
+      path: '/health'
+      fullPath: '/dashboard/health'
+      preLoaderRoute: typeof DashboardAppHealthRouteImport
+      parentRoute: typeof DashboardAppRouteRoute
+    }
   }
 }
 
@@ -132,10 +149,12 @@ const ResidentRouteRouteWithChildren = ResidentRouteRoute._addFileChildren(
 )
 
 interface DashboardAppRouteRouteChildren {
+  DashboardAppHealthRoute: typeof DashboardAppHealthRoute
   DashboardAppIndexRoute: typeof DashboardAppIndexRoute
 }
 
 const DashboardAppRouteRouteChildren: DashboardAppRouteRouteChildren = {
+  DashboardAppHealthRoute: DashboardAppHealthRoute,
   DashboardAppIndexRoute: DashboardAppIndexRoute,
 }
 
