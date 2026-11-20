@@ -1,7 +1,6 @@
 /**
  * Sample reports for dashboard development. Run with `pnpm --filter api
- * db:seed` after migrating. If it already ran on this database, it only fills
- * in missing sample contact numbers.
+ * db:seed` after migrating. Skips if it already ran on this database.
  */
 import type {
   ParseConfidence,
@@ -9,7 +8,7 @@ import type {
   SeverityLevel,
   VictimInput,
 } from '@repo/shared';
-import { and, eq, isNull, like } from 'drizzle-orm';
+import { and, eq, like } from 'drizzle-orm';
 import { env } from '../config/env.js';
 import { insertReport } from '../intake/reports.js';
 import { db, pool } from './client.js';
@@ -127,46 +126,6 @@ const samples: Sample[] = [
   },
 ];
 
-/** Fake but well-formed PH mobile numbers, unique per sample. */
-function contactNumberOf(i: number) {
-  return `0917000${String(i).padStart(4, '0')}`;
-}
-
-/**
- * Databases seeded before residents had contact numbers: give each sample
- * resident its number. Never overwrites one that's already set.
- */
-async function fillContactNumbers() {
-  let filled = 0;
-  for (const i of samples.keys()) {
-    // The sample's resident, found by its seeded web identity.
-    const [channel] = await db
-      .select({ residentId: residentChannel.residentId })
-      .from(residentChannel)
-      .where(
-        and(
-          eq(residentChannel.channel, 'web'),
-          eq(residentChannel.externalId, `${SEED_PREFIX}${i}`),
-        ),
-      )
-      .limit(1);
-    if (!channel) continue;
-
-    const updated = await db
-      .update(resident)
-      .set({ contactNumber: contactNumberOf(i) })
-      .where(
-        and(
-          eq(resident.id, channel.residentId),
-          isNull(resident.contactNumber),
-        ),
-      )
-      .returning({ id: resident.id });
-    filled += updated.length;
-  }
-  return filled;
-}
-
 async function seed() {
   if (env.NODE_ENV === 'production') {
     throw new Error('Refusing to seed sample reports in production');
@@ -183,10 +142,7 @@ async function seed() {
     )
     .limit(1);
   if (existing) {
-    const filled = await fillContactNumbers();
-    console.log(
-      `Sample reports already seeded; filled ${filled} missing contact numbers.`,
-    );
+    console.log('Sample reports already seeded; skipping.');
     return;
   }
 
@@ -208,7 +164,8 @@ async function seed() {
       .insert(resident)
       .values({
         name: sample.resident,
-        contactNumber: contactNumberOf(i),
+        // Fake but well-formed PH mobile numbers, unique per sample.
+        contactNumber: `0917000${String(i).padStart(4, '0')}`,
         createdAt,
       })
       .returning({ id: resident.id });

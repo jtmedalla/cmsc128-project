@@ -122,4 +122,4 @@ Emit feed items encoded (`reportFeedItemSchema.encode(item)`) so dates go out as
 pnpm --filter api db:seed
 ```
 
-Adds eight sample reports across statuses, incident types and barangays, each with a resident and its raw message. If it already ran, it only fills in contact numbers missing from sample residents (databases seeded before they existed), never overwriting one. Refuses when `NODE_ENV` is `production`. Seeded residents have `web` identities named `seed-<n>`.
+Adds eight sample reports across statuses, incident types and barangays, each with a resident and its raw message. Skips if it already ran and refuses when `NODE_ENV` is `production`. Seeded residents have `web` identities named `seed-<n>`.
