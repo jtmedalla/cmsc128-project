@@ -8,9 +8,8 @@ describe('EmergencyBroadcasts', () => {
   it('renders the broadcast workspace and recent advisories', () => {
     render(<EmergencyBroadcasts />);
 
-    expect(
-      screen.getByRole('heading', { name: 'Emergency Broadcasts' }),
-    ).toBeDefined();
+    expect(screen.getByText('Target Area')).toBeDefined();
+    expect(screen.getByText('Compose Advisory')).toBeDefined();
     expect(screen.getByText('Recent Advisories')).toBeDefined();
     expect(
       screen.getByRole('heading', { name: 'Pre-Evacuation Advisory' }),
@@ -23,7 +22,7 @@ describe('EmergencyBroadcasts', () => {
   it('filters recent advisories', () => {
     render(<EmergencyBroadcasts />);
 
-    fireEvent.change(screen.getByPlaceholderText('Filter by type...'), {
+    fireEvent.change(screen.getByLabelText('Filter recent advisories'), {
       target: { value: 'Road monitoring' },
     });
 
