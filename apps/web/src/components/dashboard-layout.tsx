@@ -4,7 +4,7 @@ import {
   Outlet,
   useMatchRoute,
 } from '@tanstack/react-router';
-import { Activity, LayoutDashboard } from 'lucide-react';
+import { Activity, LayoutDashboard, UsersIcon } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -30,6 +30,7 @@ const route = getRouteApi('/dashboard/_app');
 const navItems = [
   { to: '/dashboard', label: 'Home', icon: LayoutDashboard },
   { to: '/dashboard/health', label: 'System status', icon: Activity },
+  { to: '/dashboard/residents', label: 'Residents', icon: UsersIcon },
 ] as const;
 
 export function DashboardLayout() {
