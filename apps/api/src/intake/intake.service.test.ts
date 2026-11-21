@@ -1,17 +1,22 @@
 import type { ReportFeedItem } from '@repo/shared';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Database } from '../database/client.js';
 import type { RealtimeService } from '../realtime/realtime.service.js';
 import type { ReportsService } from '../triage/reports.service.js';
 import { IntakeService } from './intake.service.js';
-import { findOpenReport, insertReport, linkMessage } from './reports.js';
+import type { IntakeRepository } from './intake.repository.js';
 
 vi.mock('../config/env.js', () => ({ env: {} }));
-vi.mock('./reports.js', () => ({
+
+/** Intake's data access; transactions run the callback on `tx`. */
+const tx = {};
+const repository = {
+  transaction: vi.fn((run: (t: typeof tx) => unknown) => run(tx)),
+  lock: vi.fn(),
   insertReport: vi.fn(),
   findOpenReport: vi.fn(),
   linkMessage: vi.fn(),
-}));
+};
+const asRepository = repository as unknown as IntakeRepository;
 
 /** Triage's feed lookup, which intake calls to push new reports. */
 const reports = { findFeedItem: vi.fn() };
@@ -41,11 +46,11 @@ const item: ReportFeedItem = {
 
 describe('IntakeService.createReport', () => {
   it('saves the report and pushes it to the feed', async () => {
-    vi.mocked(insertReport).mockResolvedValue({ id, trackingToken: 'tok' });
+    repository.insertReport.mockResolvedValue({ id, trackingToken: 'tok' });
     reports.findFeedItem.mockResolvedValue(item);
     const realtime = { toDashboard: vi.fn() };
     const intake = new IntakeService(
-      {} as Database,
+      asRepository,
       realtime as unknown as RealtimeService,
       asReports,
     );
@@ -55,7 +60,7 @@ describe('IntakeService.createReport', () => {
       id,
       trackingToken: 'tok',
     });
-    expect(insertReport).toHaveBeenCalledWith({}, input);
+    expect(repository.insertReport).toHaveBeenCalledWith(input);
     expect(realtime.toDashboard).toHaveBeenCalledWith('report:created', {
       ...item,
       createdAt: createdAt.toISOString(),
@@ -65,13 +70,9 @@ describe('IntakeService.createReport', () => {
 });
 
 describe('IntakeService.receiveMessage', () => {
-  const tx = { execute: vi.fn() };
-  const db = {
-    transaction: (run: (t: typeof tx) => unknown) => run(tx),
-  } as unknown as Database;
   const realtime = { toDashboard: vi.fn() };
   const intake = new IntakeService(
-    db,
+    asRepository,
     realtime as unknown as RealtimeService,
     asReports,
   );
@@ -84,20 +85,23 @@ describe('IntakeService.receiveMessage', () => {
   afterEach(() => vi.clearAllMocks());
 
   it('starts a pending report from the first message', async () => {
-    vi.mocked(findOpenReport).mockResolvedValue(null);
-    vi.mocked(insertReport).mockResolvedValue({ id, trackingToken: 'tok' });
+    repository.findOpenReport.mockResolvedValue(null);
+    repository.insertReport.mockResolvedValue({ id, trackingToken: 'tok' });
     reports.findFeedItem.mockResolvedValue(item);
 
     await expect(intake.receiveMessage(input)).resolves.toEqual({
       reportId: id,
       created: true,
     });
-    expect(tx.execute).toHaveBeenCalledOnce();
-    expect(insertReport).toHaveBeenCalledWith(tx, {
-      residentId: id,
-      sourceChannel: 'messenger',
-      messageIds: [input.messageId],
-    });
+    expect(repository.lock).toHaveBeenCalledWith(`intake:${id}`, tx);
+    expect(repository.insertReport).toHaveBeenCalledWith(
+      {
+        residentId: id,
+        sourceChannel: 'messenger',
+        messageIds: [input.messageId],
+      },
+      tx,
+    );
     expect(realtime.toDashboard).toHaveBeenCalledWith(
       'report:created',
       expect.objectContaining({ id }),
@@ -105,28 +109,32 @@ describe('IntakeService.receiveMessage', () => {
   });
 
   it('files later messages under the open report', async () => {
-    vi.mocked(findOpenReport).mockResolvedValue(id);
+    repository.findOpenReport.mockResolvedValue(id);
 
     await expect(intake.receiveMessage(input)).resolves.toEqual({
       reportId: id,
       created: false,
     });
-    expect(findOpenReport).toHaveBeenCalledWith(tx, id, 'messenger');
-    expect(linkMessage).toHaveBeenCalledWith(tx, input.messageId, id);
-    expect(insertReport).not.toHaveBeenCalled();
+    expect(repository.findOpenReport).toHaveBeenCalledWith(id, 'messenger', tx);
+    expect(repository.linkMessage).toHaveBeenCalledWith(
+      input.messageId,
+      id,
+      tx,
+    );
+    expect(repository.insertReport).not.toHaveBeenCalled();
     expect(realtime.toDashboard).not.toHaveBeenCalled();
   });
 
   it('starts a new report on request despite an open one', async () => {
-    vi.mocked(findOpenReport).mockResolvedValue(id);
-    vi.mocked(insertReport).mockResolvedValue({ id, trackingToken: 'tok' });
+    repository.findOpenReport.mockResolvedValue(id);
+    repository.insertReport.mockResolvedValue({ id, trackingToken: 'tok' });
     reports.findFeedItem.mockResolvedValue(item);
 
     await expect(
       intake.receiveMessage({ ...input, newReport: true }),
     ).resolves.toEqual({ reportId: id, created: true });
-    expect(findOpenReport).not.toHaveBeenCalled();
-    expect(linkMessage).not.toHaveBeenCalled();
-    expect(insertReport).toHaveBeenCalledOnce();
+    expect(repository.findOpenReport).not.toHaveBeenCalled();
+    expect(repository.linkMessage).not.toHaveBeenCalled();
+    expect(repository.insertReport).toHaveBeenCalledOnce();
   });
 });
