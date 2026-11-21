@@ -19,7 +19,6 @@ import { Route as ResidentInfoHotlinesRouteImport } from './routes/_resident/inf
 import { Route as ResidentStatusTokenRouteImport } from './routes/_resident/status/$token'
 import { Route as DashboardAppIndexRouteImport } from './routes/dashboard/_app/index'
 import { Route as DashboardAppAdminRouteRouteImport } from './routes/dashboard/_app/admin/route'
-import { Route as DashboardAppEmergencyBroadcastsRouteImport } from './routes/dashboard/_app/emergency-broadcasts'
 import { Route as DashboardAppExportRouteImport } from './routes/dashboard/_app/export'
 import { Route as DashboardAppHealthRouteImport } from './routes/dashboard/_app/health'
 import { Route as DashboardAppHelpRouteImport } from './routes/dashboard/_app/help'
@@ -28,6 +27,7 @@ import { Route as DashboardAppAdminIndexRouteImport } from './routes/dashboard/_
 import { Route as DashboardAppAdminAgenciesRouteImport } from './routes/dashboard/_app/admin/agencies'
 import { Route as DashboardAppAdminIncidentTypesRouteImport } from './routes/dashboard/_app/admin/incident-types'
 import { Route as DashboardAppAdminUsersRouteImport } from './routes/dashboard/_app/admin/users'
+import { Route as DashboardAppBroadcastsIndexRouteImport } from './routes/dashboard/_app/broadcasts/index'
 import { Route as DashboardAppBroadcastsBroadcastIdRouteImport } from './routes/dashboard/_app/broadcasts/$broadcastId'
 import { Route as DashboardAppIncidentsIndexRouteImport } from './routes/dashboard/_app/incidents/index'
 import { Route as DashboardAppIncidentsReportIdRouteImport } from './routes/dashboard/_app/incidents/$reportId'
@@ -83,12 +83,6 @@ const DashboardAppAdminRouteRoute = DashboardAppAdminRouteRouteImport.update({
   path: '/admin',
   getParentRoute: () => DashboardAppRouteRoute,
 } as any)
-const DashboardAppEmergencyBroadcastsRoute =
-  DashboardAppEmergencyBroadcastsRouteImport.update({
-    id: '/emergency-broadcasts',
-    path: '/emergency-broadcasts',
-    getParentRoute: () => DashboardAppRouteRoute,
-  } as any)
 const DashboardAppExportRoute = DashboardAppExportRouteImport.update({
   id: '/export',
   path: '/export',
@@ -131,6 +125,12 @@ const DashboardAppAdminUsersRoute = DashboardAppAdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => DashboardAppAdminRouteRoute,
 } as any)
+const DashboardAppBroadcastsIndexRoute =
+  DashboardAppBroadcastsIndexRouteImport.update({
+    id: '/broadcasts/',
+    path: '/broadcasts/',
+    getParentRoute: () => DashboardAppRouteRoute,
+  } as any)
 const DashboardAppBroadcastsBroadcastIdRoute =
   DashboardAppBroadcastsBroadcastIdRouteImport.update({
     id: '/broadcasts/$broadcastId',
@@ -170,7 +170,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/admin': typeof DashboardAppAdminRouteRouteWithChildren
   '/info/hotlines': typeof ResidentInfoHotlinesRoute
   '/status/$token': typeof ResidentStatusTokenRoute
-  '/dashboard/emergency-broadcasts': typeof DashboardAppEmergencyBroadcastsRoute
   '/dashboard/export': typeof DashboardAppExportRoute
   '/dashboard/health': typeof DashboardAppHealthRoute
   '/dashboard/help': typeof DashboardAppHelpRoute
@@ -184,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/incidents/$reportId': typeof DashboardAppIncidentsReportIdRoute
   '/dashboard/residents/$residentId': typeof DashboardAppResidentsResidentIdRoute
   '/dashboard/admin/': typeof DashboardAppAdminIndexRoute
+  '/dashboard/broadcasts/': typeof DashboardAppBroadcastsIndexRoute
   '/dashboard/incidents/': typeof DashboardAppIncidentsIndexRoute
   '/dashboard/residents/': typeof DashboardAppResidentsIndexRoute
 }
@@ -193,7 +193,6 @@ export interface FileRoutesByTo {
   '/': typeof ResidentIndexRoute
   '/info/hotlines': typeof ResidentInfoHotlinesRoute
   '/status/$token': typeof ResidentStatusTokenRoute
-  '/dashboard/emergency-broadcasts': typeof DashboardAppEmergencyBroadcastsRoute
   '/dashboard/export': typeof DashboardAppExportRoute
   '/dashboard/health': typeof DashboardAppHealthRoute
   '/dashboard/help': typeof DashboardAppHelpRoute
@@ -207,6 +206,7 @@ export interface FileRoutesByTo {
   '/dashboard/incidents/$reportId': typeof DashboardAppIncidentsReportIdRoute
   '/dashboard/residents/$residentId': typeof DashboardAppResidentsResidentIdRoute
   '/dashboard/admin': typeof DashboardAppAdminIndexRoute
+  '/dashboard/broadcasts': typeof DashboardAppBroadcastsIndexRoute
   '/dashboard/incidents': typeof DashboardAppIncidentsIndexRoute
   '/dashboard/residents': typeof DashboardAppResidentsIndexRoute
 }
@@ -220,7 +220,6 @@ export interface FileRoutesById {
   '/dashboard/_app/admin': typeof DashboardAppAdminRouteRouteWithChildren
   '/_resident/info/hotlines': typeof ResidentInfoHotlinesRoute
   '/_resident/status/$token': typeof ResidentStatusTokenRoute
-  '/dashboard/_app/emergency-broadcasts': typeof DashboardAppEmergencyBroadcastsRoute
   '/dashboard/_app/export': typeof DashboardAppExportRoute
   '/dashboard/_app/health': typeof DashboardAppHealthRoute
   '/dashboard/_app/help': typeof DashboardAppHelpRoute
@@ -234,6 +233,7 @@ export interface FileRoutesById {
   '/dashboard/_app/incidents/$reportId': typeof DashboardAppIncidentsReportIdRoute
   '/dashboard/_app/residents/$residentId': typeof DashboardAppResidentsResidentIdRoute
   '/dashboard/_app/admin/': typeof DashboardAppAdminIndexRoute
+  '/dashboard/_app/broadcasts/': typeof DashboardAppBroadcastsIndexRoute
   '/dashboard/_app/incidents/': typeof DashboardAppIncidentsIndexRoute
   '/dashboard/_app/residents/': typeof DashboardAppResidentsIndexRoute
 }
@@ -247,7 +247,6 @@ export interface FileRouteTypes {
     | '/dashboard/admin'
     | '/info/hotlines'
     | '/status/$token'
-    | '/dashboard/emergency-broadcasts'
     | '/dashboard/export'
     | '/dashboard/health'
     | '/dashboard/help'
@@ -261,6 +260,7 @@ export interface FileRouteTypes {
     | '/dashboard/incidents/$reportId'
     | '/dashboard/residents/$residentId'
     | '/dashboard/admin/'
+    | '/dashboard/broadcasts/'
     | '/dashboard/incidents/'
     | '/dashboard/residents/'
   fileRoutesByTo: FileRoutesByTo
@@ -270,7 +270,6 @@ export interface FileRouteTypes {
     | '/'
     | '/info/hotlines'
     | '/status/$token'
-    | '/dashboard/emergency-broadcasts'
     | '/dashboard/export'
     | '/dashboard/health'
     | '/dashboard/help'
@@ -284,6 +283,7 @@ export interface FileRouteTypes {
     | '/dashboard/incidents/$reportId'
     | '/dashboard/residents/$residentId'
     | '/dashboard/admin'
+    | '/dashboard/broadcasts'
     | '/dashboard/incidents'
     | '/dashboard/residents'
   id:
@@ -296,7 +296,6 @@ export interface FileRouteTypes {
     | '/dashboard/_app/admin'
     | '/_resident/info/hotlines'
     | '/_resident/status/$token'
-    | '/dashboard/_app/emergency-broadcasts'
     | '/dashboard/_app/export'
     | '/dashboard/_app/health'
     | '/dashboard/_app/help'
@@ -310,6 +309,7 @@ export interface FileRouteTypes {
     | '/dashboard/_app/incidents/$reportId'
     | '/dashboard/_app/residents/$residentId'
     | '/dashboard/_app/admin/'
+    | '/dashboard/_app/broadcasts/'
     | '/dashboard/_app/incidents/'
     | '/dashboard/_app/residents/'
   fileRoutesById: FileRoutesById
@@ -392,13 +392,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAppAdminRouteRouteImport
       parentRoute: typeof DashboardAppRouteRoute
     }
-    '/dashboard/_app/emergency-broadcasts': {
-      id: '/dashboard/_app/emergency-broadcasts'
-      path: '/emergency-broadcasts'
-      fullPath: '/dashboard/emergency-broadcasts'
-      preLoaderRoute: typeof DashboardAppEmergencyBroadcastsRouteImport
-      parentRoute: typeof DashboardAppRouteRoute
-    }
     '/dashboard/_app/export': {
       id: '/dashboard/_app/export'
       path: '/export'
@@ -454,6 +447,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/admin/users'
       preLoaderRoute: typeof DashboardAppAdminUsersRouteImport
       parentRoute: typeof DashboardAppAdminRouteRoute
+    }
+    '/dashboard/_app/broadcasts/': {
+      id: '/dashboard/_app/broadcasts/'
+      path: '/broadcasts'
+      fullPath: '/dashboard/broadcasts/'
+      preLoaderRoute: typeof DashboardAppBroadcastsIndexRouteImport
+      parentRoute: typeof DashboardAppRouteRoute
     }
     '/dashboard/_app/broadcasts/$broadcastId': {
       id: '/dashboard/_app/broadcasts/$broadcastId'
@@ -535,7 +535,6 @@ const DashboardAppAdminRouteRouteWithChildren =
 
 interface DashboardAppRouteRouteChildren {
   DashboardAppAdminRouteRoute: typeof DashboardAppAdminRouteRouteWithChildren
-  DashboardAppEmergencyBroadcastsRoute: typeof DashboardAppEmergencyBroadcastsRoute
   DashboardAppExportRoute: typeof DashboardAppExportRoute
   DashboardAppHealthRoute: typeof DashboardAppHealthRoute
   DashboardAppHelpRoute: typeof DashboardAppHelpRoute
@@ -544,13 +543,13 @@ interface DashboardAppRouteRouteChildren {
   DashboardAppBroadcastsBroadcastIdRoute: typeof DashboardAppBroadcastsBroadcastIdRoute
   DashboardAppIncidentsReportIdRoute: typeof DashboardAppIncidentsReportIdRoute
   DashboardAppResidentsResidentIdRoute: typeof DashboardAppResidentsResidentIdRoute
+  DashboardAppBroadcastsIndexRoute: typeof DashboardAppBroadcastsIndexRoute
   DashboardAppIncidentsIndexRoute: typeof DashboardAppIncidentsIndexRoute
   DashboardAppResidentsIndexRoute: typeof DashboardAppResidentsIndexRoute
 }
 
 const DashboardAppRouteRouteChildren: DashboardAppRouteRouteChildren = {
   DashboardAppAdminRouteRoute: DashboardAppAdminRouteRouteWithChildren,
-  DashboardAppEmergencyBroadcastsRoute: DashboardAppEmergencyBroadcastsRoute,
   DashboardAppExportRoute: DashboardAppExportRoute,
   DashboardAppHealthRoute: DashboardAppHealthRoute,
   DashboardAppHelpRoute: DashboardAppHelpRoute,
@@ -560,6 +559,7 @@ const DashboardAppRouteRouteChildren: DashboardAppRouteRouteChildren = {
     DashboardAppBroadcastsBroadcastIdRoute,
   DashboardAppIncidentsReportIdRoute: DashboardAppIncidentsReportIdRoute,
   DashboardAppResidentsResidentIdRoute: DashboardAppResidentsResidentIdRoute,
+  DashboardAppBroadcastsIndexRoute: DashboardAppBroadcastsIndexRoute,
   DashboardAppIncidentsIndexRoute: DashboardAppIncidentsIndexRoute,
   DashboardAppResidentsIndexRoute: DashboardAppResidentsIndexRoute,
 }

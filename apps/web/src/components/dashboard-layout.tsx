@@ -52,7 +52,7 @@ const navItems = [
     fuzzy: true,
   },
   {
-    to: '/dashboard/emergency-broadcasts',
+    to: '/dashboard/broadcasts',
     label: 'Emergency Broadcasts',
     icon: Radio,
     fuzzy: false,
