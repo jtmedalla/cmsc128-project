@@ -50,7 +50,7 @@ apps/web/src/
 
 A feature folder holds what it needs from:
 
-- `api.ts`: TanStack Query options for the module's endpoints
+- `api.ts`: TanStack Query options for the module's endpoints, calling the shared client `api` from `@/lib/api` (`get`, `getOrNull`, `post`, `put`, `patch`, `delete`)
 - `components/`: React components, with tests beside them
 - `hooks/`, `lib/`: feature-only hooks and helpers
 - `index.ts`: the public surface
