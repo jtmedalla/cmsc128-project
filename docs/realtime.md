@@ -3,7 +3,7 @@
 Socket.IO gateway shared by every module that pushes to the dashboard (triage feed, broadcasts, messaging). Server-to-client only; clients change data through REST.
 
 - API: `apps/api/src/realtime/`
-- Web: `apps/web/src/lib/socket.ts`, `apps/web/src/hooks/use-realtime.ts`
+- Web: `apps/web/src/features/realtime/`
 
 ## Connections
 

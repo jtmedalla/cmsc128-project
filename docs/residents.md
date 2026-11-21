@@ -3,7 +3,7 @@
 Lets responders browse residents and view a resident's profile.
 
 - API: `apps/api/src/residents/`
-- Web: `apps/web/src/components/residents-directory.tsx`, `resident-profile-page.tsx`, `apps/web/src/lib/residents.ts`
+- Web: `apps/web/src/features/residents/`
 - Schemas: `packages/shared/src/residents/`
 
 ## Endpoints
