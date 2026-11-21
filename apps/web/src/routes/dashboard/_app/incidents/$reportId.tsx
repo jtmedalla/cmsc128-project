@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { IncidentDetail } from '@/components/incident-detail';
+import { IncidentDetail } from '@/features/triage';
 import { requireRole } from '@/features/auth';
 
 // /dashboard/incidents/:reportId: the full report page.

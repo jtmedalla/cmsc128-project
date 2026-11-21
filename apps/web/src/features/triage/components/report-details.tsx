@@ -2,13 +2,14 @@ import { formatAgeRange, type ReportDetail } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { cn } from 'cn';
-import { SeverityBadge, StatusBadge } from '@/components/report-badges';
+import { SeverityBadge, StatusBadge } from './report-badges';
 import { Button } from '@/components/ui/button';
-import { ReportMap } from '@/components/report-map';
+import { ReportMap } from './report-map';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatTime, label } from '@/lib/format';
-import { reportDetailQuery, reportTitle } from '@/lib/reports';
+import { reportDetailQuery } from '../api';
+import { reportTitle } from '../lib/report-title';
 
 function Field({ name, value }: { name: string; value: React.ReactNode }) {
   return (

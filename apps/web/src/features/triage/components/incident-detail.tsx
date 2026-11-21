@@ -1,9 +1,9 @@
 import { formatAgeRange, type ReportDetail } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { SeverityBadge, StatusBadge } from '@/components/report-badges';
-import { ChatMessages, PaneMessage } from '@/components/report-details';
-import { ReportMap } from '@/components/report-map';
+import { SeverityBadge, StatusBadge } from './report-badges';
+import { ChatMessages, PaneMessage } from './report-details';
+import { ReportMap } from './report-map';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -31,7 +31,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatTime, label } from '@/lib/format';
-import { reportDetailQuery, reportTitle } from '@/lib/reports';
+import { reportDetailQuery } from '../api';
+import { reportTitle } from '../lib/report-title';
 
 /** `/dashboard/incidents/:reportId`: one report on its own page, read-only until #39. */
 export function IncidentDetail({ reportId }: { reportId: string }) {
