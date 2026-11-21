@@ -1,8 +1,8 @@
 import type { ResidentListItem } from '@repo/shared';
 import { createColumnHelper } from '@tanstack/react-table';
-import { ArrowUpDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import type { DataTableFeatures } from '@/lib/table-features';
+import { DataTableColumnHeader } from '@/components/ui/data-table-column-header';
+import { Badge } from '@/components/ui/badge';
+import type { DataTableFeatures } from '@/lib/data-table-features';
 
 const LANGUAGE_LABELS: Record<ResidentListItem['languagePreference'], string> =
   {
@@ -12,62 +12,68 @@ const LANGUAGE_LABELS: Record<ResidentListItem['languagePreference'], string> =
     eng: 'English',
   };
 
+export const COLUMN_LABELS: Record<string, string> = {
+  name: 'Name',
+  contactNumber: 'Contact Number',
+  barangay: 'Barangay',
+  reportCount: 'Reports',
+  languagePreference: 'Language',
+  broadcastsOptIn: 'Advisories',
+  lastMessaged: 'Last Messaged',
+};
+
 const columnHelper = createColumnHelper<DataTableFeatures, ResidentListItem>();
 
 export const columns = columnHelper.columns([
   columnHelper.accessor((row) => row.name ?? '', {
     id: 'name',
     header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-      >
-        Name
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
+      <DataTableColumnHeader column={column} title="Name" />
     ),
     cell: ({ row }) => row.original.name ?? 'Unknown',
   }),
   columnHelper.accessor((row) => row.contactNumber ?? '', {
     id: 'contactNumber',
-    header: 'Contact Number',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Contact Number" />
+    ),
     cell: ({ row }) => row.original.contactNumber ?? '—',
   }),
   columnHelper.accessor((row) => row.barangay ?? '', {
     id: 'barangay',
-    header: 'Barangay',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Barangay" />
+    ),
     cell: ({ row }) => row.original.barangay ?? '—',
   }),
   columnHelper.accessor('reportCount', {
     header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-      >
-        Reports
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
+      <DataTableColumnHeader column={column} title="Reports" />
     ),
   }),
   columnHelper.accessor('languagePreference', {
-    header: 'Language',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Language" />
+    ),
     cell: ({ row }) => LANGUAGE_LABELS[row.original.languagePreference],
   }),
   columnHelper.accessor('broadcastsOptIn', {
-    header: 'Advisories',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Advisories" />
+    ),
     cell: ({ row }) =>
-      row.original.broadcastsOptIn ? 'Opted in' : 'Opted out',
+      row.original.broadcastsOptIn ? (
+        <Badge className="bg-emerald-500 text-white hover:bg-emerald-500">
+          Opted in
+        </Badge>
+      ) : (
+        <Badge variant="outline">Opted out</Badge>
+      ),
   }),
   columnHelper.accessor((row) => row.lastMessaged?.getTime() ?? 0, {
     id: 'lastMessaged',
     header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-      >
-        Last Messaged
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
+      <DataTableColumnHeader column={column} title="Last Messaged" />
     ),
     cell: ({ row }) => {
       const lastMessaged = row.original.lastMessaged;
