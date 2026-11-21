@@ -3,6 +3,7 @@ import {
   contactNumberSchema,
   matchChoice,
   isDontKnow,
+  parseAnyoneHurt,
   parseSeverity,
   parseSex,
 } from './intake.js';
@@ -45,6 +46,23 @@ describe('contactNumberSchema', () => {
 
   it.each(['12345', '0817123456', 'call me'])('rejects %s', (input) => {
     expect(contactNumberSchema.safeParse(input).success).toBe(false);
+  });
+});
+
+describe('parseAnyoneHurt', () => {
+  it.each([
+    ['Yes', 'yes'],
+    ['huo', 'yes'],
+    ['No.', 'no'],
+    ['wala', 'no'],
+    ["Don't know", 'unknown'],
+    ['ambot', 'unknown'],
+  ] as const)('reads %s as %s', (input, expected) => {
+    expect(parseAnyoneHurt(input)).toBe(expected);
+  });
+
+  it('rejects anything else', () => {
+    expect(parseAnyoneHurt('maybe two')).toBeNull();
   });
 });
 

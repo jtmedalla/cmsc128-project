@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import {
+  type AnyoneHurt,
+  anyoneHurtSchema,
   type SeverityLevel,
   severityLevelSchema,
   type Sex,
@@ -14,6 +16,7 @@ export const intakeFieldSchema = z.enum([
   'incidentType',
   'barangay',
   'severity',
+  'anyoneHurt',
   'contactNumber',
 ]);
 export type IntakeField = z.infer<typeof intakeFieldSchema>;
@@ -72,6 +75,28 @@ export function isDontKnow(text: string): boolean {
       [DONT_KNOW],
       () => DONT_KNOW_WORDS,
     ) !== null
+  );
+}
+
+export const ANYONE_HURT_LABELS: Record<AnyoneHurt, string> = {
+  yes: 'Yes',
+  no: 'No',
+  unknown: DONT_KNOW,
+};
+
+/** Other words residents use for each answer, in English and local languages. */
+const ANYONE_HURT_WORDS: Record<AnyoneHurt, string[]> = {
+  yes: ['oo', 'huo', 'meron', 'may ara'],
+  no: ['none', 'no one', 'nobody', 'wala', 'wala man', 'hindi', 'indi'],
+  unknown: DONT_KNOW_WORDS,
+};
+
+/** Matches an "Is anyone hurt?" answer as its value, label or a known word. */
+export function parseAnyoneHurt(text: string): AnyoneHurt | null {
+  return matchChoice(
+    text.replace(/[.!]+$/, ''),
+    anyoneHurtSchema.options,
+    (a) => [a, ANYONE_HURT_LABELS[a], ...ANYONE_HURT_WORDS[a]],
   );
 }
 

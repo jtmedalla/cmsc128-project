@@ -53,6 +53,7 @@ flowchart TD
 | `incidentType`  | What happened?                          | Tap or type an active incident type's name or code       |
 | `barangay`      | Which barangay is it in?                | Typed; matched by `BarangayService.findByName`           |
 | `severity`      | How serious is it?                      | Tap or type a level (`parseSeverity`)                    |
+| `anyoneHurt`    | Is anyone hurt?                         | Yes, No or Don't know (`parseAnyoneHurt`)                |
 | `contactNumber` | What number can responders call you on? | PH mobile (`contactNumberSchema`); saved on the resident |
 
 Each field's question, retry text, choices and answer parsing live in `QUESTIONS` (`apps/api/src/intake/questions.ts`); add a field there and to `INTAKE_FIELDS`. No question state is stored. Each follow-up message answers the first field still missing (`IntakeService.missingFields`), so a field filled any other way is never asked. An answer that doesn't fit gets the question again. After the last answer the bot thanks the resident once, with a "New report" quick reply. Later messages stay on the report as updates (the victim's condition, say), and each gets `FOLLOW_UP_REPLY` with the same quick reply, so no message goes unanswered.
@@ -112,7 +113,7 @@ if (!parsed) {
 | `reportDetailSchema`                                   | One report as a responder reviews it, with the contact number; see triage.md  |
 | `reportCreatedEventSchema`, `reportUpdatedEventSchema` | Feed item payloads of `report:created` and `report:updated` (`REPORT_EVENTS`) |
 
-Victims have no name field (FR9). In a `ParsedReport`, `victims.value` is null when the message doesn't say and `[]` when it says no one is hurt.
+Victims have no name field (FR9). In a `ParsedReport`, `victims.value` is null when the message doesn't say and `[]` when it says no one is hurt; pass `anyoneHurt: 'no'` for `[]`. `createReport` sets `anyoneHurt` to `yes` when given victims.
 
 Emit feed items encoded (`reportFeedItemSchema.encode(item)`) so dates go out as ISO strings, and decode them on the client. `findFeedItems(db, where?)` and `findFeedItem(db, id)` in `triage/feed.ts` load them; see [triage.md](triage.md).
 

@@ -34,6 +34,7 @@ export function insertReport(
   input: ReportInput,
 ): Promise<CreatedReport> {
   const { victims, messageIds, ...fields } = reportInputSchema.parse(input);
+  if (victims.length) fields.anyoneHurt ??= 'yes';
   return db.transaction(async (tx) => {
     const [created] = await tx
       .insert(report)
@@ -109,7 +110,10 @@ export async function linkMessage(
 
 /** Report fields residents can fill in during intake. */
 export type IntakeAnswers = Partial<
-  Pick<typeof report.$inferInsert, 'incidentTypeId' | 'barangayId' | 'severity'>
+  Pick<
+    typeof report.$inferInsert,
+    'incidentTypeId' | 'barangayId' | 'severity' | 'anyoneHurt'
+  >
 >;
 
 export async function updateReport(
@@ -127,7 +131,12 @@ export async function findMissingFields(
 ): Promise<IntakeField[]> {
   const row = await db.query.report.findFirst({
     where: eq(report.id, id),
-    columns: { incidentTypeId: true, barangayId: true, severity: true },
+    columns: {
+      incidentTypeId: true,
+      barangayId: true,
+      severity: true,
+      anyoneHurt: true,
+    },
     with: { resident: { columns: { contactNumber: true } } },
   });
   if (!row) throw new Error(`Report ${id} not found`);
@@ -135,6 +144,7 @@ export async function findMissingFields(
     incidentType: row.incidentTypeId,
     barangay: row.barangayId,
     severity: row.severity,
+    anyoneHurt: row.anyoneHurt,
     contactNumber: row.resident?.contactNumber,
   };
   return INTAKE_FIELDS.filter((field) => known[field] == null);

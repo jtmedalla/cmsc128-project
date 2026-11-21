@@ -37,6 +37,10 @@ export const severityLevelSchema = z.enum([
 ]);
 export type SeverityLevel = z.infer<typeof severityLevelSchema>;
 
+/** Whether anyone was hurt, as the reporter answered. */
+export const anyoneHurtSchema = z.enum(['yes', 'no', 'unknown']);
+export type AnyoneHurt = z.infer<typeof anyoneHurtSchema>;
+
 export const directionSchema = z.enum(['inbound', 'outbound']);
 export type Direction = z.infer<typeof directionSchema>;
 

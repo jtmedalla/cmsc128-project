@@ -18,6 +18,7 @@ const ALL: IntakeField[] = [
   'incidentType',
   'barangay',
   'severity',
+  'anyoneHurt',
   'contactNumber',
 ];
 
@@ -126,6 +127,15 @@ describe('ChatIntakeService', () => {
     expect(sent()).toEqual([
       `${QUESTIONS.severity.retry} ${QUESTIONS.severity.ask}`,
     ]);
+  });
+
+  it('records whether anyone is hurt', async () => {
+    followUp(['anyoneHurt', 'contactNumber']);
+    await service.handle('messenger', recorded, 'wala');
+    expect(intake.answer).toHaveBeenCalledWith('report-1', {
+      anyoneHurt: 'no',
+    });
+    expect(sent()).toEqual([QUESTIONS.contactNumber.ask]);
   });
 
   it('saves the contact number on the resident and thanks them', async () => {

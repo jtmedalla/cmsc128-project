@@ -16,7 +16,13 @@ import { agencyReferral } from './agency.js';
 import { user } from './auth.js';
 import { barangay } from './barangay.js';
 import { geometryPoint, timestamps } from './columns.js';
-import { reportStatus, severityLevel, sex, sourceChannel } from './enums.js';
+import {
+  anyoneHurt,
+  reportStatus,
+  severityLevel,
+  sex,
+  sourceChannel,
+} from './enums.js';
 import { message } from './message.js';
 import { resident } from './resident.js';
 
@@ -57,6 +63,8 @@ export const report = pgTable(
       onDelete: 'restrict',
     }),
     severity: severityLevel('severity'),
+    /** Null until the reporter says; `yes` with no victims means no details yet. */
+    anyoneHurt: anyoneHurt('anyone_hurt'),
     barangayId: uuid('barangay_id').references(() => barangay.id, {
       onDelete: 'restrict',
     }),

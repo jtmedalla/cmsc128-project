@@ -1,7 +1,9 @@
 import {
+  ANYONE_HURT_LABELS,
   contactNumberSchema,
   type IntakeField,
   matchChoice,
+  parseAnyoneHurt,
   parseSeverity,
   SEVERITY_LABELS,
   type SourceChannel,
@@ -69,6 +71,18 @@ export const QUESTIONS: Record<IntakeField, Question> = {
       const severity = parseSeverity(text);
       if (!severity) return false;
       await intake.answer(turn.reportId, { severity });
+      return true;
+    },
+  },
+
+  anyoneHurt: {
+    ask: 'Is anyone hurt?',
+    retry: 'Please pick one.',
+    choices: () => Object.values(ANYONE_HURT_LABELS),
+    async answer(text, turn, { intake }) {
+      const anyoneHurt = parseAnyoneHurt(text);
+      if (!anyoneHurt) return false;
+      await intake.answer(turn.reportId, { anyoneHurt });
       return true;
     },
   },
