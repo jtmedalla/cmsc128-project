@@ -8,7 +8,7 @@ MIGO is split into vertical modules named after the TRD module list. A module ha
 - Docs: `docs/<module>.md`
 - Issue label: `mod:<module>`
 
-Route prefix exceptions: Better Auth owns `/api/auth/*`, and the Messenger webhook stays at `/webhooks/messenger` because the Meta app points there.
+Route prefix exceptions: Better Auth owns `/api/auth/*`, and chat webhooks stay at `/webhooks/:platform` because the Meta app points there.
 
 ## Modules
 
