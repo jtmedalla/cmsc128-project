@@ -1,5 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { residentListItemSchema } from '@repo/shared';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { residentListItemSchema, residentProfileSchema } from '@repo/shared';
 import { asc, countDistinct, eq, max } from 'drizzle-orm';
 import type { Database } from '../database/client.js';
 import { DB } from '../database/database.module.js';
@@ -9,6 +9,17 @@ import {
   resident,
   residentChannel,
 } from '../database/schema/index.js';
+
+const listColumns = {
+  id: resident.id,
+  name: resident.name,
+  contactNumber: resident.contactNumber,
+  barangay: barangay.name,
+  reportCount: countDistinct(report.id),
+  broadcastsOptIn: resident.broadcastsOptIn,
+  languagePreference: resident.languagePreference,
+  lastMessaged: max(residentChannel.lastInboundAt),
+};
 
 @Injectable()
 export class ResidentsService {
@@ -34,5 +45,24 @@ export class ResidentsService {
       .orderBy(asc(resident.name));
 
     return rows.map((row) => residentListItemSchema.encode(row));
+  }
+  async get(id: string) {
+    const [row] = await this.db
+      .select({
+        ...listColumns,
+        age: resident.age,
+        sex: resident.sex,
+        locationText: resident.locationText,
+      })
+      .from(resident)
+      .leftJoin(barangay, eq(resident.barangayId, barangay.id))
+      .leftJoin(report, eq(report.residentId, resident.id))
+      .leftJoin(residentChannel, eq(residentChannel.residentId, resident.id))
+      .where(eq(resident.id, id))
+      .groupBy(resident.id, barangay.name);
+
+    if (!row) throw new NotFoundException('Resident not found');
+
+    return residentProfileSchema.encode(row);
   }
 }
