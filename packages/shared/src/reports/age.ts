@@ -171,3 +171,15 @@ export function parseAgeRange(text: string): AgeRange | null {
   }
   return null;
 }
+
+/** "18 years old", "60-69 years old", "60+ years old", or null if unknown. */
+export function formatAgeRange(
+  min: number | null,
+  max: number | null,
+): string | null {
+  if (min === null && max === null) return null;
+  if (max === null) return `${min}+ years old`;
+  if (min === null || min === 0) return `Under ${max + 1}`;
+  if (min === max) return `${min} years old`;
+  return `${min}-${max} years old`;
+}

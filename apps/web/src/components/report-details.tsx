@@ -1,4 +1,4 @@
-import type { ReportDetail } from '@repo/shared';
+import { formatAgeRange, type ReportDetail } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { cn } from 'cn';
@@ -240,7 +240,7 @@ function ReportFields({ report }: { report: ReportDetail }) {
                   <li key={v.id}>
                     {[
                       v.sex && label(v.sex),
-                      v.age !== null && `${v.age} years old`,
+                      formatAgeRange(v.ageMin, v.ageMax),
                       v.medicalCondition,
                     ]
                       .filter(Boolean)

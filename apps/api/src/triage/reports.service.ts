@@ -31,7 +31,13 @@ export class ReportsService {
         resident: { columns: { id: true, name: true, contactNumber: true } },
         // Ordered by ID so the list doesn't reshuffle between loads.
         victims: {
-          columns: { id: true, sex: true, age: true, medicalCondition: true },
+          columns: {
+            id: true,
+            sex: true,
+            ageMin: true,
+            ageMax: true,
+            medicalCondition: true,
+          },
           orderBy: (v, { asc }) => asc(v.id),
         },
         // senderId tells a responder's reply from the bot's; attachments flag location shares.

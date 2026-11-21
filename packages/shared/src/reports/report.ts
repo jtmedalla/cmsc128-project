@@ -86,7 +86,8 @@ export const reportDetailSchema = reportFeedItemSchema
       z.object({
         id: z.uuid(),
         sex: sexSchema.nullable(),
-        age: z.int().min(0).nullable(),
+        ageMin: z.int().min(0).nullable(),
+        ageMax: z.int().min(0).nullable(),
         medicalCondition: z.string().nullable(),
       }),
     ),

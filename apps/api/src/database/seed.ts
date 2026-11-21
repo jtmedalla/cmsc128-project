@@ -68,8 +68,8 @@ const samples: Sample[] = [
     minutesAgo: 25,
     isProxy: true,
     victims: [
-      { sex: 'male', age: 24, medicalCondition: 'Head injury' },
-      { sex: 'male', age: 31 },
+      { sex: 'male', ageMin: 24, ageMax: 24, medicalCondition: 'Head injury' },
+      { sex: 'male', ageMin: 30, ageMax: 39 },
     ],
     confidence: { incidentType: 0.95, severity: 0.8, barangay: 0.86 },
   },
@@ -82,7 +82,9 @@ const samples: Sample[] = [
     status: 'dispatched',
     minutesAgo: 48,
     isProxy: true,
-    victims: [{ sex: 'female', age: 78, medicalCondition: 'Asthma' }],
+    victims: [
+      { sex: 'female', ageMin: 60, ageMax: null, medicalCondition: 'Asthma' },
+    ],
     confidence: { incidentType: 0.9, severity: 0.55, barangay: 0.4 },
   },
   {

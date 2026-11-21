@@ -152,7 +152,8 @@ erDiagram
         uuid id PK
         uuid report_id FK
         sex sex "nullable"
-        integer age "nullable"
+        integer age_min "nullable"
+        integer age_max "nullable"
         text medical_condition "nullable"
     }
 
@@ -376,15 +377,16 @@ An incident report. `resident_id` is the sender; `is_proxy` marks reports about 
 
 ### victim
 
-A person affected by a report. No names are stored (FR9).
+A person affected by a report. No names are stored (FR9). Age is a range because reporters often guess: "18" is 18 to 18, "60s" is 60 to 69, and Senior is 60 with no `age_max`.
 
-| Column              | Type      | Null | Default | Constraint           | Description |
-| ------------------- | --------- | ---- | ------- | -------------------- | ----------- |
-| `id`                | `uuid`    | no   | random  | PK                   |             |
-| `report_id`         | `uuid`    | no   |         | FK → `report`, index |             |
-| `sex`               | `sex`     | yes  |         |                      |             |
-| `age`               | `integer` | yes  |         | `>= 0`               |             |
-| `medical_condition` | `text`    | yes  |         |                      |             |
+| Column              | Type      | Null | Default | Constraint           | Description                         |
+| ------------------- | --------- | ---- | ------- | -------------------- | ----------------------------------- |
+| `id`                | `uuid`    | no   | random  | PK                   |                                     |
+| `report_id`         | `uuid`    | no   |         | FK → `report`, index |                                     |
+| `sex`               | `sex`     | yes  |         |                      |                                     |
+| `age_min`           | `integer` | yes  |         | `>= 0`               | Equal to `age_max` for an exact age |
+| `age_max`           | `integer` | yes  |         | `>= age_min`         | Null for an open range like 60+     |
+| `medical_condition` | `text`    | yes  |         |                      |                                     |
 
 ### message
 

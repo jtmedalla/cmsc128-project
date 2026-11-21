@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseAgeRange } from './age.js';
+import { formatAgeRange, parseAgeRange } from './age.js';
 
 describe('parseAgeRange', () => {
   it.each([
@@ -94,4 +94,16 @@ describe('parseAgeRange', () => {
       expect(parseAgeRange(input)).toBeNull();
     },
   );
+});
+
+describe('formatAgeRange', () => {
+  it.each([
+    [18, 18, '18 years old'],
+    [60, 69, '60-69 years old'],
+    [60, null, '60+ years old'],
+    [0, 17, 'Under 18'],
+    [null, null, null],
+  ])('formats %s to %s as %s', (min, max, expected) => {
+    expect(formatAgeRange(min, max)).toBe(expected);
+  });
 });
