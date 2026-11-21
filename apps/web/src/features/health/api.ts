@@ -1,6 +1,6 @@
 import { healthSchema } from '@repo/shared';
 import { queryOptions } from '@tanstack/react-query';
-import { API_URL } from './env';
+import { API_URL } from '@/lib/env';
 
 /**
  * API health. A 503 still carries a report of which check failed, so it
