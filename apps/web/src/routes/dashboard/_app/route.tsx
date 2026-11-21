@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { RouteError } from '@/components/route-error';
-import { sessionQuery } from '@/lib/session';
+import { sessionQuery } from '@/features/auth';
 
 export const Route = createFileRoute('/dashboard/_app')({
   beforeLoad: async ({ context, location }) => {

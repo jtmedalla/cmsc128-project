@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { IncidentDetail } from '@/components/incident-detail';
-import { requireRole } from '@/lib/session';
+import { requireRole } from '@/features/auth';
 
 // /dashboard/incidents/:reportId: the full report page.
 export const Route = createFileRoute('/dashboard/_app/incidents/$reportId')({

@@ -18,8 +18,8 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Wordmark } from '@/components/wordmark';
-import { authClient } from '@/lib/auth-client';
-import { sessionQuery } from '@/lib/session';
+import { authClient } from '../auth-client';
+import { sessionQuery } from '../session';
 import { z } from 'zod';
 
 const route = getRouteApi('/login');
