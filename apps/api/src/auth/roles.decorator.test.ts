@@ -1,12 +1,10 @@
 import { Controller, Get, type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AuthModule } from '@thallesp/nestjs-better-auth';
-import { betterAuth } from 'better-auth';
-import { memoryAdapter } from 'better-auth/adapters/memory';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Roles } from './roles.decorator.js';
-import { adminPlugin } from './roles.js';
+import { createTestAuth } from '../testing/auth.js';
 
 @Controller('probe')
 class ProbeController {
@@ -23,28 +21,8 @@ class ProbeController {
 }
 
 describe('role guards', () => {
-  const store: Record<string, Record<string, unknown>[]> = {
-    user: [],
-    session: [],
-    account: [],
-    verification: [],
-  };
-  const auth = betterAuth({
-    secret: 'test-secret-test-secret-test-secret',
-    baseURL: 'http://localhost:3000',
-    database: memoryAdapter(store),
-    emailAndPassword: { enabled: true },
-    plugins: [adminPlugin],
-  });
+  const { auth, signUp } = createTestAuth();
   let app: INestApplication;
-
-  const signUp = async (email: string) => {
-    const res = await auth.api.signUpEmail({
-      body: { email, password: 'password1234', name: email },
-      returnHeaders: true,
-    });
-    return res.headers.get('set-cookie')!;
-  };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -65,9 +43,8 @@ describe('role guards', () => {
   });
 
   it('defaults new users to responder', async () => {
-    const cookie = await signUp('responder@example.com');
-    const user = store.user!.find((u) => u.email === 'responder@example.com');
-    expect(user?.role).toBe('responder');
+    const { cookie, user } = await signUp('responder@example.com');
+    expect(user.role).toBe('responder');
 
     const server = app.getHttpServer();
     expect(
@@ -79,8 +56,7 @@ describe('role guards', () => {
   });
 
   it('allows admins through admin-only routes', async () => {
-    const cookie = await signUp('admin@example.com');
-    store.user!.find((u) => u.email === 'admin@example.com')!.role = 'admin';
+    const { cookie } = await signUp('admin@example.com', 'admin');
 
     const res = await request(app.getHttpServer())
       .get('/probe/admin')
