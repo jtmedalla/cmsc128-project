@@ -18,7 +18,7 @@ import {
 import { BOT, createBot } from './bot.js';
 import { ChannelsModule } from './channels.module.js';
 import { ChannelsService } from './channels.service.js';
-import { MessageLogService } from './message-log.service.js';
+import { ChannelsRepository } from './channels.repository.js';
 
 vi.mock('../config/env.js', () => ({
   env: {
@@ -91,7 +91,7 @@ describe('channels', () => {
     })
       .overrideProvider(BOT)
       .useValue(createBot(createMemoryState()))
-      .overrideProvider(MessageLogService)
+      .overrideProvider(ChannelsRepository)
       .useValue(log)
       .compile();
     app = moduleRef.createNestApplication({ bodyParser: false });

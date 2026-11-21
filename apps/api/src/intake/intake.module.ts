@@ -4,6 +4,7 @@ import { GeoModule } from '../geo/geo.module.js';
 import { RealtimeModule } from '../realtime/realtime.module.js';
 import { TriageModule } from '../triage/triage.module.js';
 import { ChatIntakeService } from './chat-intake.service.js';
+import { IntakeRepository } from './intake.repository.js';
 import { IntakeService } from './intake.service.js';
 import { REPORT_PARSER, UnavailableParser } from './parser.js';
 
@@ -11,6 +12,7 @@ import { REPORT_PARSER, UnavailableParser } from './parser.js';
   imports: [ChannelsModule, GeoModule, RealtimeModule, TriageModule],
   providers: [
     IntakeService,
+    IntakeRepository,
     ChatIntakeService,
     { provide: REPORT_PARSER, useClass: UnavailableParser },
   ],

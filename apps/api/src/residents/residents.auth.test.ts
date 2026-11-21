@@ -8,6 +8,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { adminPlugin } from '../auth/roles.js';
 import { DB } from '../database/database.module.js';
 import { ResidentsController } from './residents.controller.js';
+import { ResidentsRepository } from './residents.repository.js';
 import { ResidentsService } from './residents.service.js';
 
 vi.mock('../config/env.js', () => ({ env: {} }));
@@ -47,7 +48,11 @@ describe('residents role guards', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AuthModule.forRoot({ auth })],
       controllers: [ResidentsController],
-      providers: [ResidentsService, { provide: DB, useValue: db }],
+      providers: [
+        ResidentsService,
+        ResidentsRepository,
+        { provide: DB, useValue: db },
+      ],
     }).compile();
     app = moduleRef.createNestApplication({ bodyParser: false });
     await app.init();

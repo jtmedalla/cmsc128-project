@@ -10,7 +10,7 @@ import type {
 } from '@repo/shared';
 import { and, eq, inArray, like } from 'drizzle-orm';
 import { env } from '../config/env.js';
-import { insertReport } from '../intake/reports.js';
+import { IntakeRepository } from '../intake/intake.repository.js';
 import { db, pool } from './client.js';
 import {
   barangay,
@@ -265,7 +265,7 @@ async function seed() {
       })
       .returning({ id: message.id });
 
-    const { id } = await insertReport(db, {
+    const { id } = await new IntakeRepository(db).insertReport({
       residentId: person!.id,
       sourceChannel: 'web',
       isProxy: sample.isProxy,

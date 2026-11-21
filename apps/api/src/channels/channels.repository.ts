@@ -1,8 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { SourceChannel } from '@repo/shared';
-import { and, eq, isNotNull, sql } from 'drizzle-orm';
+import { and, eq, isNotNull } from 'drizzle-orm';
 import type { Database } from '../database/client.js';
 import { DB } from '../database/database.module.js';
+import { advisoryLock } from '../database/transaction.js';
 import {
   message,
   resident,
@@ -35,7 +36,7 @@ export interface OutboundRecord {
 
 /** Keeps every message sent or received as a permanent Message row. */
 @Injectable()
-export class MessageLogService {
+export class ChannelsRepository {
   constructor(@Inject(DB) private readonly db: Database) {}
 
   /**
@@ -45,9 +46,7 @@ export class MessageLogService {
   recordInbound(inbound: InboundRecord): Promise<RecordedMessage | null> {
     return this.db.transaction(async (tx) => {
       // Serializes first contact so concurrent messages create one resident.
-      await tx.execute(
-        sql`select pg_advisory_xact_lock(hashtext(${`${inbound.channel}:${inbound.senderExternalId}`}))`,
-      );
+      await advisoryLock(tx, `${inbound.channel}:${inbound.senderExternalId}`);
 
       let [identity] = await tx
         .update(residentChannel)

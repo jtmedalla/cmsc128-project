@@ -14,6 +14,7 @@ import {
 } from 'vitest';
 import { DB } from '../database/database.module.js';
 import { ResidentsController } from './residents.controller.js';
+import { ResidentsRepository } from './residents.repository.js';
 import { ResidentsService } from './residents.service.js';
 
 vi.mock('../config/env.js', () => ({ env: {} }));
@@ -34,6 +35,7 @@ describe('GET /residents', () => {
       controllers: [ResidentsController],
       providers: [
         ResidentsService,
+        ResidentsRepository,
         { provide: DB, useValue: db },
         { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
       ],

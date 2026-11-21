@@ -9,9 +9,11 @@ import type { SourceChannel } from '@repo/shared';
 import type { Message, Thread } from 'chat';
 import { BOT, type Bot } from './bot.js';
 import {
-  MessageLogService,
+  ChannelsRepository,
   type RecordedMessage,
-} from './message-log.service.js';
+} from './channels.repository.js';
+
+export type { RecordedMessage } from './channels.repository.js';
 import { sendQuickReplies } from './messenger.js';
 
 type Handler = (
@@ -69,7 +71,7 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy {
 
   constructor(
     @Inject(BOT) private readonly bot: Bot,
-    private readonly log: MessageLogService,
+    private readonly repository: ChannelsRepository,
   ) {
     bot.onDirectMessage((thread, message) => this.receive(thread, message));
   }
@@ -118,7 +120,7 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy {
     text: string,
     options: SendOptions = {},
   ) {
-    const recipient = await this.log.findExternalId(residentId, channel);
+    const recipient = await this.repository.findExternalId(residentId, channel);
     if (!recipient) {
       throw new Error(`Resident ${residentId} has no ${channel} identity`);
     }
@@ -131,7 +133,7 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy {
       externalId = (await this.bot.thread(`${channel}:${recipient}`).post(body))
         .id;
     }
-    return this.log.recordOutbound({
+    return this.repository.recordOutbound({
       ...record,
       residentId,
       channel,
@@ -141,7 +143,7 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async receive(thread: Thread, message: Message) {
-    const recorded = await this.log.recordInbound({
+    const recorded = await this.repository.recordInbound({
       channel: thread.adapter.name as SourceChannel,
       senderExternalId: message.author.userId,
       externalId: message.id,

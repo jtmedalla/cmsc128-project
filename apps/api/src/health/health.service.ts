@@ -1,12 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { Health, HealthStatus } from '@repo/shared';
-import { sql } from 'drizzle-orm';
-import type { Database } from '../database/client.js';
-import { DB } from '../database/database.module.js';
+import { HealthRepository } from './health.repository.js';
 
 @Injectable()
 export class HealthService {
-  constructor(@Inject(DB) private readonly db: Database) {}
+  constructor(private readonly repository: HealthRepository) {}
 
   async check(): Promise<Health> {
     const database = await this.checkDatabase();
@@ -20,7 +18,7 @@ export class HealthService {
 
   private async checkDatabase(): Promise<HealthStatus> {
     try {
-      await this.db.execute(sql`select 1`);
+      await this.repository.ping();
       return 'ok';
     } catch {
       return 'error';

@@ -12,22 +12,22 @@ import {
   it,
   vi,
 } from 'vitest';
-import { DB } from '../database/database.module.js';
 import { HealthController } from './health.controller.js';
+import { HealthRepository } from './health.repository.js';
 import { HealthService } from './health.service.js';
 
 vi.mock('../config/env.js', () => ({ env: {} }));
 
 describe('GET /health', () => {
   let app: INestApplication;
-  const db = { execute: vi.fn() };
+  const repository = { ping: vi.fn() };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       controllers: [HealthController],
       providers: [
         HealthService,
-        { provide: DB, useValue: db },
+        { provide: HealthRepository, useValue: repository },
         { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
       ],
     }).compile();
@@ -36,7 +36,7 @@ describe('GET /health', () => {
   });
 
   beforeEach(() => {
-    db.execute.mockReset();
+    repository.ping.mockReset();
   });
 
   afterAll(async () => {
@@ -44,7 +44,7 @@ describe('GET /health', () => {
   });
 
   it('returns ok when the database answers', async () => {
-    db.execute.mockResolvedValue({ rows: [] });
+    repository.ping.mockResolvedValue(undefined);
     const res = await request(app.getHttpServer()).get('/health');
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
@@ -56,7 +56,7 @@ describe('GET /health', () => {
   });
 
   it('returns 503 when the database is unreachable', async () => {
-    db.execute.mockRejectedValue(new Error('connect ECONNREFUSED'));
+    repository.ping.mockRejectedValue(new Error('connect ECONNREFUSED'));
     const res = await request(app.getHttpServer()).get('/health');
     expect(res.status).toBe(503);
     expect(res.body).toMatchObject({

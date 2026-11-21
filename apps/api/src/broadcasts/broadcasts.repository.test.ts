@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Database } from '../database/client.js';
-import { BroadcastsService } from './broadcasts.service.js';
+import { BroadcastsRepository } from './broadcasts.repository.js';
 
 vi.mock('../config/env.js', () => ({ env: {} }));
 
@@ -12,10 +12,10 @@ function serviceWith(rows: unknown[]) {
   const db = {
     query: { broadcast: { findMany } },
   } as unknown as Database;
-  return { service: new BroadcastsService(db), findMany };
+  return { service: new BroadcastsRepository(db), findMany };
 }
 
-describe('BroadcastsService.findRecentAdvisories', () => {
+describe('BroadcastsRepository.findRecentAdvisories', () => {
   it('returns sent advisory rows with their creator', async () => {
     const { service, findMany } = serviceWith([
       {

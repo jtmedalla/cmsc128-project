@@ -1,5 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
+  INTAKE_FIELDS,
+  type IntakeField,
   REPORT_EVENTS,
   type ReportInput,
   reportCreatedEventSchema,
@@ -7,22 +9,10 @@ import {
   type SourceChannel,
   type VictimInput,
 } from '@repo/shared';
-import { eq, sql } from 'drizzle-orm';
-import type { Database } from '../database/client.js';
-import { DB } from '../database/database.module.js';
-import { incidentType, resident } from '../database/schema/index.js';
 import { RealtimeService } from '../realtime/realtime.service.js';
 // The feed belongs to triage (docs/intake.md, docs/realtime.md); intake only pushes new reports to it.
 import { ReportsService } from '../triage/reports.service.js';
-import {
-  findMissingFields,
-  findOpenReport,
-  type IntakeAnswers,
-  insertReport,
-  insertVictims,
-  linkMessage,
-  updateReport,
-} from './reports.js';
+import { type IntakeAnswers, IntakeRepository } from './intake.repository.js';
 
 export interface IncomingMessage {
   residentId: string;
@@ -41,7 +31,7 @@ export interface ReceivedMessage {
 @Injectable()
 export class IntakeService {
   constructor(
-    @Inject(DB) private readonly db: Database,
+    private readonly repository: IntakeRepository,
     private readonly realtime: RealtimeService,
     private readonly reports: ReportsService,
   ) {}
@@ -51,7 +41,7 @@ export class IntakeService {
    * and the guided form all call this. Pushes the report to the feed.
    */
   async createReport(input: ReportInput) {
-    const created = await insertReport(this.db, input);
+    const created = await this.repository.insertReport(input);
     await this.publish('created', created.id);
     return created;
   }
@@ -68,23 +58,20 @@ export class IntakeService {
     channel,
     newReport = false,
   }: IncomingMessage): Promise<ReceivedMessage> {
-    const received = await this.db.transaction(async (tx) => {
+    const received = await this.repository.transaction(async (tx) => {
       // Serializes a resident's messages so a burst opens one report.
-      await tx.execute(
-        sql`select pg_advisory_xact_lock(hashtext(${`intake:${residentId}`}))`,
-      );
+      await this.repository.lock(`intake:${residentId}`, tx);
       const open = newReport
         ? null
-        : await findOpenReport(tx, residentId, channel);
+        : await this.repository.findOpenReport(residentId, channel, tx);
       if (open) {
-        await linkMessage(tx, messageId, open);
+        await this.repository.linkMessage(messageId, open, tx);
         return { reportId: open, created: false };
       }
-      const { id } = await insertReport(tx, {
-        residentId,
-        sourceChannel: channel,
-        messageIds: [messageId],
-      });
+      const { id } = await this.repository.insertReport(
+        { residentId, sourceChannel: channel, messageIds: [messageId] },
+        tx,
+      );
       return { reportId: id, created: true };
     });
     if (received.created) await this.publish('created', received.reportId);
@@ -92,19 +79,30 @@ export class IntakeService {
   }
 
   /** Intake fields the report and its resident still lack, in asking order. */
-  missingFields(reportId: string) {
-    return findMissingFields(this.db, reportId);
+  async missingFields(reportId: string): Promise<IntakeField[]> {
+    const progress = await this.repository.findProgress(reportId);
+    const known: Record<IntakeField, unknown> = {
+      incidentType: progress.incidentTypeId,
+      barangay: progress.barangayId,
+      severity: progress.severity,
+      anyoneHurt: progress.anyoneHurt,
+      // Only missing once someone is hurt; filled by the first victim.
+      victims:
+        progress.anyoneHurt !== 'yes' || progress.hasVictims ? true : null,
+      contactNumber: progress.contactNumber,
+    };
+    return INTAKE_FIELDS.filter((field) => known[field] == null);
   }
 
   /** Fills in report fields from the resident's answers. */
   async answer(reportId: string, answers: IntakeAnswers) {
-    await updateReport(this.db, reportId, answers);
+    await this.repository.updateReport(reportId, answers);
     await this.publish('updated', reportId);
   }
 
   /** Adds anonymous victims to a report; names have no field (FR9). */
   async addVictims(reportId: string, victims: VictimInput[]) {
-    await insertVictims(this.db, reportId, victims);
+    await this.repository.insertVictims(reportId, victims);
     await this.publish('updated', reportId);
   }
 
@@ -113,33 +111,20 @@ export class IntakeService {
    * answer each victim question once, across app instances.
    */
   withVictimLock<T>(reportId: string, fn: () => Promise<T>): Promise<T> {
-    return this.db.transaction(async (tx) => {
-      await tx.execute(
-        sql`select pg_advisory_xact_lock(hashtext(${`victims:${reportId}`}))`,
-      );
+    return this.repository.transaction(async (tx) => {
+      await this.repository.lock(`victims:${reportId}`, tx);
       return fn();
     });
   }
 
   // TODO(#99): save through the profile service once it lands.
   async saveContactNumber(residentId: string, contactNumber: string) {
-    await this.db
-      .update(resident)
-      .set({ contactNumber })
-      .where(eq(resident.id, residentId));
+    await this.repository.updateContactNumber(residentId, contactNumber);
   }
 
   /** Active incident types, by name. */
   incidentTypes() {
-    return this.db
-      .select({
-        id: incidentType.id,
-        code: incidentType.code,
-        name: incidentType.name,
-      })
-      .from(incidentType)
-      .where(eq(incidentType.isActive, true))
-      .orderBy(incidentType.name);
+    return this.repository.findActiveIncidentTypes();
   }
 
   /** Pushes the report's feed item to the dashboard. */
