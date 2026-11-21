@@ -15,7 +15,7 @@ Both need a signed-in responder or admin (`@Roles` on the controller, #41); any 
 
 ## Feed queries
 
-`triage/feed.ts` holds the projection the list and the detail share: `reportColumns` hides internal links and the tracking token, and `reportRelations` adds the incident type and barangay. `findFeedItems(db, where?)` and `findFeedItem(db, id)` load feed items; intake uses `findFeedItem` to push `report:created`.
+`TriageRepository` holds the projection the list and the detail share: `reportColumns` hides internal links and the tracking token, and `reportRelations` adds the incident type and barangay. `ReportsService` exposes `findFeed()`, `findFeedItem(id)` and `findDetail(id)`; intake uses `findFeedItem` to push `report:created`.
 
 `parse_confidence` and `message.attachments` are `jsonb`, so `checkConfidence` and `checkAttachments` validate them against `parseConfidenceSchema` and `messageAttachmentsSchema` and return null for a value of the wrong shape instead of failing the response.
 

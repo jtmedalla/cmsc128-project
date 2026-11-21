@@ -30,6 +30,21 @@ Platform modules have no epic and serve the others: `auth`, `realtime`, `geo`, `
 
 The dashboard home (`/dashboard`) belongs to no module. Its summary widgets come from the modules that own the data.
 
+## API layers
+
+Every API module that stores or reads data has the same three layers:
+
+```
+<module>.controller.ts   HTTP only: DTOs, status codes, guards
+<module>.service.ts      domain rules; never imports Drizzle, the schema or `db`
+<module>.repository.ts   <Module>Repository: the only code that queries the database
+```
+
+- Repositories only access data: queries, projections and row mapping. A method names what it reads or writes (`findFeed`, `insertReport`), not why.
+- Services hold the rules. Multi-step writes run inside the repository's `transaction(fn)`; repository methods take an optional `tx: Executor` last, defaulting to the database. Advisory locks go through `advisoryLock` in `database/transaction.ts`.
+- One repository per module. Two modules may touch the same table for different jobs (intake creates reports, triage reads them), but a module never imports another module's repository, only its exported service.
+- Service tests pass a fake repository instead of mocking Drizzle.
+
 ## Ownership
 
 - The module that owns the data owns its endpoints and screens, wherever they appear. Knowledge-base edit pages belong to `info`, not `admin`.

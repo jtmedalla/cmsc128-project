@@ -154,7 +154,7 @@ if (!parsed) {
 
 Victims have no name field (FR9). In a `ParsedReport`, `victims.value` is null when the message doesn't say and `[]` when it says no one is hurt; pass `anyoneHurt: 'no'` for `[]`. `createReport` sets `anyoneHurt` to `yes` when given victims.
 
-Emit feed items encoded (`reportFeedItemSchema.encode(item)`) so dates go out as ISO strings, and decode them on the client. `findFeedItems(db, where?)` and `findFeedItem(db, id)` in `triage/feed.ts` load them; see [triage.md](triage.md).
+Emit feed items encoded (`reportFeedItemSchema.encode(item)`) so dates go out as ISO strings, and decode them on the client. Intake loads them through triage's exported `ReportsService.findFeedItem(id)`; see [triage.md](triage.md).
 
 ## Sample data
 
