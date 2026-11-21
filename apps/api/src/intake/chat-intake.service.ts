@@ -120,9 +120,25 @@ export class ChatIntakeService implements OnModuleInit {
     text: string,
   ) {
     const step = VICTIM_STEPS[draft.step];
-    const next = await step.answer(text, draft, this.deps);
+    // Locked from rereading the draft to saving the next one: two quick
+    // messages could otherwise both answer "How are they hurt?" and save the
+    // same person twice.
+    const answered = await this.deps.intake.withVictimLock(
+      turn.reportId,
+      async () => {
+        const current = (await thread.state)?.victim;
+        if (current?.step !== draft.step || current.saved !== draft.saved) {
+          return null;
+        }
+        const next = await step.answer(text, draft, this.deps);
+        if (next !== undefined) await thread.setState({ victim: next });
+        return { next };
+      },
+    );
+    // An earlier message answered it; this one stays on the report.
+    if (!answered) return;
+    const { next } = answered;
     if (next === undefined) return this.askVictim(turn, draft, step.retry);
-    await thread.setState({ victim: next });
     if (next) return this.askVictim(turn, next);
     await this.askNext(turn, thread);
   }

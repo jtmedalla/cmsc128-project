@@ -107,6 +107,19 @@ export class IntakeService {
     await this.publish('updated', reportId);
   }
 
+  /**
+   * Runs `fn` holding the report's victim lock, so overlapping messages
+   * answer each victim question once, across app instances.
+   */
+  withVictimLock<T>(reportId: string, fn: () => Promise<T>): Promise<T> {
+    return this.db.transaction(async (tx) => {
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtext(${`victims:${reportId}`}))`,
+      );
+      return fn();
+    });
+  }
+
   // TODO(#99): save through the profile service once it lands.
   async saveContactNumber(residentId: string, contactNumber: string) {
     await this.db

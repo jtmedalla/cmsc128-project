@@ -37,6 +37,7 @@ describe('ChatIntakeService', () => {
     missingFields: vi.fn(),
     answer: vi.fn(),
     addVictims: vi.fn(),
+    withVictimLock: vi.fn(),
     saveContactNumber: vi.fn(),
     incidentTypes: vi.fn(),
   };
@@ -49,11 +50,19 @@ describe('ChatIntakeService', () => {
   const recorded = { residentId: 'resident-1', messageId: 'msg-1' };
   const options = { reportId: 'report-1' };
 
-  /** A Chat SDK thread holding `state`. */
-  const threadWith = (state: IntakeState | null = null) => ({
-    state: Promise.resolve(state),
-    setState: vi.fn(),
-  });
+  /** A Chat SDK thread holding `state`, which `setState` merges into. */
+  const threadWith = (initial: IntakeState | null = null) => {
+    let state = initial;
+    return {
+      get state() {
+        return Promise.resolve(state);
+      },
+      setState: vi.fn((next: IntakeState) => {
+        state = { ...state, ...next };
+        return Promise.resolve();
+      }),
+    };
+  };
   let thread = threadWith();
 
   /** Mid-questions about a person, at `draft.step`. */
@@ -86,6 +95,18 @@ describe('ChatIntakeService', () => {
 
   beforeEach(() => {
     thread = threadWith();
+    // Runs one locked call at a time, like the advisory lock.
+    let held = Promise.resolve();
+    intake.withVictimLock.mockImplementation(
+      (_reportId: string, fn: () => Promise<unknown>) => {
+        const run = held.then(fn);
+        held = run.then(
+          () => undefined,
+          () => undefined,
+        );
+        return run;
+      },
+    );
     intake.incidentTypes.mockResolvedValue([
       { id: 'type-fire', code: 'fire', name: 'Fire' },
       { id: 'type-flood', code: 'flood', name: 'Flood' },
@@ -241,6 +262,24 @@ describe('ChatIntakeService', () => {
     await service.handle('messenger', recorded, "Don't know", thread);
     expect(intake.addVictims).toHaveBeenCalledWith('report-1', [
       { sex: null, ageMin: null, ageMax: null, medicalCondition: null },
+    ]);
+  });
+
+  it('saves a person once when their condition comes in two quick messages', async () => {
+    asking({ step: 'condition', sex: 'male' });
+    // The first save is slow, so the second message arrives during it.
+    intake.addVictims.mockImplementation(
+      () => new Promise((resolve) => setTimeout(resolve, 10)),
+    );
+    await Promise.all([
+      service.handle('messenger', recorded, 'Bleeding', thread),
+      service.handle('messenger', recorded, 'from his head', thread),
+    ]);
+    expect(intake.addVictims).toHaveBeenCalledExactlyOnceWith('report-1', [
+      { sex: 'male', ageMin: null, ageMax: null, medicalCondition: 'Bleeding' },
+    ]);
+    expect(sent()).toEqual([
+      VICTIM_STEPS.another.ask({ ...firstVictimDraft('report-1'), saved: 1 }),
     ]);
   });
 

@@ -90,7 +90,7 @@ Age is stored as a range (`parseAgeRange`). Answers can be typed in English, Tag
 
 `formatAgeRange` shows it as "18 years old", "60-69 years old", "60+ years old" or "Under 18".
 
-Each answer goes into a `VictimDraft` in the Chat SDK thread state (`IntakeState.victim`), and the person is saved as a victim after their condition. A draft holds its `reportId`, so one left from an older report is ignored. If the draft expires mid-person, the next message starts that person over.
+Each answer goes into a `VictimDraft` in the Chat SDK thread state (`IntakeState.victim`), and the person is saved as a victim after their condition. A draft holds its `reportId`, so one left from an older report is ignored. If the draft expires mid-person, the next message starts that person over. Answers about a person run under a per-report advisory lock (`IntakeService.withVictimLock`) that rereads the draft, so a quick second message ("Bleeding", then "from his head") stays on the report instead of saving the person twice.
 
 Names are never asked for, and victims have no name field (FR9). A name typed anyway can only land in the condition.
 
