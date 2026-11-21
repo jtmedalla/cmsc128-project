@@ -29,8 +29,5 @@
     "prettier": "^3.9.10",
     "turbo": "^2.11.10",
     "typescript": "^5.9.3"
-  },
-  "dependencies": {
-    "@tanstack/react-table": "^9.3.1"
   }
 }
