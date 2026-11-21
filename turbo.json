@@ -26,6 +26,11 @@
     "db:migrate": {
       "cache": false,
       "passThroughEnv": ["DATABASE_URL"]
+    },
+    "db:seed": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "passThroughEnv": ["DATABASE_URL", "BETTER_AUTH_SECRET", "NODE_ENV"]
     }
   }
 }
