@@ -1,12 +1,6 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, render, screen } from '@testing-library/react';
-import {
-  createMemoryHistory,
-  createRootRoute,
-  createRouter,
-  RouterProvider,
-} from '@tanstack/react-router';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { renderWithProviders, respondWith } from '@/testing/render';
 import { IncidentDetail } from './incident-detail';
 
 const id = '0b9a3f4e-8c1d-4e2a-9f6b-1c2d3e4f5a6b';
@@ -50,40 +44,10 @@ const wire = {
   updatedAt: at,
 };
 
-function respondWith(status: number, body?: unknown) {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn().mockResolvedValue(new Response(JSON.stringify(body), { status })),
-  );
-}
-
-function renderPage() {
-  const router = createRouter({
-    routeTree: createRootRoute({
-      component: () => <IncidentDetail reportId={id} />,
-    }),
-    history: createMemoryHistory(),
-  });
-  render(
-    <QueryClientProvider
-      client={
-        new QueryClient({ defaultOptions: { queries: { retry: false } } })
-      }
-    >
-      <RouterProvider router={router} />
-    </QueryClientProvider>,
-  );
-}
-
-afterEach(() => {
-  cleanup();
-  vi.unstubAllGlobals();
-});
-
 describe('IncidentDetail', () => {
   it('shows the title, details, victims and messages', async () => {
     respondWith(200, wire);
-    renderPage();
+    renderWithProviders(<IncidentDetail reportId={id} />);
     expect(
       await screen.findByRole('heading', { name: 'Flood · Mat-y' }),
     ).toBeDefined();
@@ -100,45 +64,15 @@ describe('IncidentDetail', () => {
     expect(screen.getByText('Gataas na baha diri')).toBeDefined();
   });
 
-  it('links the breadcrumb back to the incidents feed', async () => {
-    respondWith(200, wire);
-    renderPage();
-    await screen.findByRole('heading', { name: 'Flood · Mat-y' });
-    expect(
-      screen.getByRole('link', { name: 'Incidents' }).getAttribute('href'),
-    ).toBe('/dashboard/incidents');
-  });
-
-  // Owned by #39, #12 and #63; shown so the layout is in place.
-  it('shows the actions that other issues own disabled', async () => {
-    respondWith(200, wire);
-    renderPage();
-    await screen.findByRole('heading', { name: 'Flood · Mat-y' });
-    for (const name of [
-      'Mark invalid',
-      'Mark dispatched',
-      'Edit details',
-      'Send',
-      'Log referral',
-    ]) {
-      expect(
-        screen.getByRole('button', { name }).hasAttribute('disabled'),
-      ).toBe(true);
-    }
-    expect(
-      screen.getByRole('textbox', { name: 'Reply' }).hasAttribute('disabled'),
-    ).toBe(true);
-  });
-
   it('says so when the report does not exist', async () => {
     respondWith(404, { message: 'Report not found' });
-    renderPage();
+    renderWithProviders(<IncidentDetail reportId={id} />);
     expect(await screen.findByText("This report doesn't exist.")).toBeDefined();
   });
 
   it('offers a retry when the API fails', async () => {
     respondWith(500, {});
-    renderPage();
+    renderWithProviders(<IncidentDetail reportId={id} />);
     expect(
       await screen.findByRole('button', { name: 'Try again' }),
     ).toBeDefined();

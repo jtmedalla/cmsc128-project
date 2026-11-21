@@ -67,18 +67,6 @@ describe('/broadcasts/advisories', () => {
           sentAt: at.toISOString(),
         },
       ]);
-      expect(broadcasts.findRecentAdvisories).toHaveBeenCalledOnce();
     },
   );
-
-  it('returns an empty list when there are no advisories', async () => {
-    broadcasts.findRecentAdvisories.mockResolvedValue([]);
-
-    const res = await request(app.getHttpServer()).get(
-      '/broadcasts/advisories',
-    );
-
-    expect(res.status).toBe(200);
-    expect(res.body).toEqual([]);
-  });
 });

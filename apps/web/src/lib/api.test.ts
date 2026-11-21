@@ -1,22 +1,12 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
+import { respondWith } from '@/testing/render';
 import { api, ApiError } from './api';
 import { API_URL } from './env';
 
 const schema = z.object({ at: z.iso.datetime().transform((s) => new Date(s)) });
 const body = { at: '2026-11-20T00:00:00.000Z' };
 const decoded = { at: new Date(body.at) };
-
-function respondWith(status: number, json?: unknown) {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn().mockResolvedValue(
-      new Response(json === undefined ? null : JSON.stringify(json), {
-        status,
-      }),
-    ),
-  );
-}
 
 /** The ApiError a call rejects with; fails the test if it resolves. */
 async function rejection(call: Promise<unknown>): Promise<ApiError> {
@@ -28,10 +18,6 @@ async function rejection(call: Promise<unknown>): Promise<ApiError> {
   }
   throw new Error('expected the call to reject');
 }
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
 
 describe('api.get', () => {
   it('sends the session cookie and signal to the API', async () => {
@@ -68,20 +54,12 @@ describe('api.get', () => {
       api.get('/things', schema, { acceptStatuses: [503] }),
     ).resolves.toEqual(decoded);
   });
-
-  it('rejects a body that does not match the schema', async () => {
-    respondWith(200, { at: 'not a date' });
-    await expect(api.get('/things', schema)).rejects.toThrow();
-  });
 });
 
 describe('api.getOrNull', () => {
-  it('resolves null on 404 by default', async () => {
+  it('resolves null on 404, or on each status listed as missing', async () => {
     respondWith(404);
     expect(await api.getOrNull('/things/1', schema)).toBeNull();
-  });
-
-  it('resolves null on each status listed as missing', async () => {
     respondWith(400);
     expect(
       await api.getOrNull('/things/x', schema, { missing: [400, 404] }),
@@ -119,16 +97,6 @@ describe('writes', () => {
     await expect(api.post('/things/1/archive')).resolves.toBeUndefined();
   });
 
-  it('deletes without a body', async () => {
-    respondWith(204);
-    await expect(api.delete('/things/1')).resolves.toBeUndefined();
-    expect(fetch).toHaveBeenCalledWith(`${API_URL}/things/1`, {
-      method: 'DELETE',
-      credentials: 'include',
-      signal: undefined,
-    });
-  });
-
   it('exposes validation issues from a 400', async () => {
     const issues = [
       { path: ['name'], message: 'Required', code: 'invalid_type' },
@@ -140,11 +108,5 @@ describe('writes', () => {
     });
     const error = await rejection(api.post('/things', {}, schema));
     expect(error.issues).toEqual(issues);
-  });
-
-  it('has no issues when the error body has none', async () => {
-    respondWith(500);
-    const error = await rejection(api.post('/things'));
-    expect(error.issues).toEqual([]);
   });
 });

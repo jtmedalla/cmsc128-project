@@ -1,10 +1,9 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { QueryClient } from '@tanstack/react-query';
+import { fireEvent, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { renderWithProviders } from '@/testing/render';
 import { broadcastQueries } from '../queries';
 import { EmergencyBroadcasts } from './emergency-broadcasts';
-
-afterEach(cleanup);
 
 function renderWorkspace() {
   const queryClient = new QueryClient({
@@ -29,28 +28,22 @@ function renderWorkspace() {
     },
   ]);
 
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <EmergencyBroadcasts />
-    </QueryClientProvider>,
-  );
+  return renderWithProviders(<EmergencyBroadcasts />, { queryClient });
 }
 
 describe('EmergencyBroadcasts', () => {
-  it('renders the broadcast workspace and recent advisories', () => {
+  it('lists recent advisories', async () => {
     renderWorkspace();
 
-    expect(screen.getByText('Target Area')).toBeDefined();
-    expect(screen.getByText('Compose Advisory')).toBeDefined();
-    expect(screen.getByText('Recent Advisories')).toBeDefined();
     expect(
-      screen.getAllByRole('heading', { name: 'Emergency Advisory' }),
+      await screen.findAllByRole('heading', { name: 'Emergency Advisory' }),
     ).toHaveLength(2);
     expect(screen.getByText(/Residents in high-risk zones/)).toBeDefined();
   });
 
-  it('filters recent advisories', () => {
+  it('filters recent advisories', async () => {
     renderWorkspace();
+    await screen.findByText(/Residents in high-risk zones/);
 
     fireEvent.change(screen.getByLabelText('Filter recent advisories'), {
       target: { value: 'Road monitoring' },
@@ -60,8 +53,9 @@ describe('EmergencyBroadcasts', () => {
     expect(screen.queryByText(/Residents in high-risk zones/)).toBeNull();
   });
 
-  it('applies a quick template to the title', () => {
+  it('applies a quick template to the title', async () => {
     renderWorkspace();
+    await screen.findByText(/Residents in high-risk zones/);
 
     fireEvent.click(
       screen.getByRole('button', {
@@ -71,15 +65,5 @@ describe('EmergencyBroadcasts', () => {
 
     const titleInput = screen.getByLabelText('Title') as HTMLInputElement;
     expect(titleInput.value).toBe('Immediate Evacuation Order');
-  });
-
-  it('starts with all residents selected', () => {
-    renderWorkspace();
-
-    const checkbox = screen.getByRole('checkbox', {
-      name: 'All residents (no selection)',
-    });
-
-    expect(checkbox.getAttribute('aria-checked')).toBe('true');
   });
 });

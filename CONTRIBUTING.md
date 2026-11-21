@@ -37,6 +37,8 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm build
 
 CI runs the same checks on every PR.
 
+New or changed behavior needs tests that follow [docs/testing.md](docs/testing.md).
+
 ## Code review
 
 Follow Google's [What to look for in a code review](https://google.github.io/eng-practices/review/reviewer/looking-for.html).

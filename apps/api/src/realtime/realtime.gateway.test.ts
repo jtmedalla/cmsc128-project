@@ -1,10 +1,9 @@
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AuthModule } from '@thallesp/nestjs-better-auth';
-import { betterAuth } from 'better-auth';
-import { memoryAdapter } from 'better-auth/adapters/memory';
 import { io, type Socket } from 'socket.io-client';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { createTestAuth } from '../testing/auth.js';
 import { RealtimeModule } from './realtime.module.js';
 import { RealtimeService } from './realtime.service.js';
 
@@ -13,18 +12,7 @@ vi.mock('../config/env.js', () => ({
 }));
 
 describe('realtime gateway', () => {
-  const store: Record<string, Record<string, unknown>[]> = {
-    user: [],
-    session: [],
-    account: [],
-    verification: [],
-  };
-  const auth = betterAuth({
-    secret: 'test-secret-test-secret-test-secret',
-    baseURL: 'http://localhost:3000',
-    database: memoryAdapter(store),
-    emailAndPassword: { enabled: true },
-  });
+  const { auth, signUp } = createTestAuth();
   let app: INestApplication;
   let url: string;
   const sockets: Socket[] = [];
@@ -37,17 +25,6 @@ describe('realtime gateway', () => {
     });
     sockets.push(socket);
     return socket;
-  };
-
-  const signUp = async (email: string) => {
-    const res = await auth.api.signUpEmail({
-      body: { email, password: 'password1234', name: email },
-      returnHeaders: true,
-    });
-    return {
-      cookie: res.headers.get('set-cookie')!,
-      userId: res.response.user.id,
-    };
   };
 
   beforeAll(async () => {
