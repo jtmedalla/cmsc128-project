@@ -3,7 +3,7 @@
 Lets responders review reports. Read-only for now; editing arrives with #39.
 
 - API: `apps/api/src/triage/`
-- Web: `apps/web/src/components/incidents-workspace.tsx`, `report-details.tsx`, `apps/web/src/lib/reports.ts`
+- Web: `apps/web/src/components/incidents-workspace.tsx`, `report-details.tsx`, `incident-detail.tsx`, `apps/web/src/lib/reports.ts`
 - Schemas: `packages/shared/src/reports/`
 
 ## Endpoints
@@ -21,7 +21,9 @@ Both need a signed-in responder or admin (`@Roles` on the controller, #41); any 
 
 ## Incidents workspace
 
-`/dashboard/incidents` follows the wireframe's Incident Feed: report cards on the left, and the selected report's chat and details beside them. Selecting a card opens `/dashboard/incidents/:reportId`; with none selected, both panes prompt to select a report. The Table and Kanban tabs, Sort and the message box are shown disabled until their features exist.
+`/dashboard/incidents` follows the wireframe's Incident Feed: report cards on the left, and a quick view of the selected report's chat and details beside them. Selecting a card sets `?report=<id>` and stays on the same route, as the sitemap asks; a refresh or shared link keeps the selection. With none selected, both panes prompt to select a report. The Table and Kanban tabs, Sort and the message box are shown disabled until their features exist.
+
+The quick view's header links to `/dashboard/incidents/:reportId`, the full report page (responders and admins): details, victims, location, messages, edit history and referrals. It is read-only; the status actions, Edit details and Edit history (#39), replies (#12), the map (#66) and referrals (#63) are shown disabled or as placeholders. A breadcrumb leads back to the feed.
 
 The chat pane labels messages by `direction` and `sender_id`: inbound is the resident, outbound with a sender is a responder, outbound without one is the bot.
 
