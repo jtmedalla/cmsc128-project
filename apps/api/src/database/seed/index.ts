@@ -32,9 +32,7 @@ async function seed() {
     .where(like(residentChannel.externalId, `${SEED_PREFIX}%`))
     .limit(1);
   if (existing) {
-    console.log(
-      'Already seeded; skipping. To start over, recreate the database and run pnpm db:migrate.',
-    );
+    console.log('Already seeded; skipping. To start over, run pnpm db:reset.');
     return;
   }
 

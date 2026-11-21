@@ -31,6 +31,16 @@
       "dependsOn": ["^build"],
       "cache": false,
       "passThroughEnv": ["DATABASE_URL", "BETTER_AUTH_SECRET", "NODE_ENV"]
+    },
+    "db:reset": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "passThroughEnv": [
+        "DATABASE_URL",
+        "BETTER_AUTH_SECRET",
+        "NODE_ENV",
+        "RESET_REMOTE_DATABASE"
+      ]
     }
   }
 }
