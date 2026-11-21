@@ -379,7 +379,7 @@ An incident report. `resident_id` is the sender; `is_proxy` marks reports about 
 
 ### victim
 
-A person affected by a report. No names are stored (FR9). A report with `anyone_hurt = 'yes'` and no victims has no details yet. Age is a range because reporters often guess: "18" is 18 to 18, "60s" is 60 to 69, and Senior is 60 with no `age_max`.
+A person affected by a report. No names are stored (FR9). A report with `anyone_hurt = 'yes'` and no victims has no details yet; a victim with every column null means the reporter couldn't tell. Age is a range because reporters often guess: "18" is 18 to 18, "60s" is 60 to 69, and Senior is 60 with no `age_max`.
 
 | Column              | Type      | Null | Default | Constraint           | Description                         |
 | ------------------- | --------- | ---- | ------- | -------------------- | ----------------------------------- |

@@ -17,6 +17,11 @@ export const intakeFieldSchema = z.enum([
   'barangay',
   'severity',
   'anyoneHurt',
+  /**
+   * Missing when someone is hurt and no victim is known yet. Chat then asks
+   * about each person in turn (`VICTIM_STEPS` in the API).
+   */
+  'victims',
   'contactNumber',
 ]);
 export type IntakeField = z.infer<typeof intakeFieldSchema>;

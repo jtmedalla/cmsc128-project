@@ -7,10 +7,17 @@ import {
   DONE_REPLY,
   FOLLOW_UP_REPLY,
   NEW_REPORT_CHOICE,
+  type IntakeState,
   RECEIVED_REPLY,
 } from './chat-intake.service.js';
 import type { IntakeService } from './intake.service.js';
-import { QUESTIONS } from './questions.js';
+import {
+  COMMON_CONDITIONS,
+  firstVictimDraft,
+  QUESTIONS,
+  VICTIM_STEPS,
+  type VictimDraft,
+} from './questions.js';
 
 vi.mock('../config/env.js', () => ({ env: {} }));
 
@@ -19,6 +26,7 @@ const ALL: IntakeField[] = [
   'barangay',
   'severity',
   'anyoneHurt',
+  'victims',
   'contactNumber',
 ];
 
@@ -28,6 +36,7 @@ describe('ChatIntakeService', () => {
     receiveMessage: vi.fn(),
     missingFields: vi.fn(),
     answer: vi.fn(),
+    addVictims: vi.fn(),
     saveContactNumber: vi.fn(),
     incidentTypes: vi.fn(),
   };
@@ -40,25 +49,50 @@ describe('ChatIntakeService', () => {
   const recorded = { residentId: 'resident-1', messageId: 'msg-1' };
   const options = { reportId: 'report-1' };
 
-  /** The texts the bot sent, in order. */
-  const sent = () => channels.send.mock.calls.map((call) => call[2] as string);
+  /** A Chat SDK thread holding `state`. */
+  const threadWith = (state: IntakeState | null = null) => ({
+    state: Promise.resolve(state),
+    setState: vi.fn(),
+  });
+  let thread = threadWith();
 
-  const followUp = (missing: IntakeField[]) => {
+  /** Mid-questions about a person, at `draft.step`. */
+  const asking = (draft: Partial<VictimDraft>) => {
+    thread = threadWith({
+      victim: { ...firstVictimDraft('report-1'), ...draft },
+    });
     intake.receiveMessage.mockResolvedValue({
       reportId: 'report-1',
       created: false,
     });
-    intake.missingFields.mockResolvedValue(missing);
+  };
+
+  /** The texts the bot sent, in order. */
+  const sent = () => channels.send.mock.calls.map((call) => call[2] as string);
+
+  /** Fields missing before the message, then after its answer is saved. */
+  const followUp = (
+    missing: IntakeField[],
+    after: IntakeField[] = missing.slice(1),
+  ) => {
+    intake.receiveMessage.mockResolvedValue({
+      reportId: 'report-1',
+      created: false,
+    });
+    intake.missingFields
+      .mockResolvedValueOnce(missing)
+      .mockResolvedValueOnce(after);
   };
 
   beforeEach(() => {
+    thread = threadWith();
     intake.incidentTypes.mockResolvedValue([
       { id: 'type-fire', code: 'fire', name: 'Fire' },
       { id: 'type-flood', code: 'flood', name: 'Flood' },
     ]);
   });
 
-  afterEach(() => vi.clearAllMocks());
+  afterEach(() => vi.resetAllMocks());
 
   it('handles every resident message', async () => {
     followUp([]);
@@ -83,7 +117,7 @@ describe('ChatIntakeService', () => {
     });
     intake.missingFields.mockResolvedValue(ALL);
 
-    await service.handle('messenger', recorded, 'may sunog');
+    await service.handle('messenger', recorded, 'may sunog', thread);
 
     expect(sent()).toEqual([RECEIVED_REPLY, QUESTIONS.incidentType.ask]);
     expect(channels.send).toHaveBeenLastCalledWith(
@@ -97,7 +131,7 @@ describe('ChatIntakeService', () => {
 
   it('saves a valid answer and asks the next question', async () => {
     followUp(ALL);
-    await service.handle('messenger', recorded, 'fire');
+    await service.handle('messenger', recorded, 'fire', thread);
     expect(intake.answer).toHaveBeenCalledWith('report-1', {
       incidentTypeId: 'type-fire',
     });
@@ -107,7 +141,7 @@ describe('ChatIntakeService', () => {
   it('matches the barangay by name', async () => {
     followUp(['barangay', 'severity']);
     barangays.findByName.mockResolvedValue({ id: 'brgy-1' });
-    await service.handle('messenger', recorded, 'Tacas');
+    await service.handle('messenger', recorded, 'Tacas', thread);
     expect(barangays.findByName).toHaveBeenCalledWith('Tacas');
     expect(intake.answer).toHaveBeenCalledWith('report-1', {
       barangayId: 'brgy-1',
@@ -122,7 +156,7 @@ describe('ChatIntakeService', () => {
 
   it('asks again when the answer does not fit', async () => {
     followUp(['severity', 'contactNumber']);
-    await service.handle('messenger', recorded, 'very bad');
+    await service.handle('messenger', recorded, 'very bad', thread);
     expect(intake.answer).not.toHaveBeenCalled();
     expect(sent()).toEqual([
       `${QUESTIONS.severity.retry} ${QUESTIONS.severity.ask}`,
@@ -130,17 +164,123 @@ describe('ChatIntakeService', () => {
   });
 
   it('records whether anyone is hurt', async () => {
-    followUp(['anyoneHurt', 'contactNumber']);
-    await service.handle('messenger', recorded, 'wala');
+    followUp(['anyoneHurt', 'victims', 'contactNumber'], ['contactNumber']);
+    await service.handle('messenger', recorded, 'wala', thread);
     expect(intake.answer).toHaveBeenCalledWith('report-1', {
       anyoneHurt: 'no',
     });
     expect(sent()).toEqual([QUESTIONS.contactNumber.ask]);
   });
 
+  it('asks about each person when someone is hurt', async () => {
+    followUp(['anyoneHurt', 'contactNumber'], ['victims', 'contactNumber']);
+    await service.handle('messenger', recorded, 'Yes', thread);
+    expect(intake.answer).toHaveBeenCalledWith('report-1', {
+      anyoneHurt: 'yes',
+    });
+    const draft = firstVictimDraft('report-1');
+    expect(thread.setState).toHaveBeenCalledWith({ victim: draft });
+    expect(channels.send).toHaveBeenLastCalledWith(
+      'resident-1',
+      'messenger',
+      VICTIM_STEPS.sex.ask(draft),
+      { ...options, choices: ['Male', 'Female', "Don't know"] },
+    );
+  });
+
+  it('keeps sex and age in the draft, and asks never for a name', async () => {
+    asking({ step: 'sex' });
+    await service.handle('messenger', recorded, 'Female', thread);
+    asking({ step: 'age', sex: 'female' });
+    await service.handle('messenger', recorded, '60s', thread);
+    expect(thread.setState).toHaveBeenLastCalledWith({
+      victim: {
+        ...firstVictimDraft('report-1'),
+        step: 'condition',
+        sex: 'female',
+        age: { min: 60, max: 69 },
+      },
+    });
+    expect(intake.addVictims).not.toHaveBeenCalled();
+    expect(sent()).toEqual([
+      VICTIM_STEPS.age.ask(firstVictimDraft('report-1')),
+      VICTIM_STEPS.condition.ask(firstVictimDraft('report-1')),
+    ]);
+    expect(sent().join(' ')).not.toMatch(/name\?/i);
+  });
+
+  it('saves the person after their condition and asks about others', async () => {
+    asking({ step: 'condition', sex: 'female', age: { min: 60, max: null } });
+    await service.handle('messenger', recorded, "can't breathe", thread);
+    expect(intake.addVictims).toHaveBeenCalledWith('report-1', [
+      {
+        sex: 'female',
+        ageMin: 60,
+        ageMax: null,
+        medicalCondition: "can't breathe",
+      },
+    ]);
+    const next = { ...firstVictimDraft('report-1'), step: 'another', saved: 1 };
+    expect(thread.setState).toHaveBeenCalledWith({ victim: next });
+    expect(sent()).toEqual([VICTIM_STEPS.another.ask(next as VictimDraft)]);
+  });
+
+  it('offers common conditions as taps', async () => {
+    asking({ step: 'age' });
+    await service.handle('messenger', recorded, 'Adult', thread);
+    expect(channels.send).toHaveBeenLastCalledWith(
+      'resident-1',
+      'messenger',
+      VICTIM_STEPS.condition.ask(firstVictimDraft('report-1')),
+      { ...options, choices: [...COMMON_CONDITIONS, "Don't know"] },
+    );
+  });
+
+  it('takes "Don\'t know" for any detail', async () => {
+    asking({ step: 'condition' });
+    await service.handle('messenger', recorded, "Don't know", thread);
+    expect(intake.addVictims).toHaveBeenCalledWith('report-1', [
+      { sex: null, ageMin: null, ageMax: null, medicalCondition: null },
+    ]);
+  });
+
+  it('asks about the next person', async () => {
+    asking({ step: 'another', saved: 1 });
+    await service.handle('messenger', recorded, 'Yes', thread);
+    expect(sent()).toEqual(['Is the next person male or female?']);
+  });
+
+  it('moves on when no one else is hurt', async () => {
+    asking({ step: 'another', saved: 1 });
+    intake.missingFields.mockResolvedValue(['contactNumber']);
+    await service.handle('messenger', recorded, 'No', thread);
+    expect(thread.setState).toHaveBeenCalledWith({ victim: null });
+    expect(sent()).toEqual([QUESTIONS.contactNumber.ask]);
+  });
+
+  it('asks a person question again when the answer does not fit', async () => {
+    asking({ step: 'age' });
+    await service.handle('messenger', recorded, 'young', thread);
+    expect(thread.setState).not.toHaveBeenCalled();
+    expect(sent()).toEqual([
+      `${VICTIM_STEPS.age.retry} ${VICTIM_STEPS.age.ask(firstVictimDraft('report-1'))}`,
+    ]);
+  });
+
+  it('ignores a draft from another report', async () => {
+    thread = threadWith({
+      victim: { ...firstVictimDraft('report-0'), step: 'age' },
+    });
+    followUp(['severity', 'contactNumber']);
+    await service.handle('messenger', recorded, 'High', thread);
+    expect(intake.answer).toHaveBeenCalledWith('report-1', {
+      severity: 'high',
+    });
+  });
+
   it('saves the contact number on the resident and thanks them', async () => {
     followUp(['contactNumber']);
-    await service.handle('messenger', recorded, '+63 917 123 4567');
+    await service.handle('messenger', recorded, '+63 917 123 4567', thread);
     expect(intake.saveContactNumber).toHaveBeenCalledWith(
       'resident-1',
       '09171234567',
@@ -161,7 +301,7 @@ describe('ChatIntakeService', () => {
     });
     intake.missingFields.mockResolvedValue(['incidentType']);
 
-    await service.handle('messenger', recorded, 'new REPORT');
+    await service.handle('messenger', recorded, 'new REPORT', thread);
 
     expect(intake.receiveMessage).toHaveBeenCalledWith(
       expect.objectContaining({ newReport: true }),
@@ -171,7 +311,7 @@ describe('ChatIntakeService', () => {
 
   it('acknowledges messages added to a complete report', async () => {
     followUp([]);
-    await service.handle('messenger', recorded, 'may naipit pa');
+    await service.handle('messenger', recorded, 'may naipit pa', thread);
     expect(intake.answer).not.toHaveBeenCalled();
     expect(channels.send).toHaveBeenCalledExactlyOnceWith(
       'resident-1',

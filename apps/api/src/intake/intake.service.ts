@@ -5,6 +5,7 @@ import {
   reportCreatedEventSchema,
   reportUpdatedEventSchema,
   type SourceChannel,
+  type VictimInput,
 } from '@repo/shared';
 import { eq, sql } from 'drizzle-orm';
 import type { Database } from '../database/client.js';
@@ -18,6 +19,7 @@ import {
   findOpenReport,
   type IntakeAnswers,
   insertReport,
+  insertVictims,
   linkMessage,
   updateReport,
 } from './reports.js';
@@ -96,6 +98,12 @@ export class IntakeService {
   /** Fills in report fields from the resident's answers. */
   async answer(reportId: string, answers: IntakeAnswers) {
     await updateReport(this.db, reportId, answers);
+    await this.publish('updated', reportId);
+  }
+
+  /** Adds anonymous victims to a report; names have no field (FR9). */
+  async addVictims(reportId: string, victims: VictimInput[]) {
+    await insertVictims(this.db, reportId, victims);
     await this.publish('updated', reportId);
   }
 

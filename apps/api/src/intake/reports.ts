@@ -4,6 +4,7 @@ import {
   type ReportInput,
   reportInputSchema,
   type SourceChannel,
+  type VictimInput,
 } from '@repo/shared';
 import { and, desc, eq, gt, inArray, sql } from 'drizzle-orm';
 import type { Database } from '../database/client.js';
@@ -42,11 +43,7 @@ export function insertReport(
       .returning({ id: report.id, trackingToken: report.trackingToken });
     const { id } = created!;
 
-    if (victims.length) {
-      await tx
-        .insert(victim)
-        .values(victims.map((v) => ({ ...v, reportId: id })));
-    }
+    await insertVictims(tx, id, victims);
 
     if (messageIds.length) {
       const linked = await tx
@@ -108,6 +105,16 @@ export async function linkMessage(
   await db.update(message).set({ reportId }).where(eq(message.id, messageId));
 }
 
+/** Adds anonymous victims to a report. */
+export async function insertVictims(
+  db: Executor,
+  reportId: string,
+  victims: VictimInput[],
+) {
+  if (!victims.length) return;
+  await db.insert(victim).values(victims.map((v) => ({ ...v, reportId })));
+}
+
 /** Report fields residents can fill in during intake. */
 export type IntakeAnswers = Partial<
   Pick<
@@ -137,7 +144,10 @@ export async function findMissingFields(
       severity: true,
       anyoneHurt: true,
     },
-    with: { resident: { columns: { contactNumber: true } } },
+    with: {
+      resident: { columns: { contactNumber: true } },
+      victims: { columns: { id: true }, limit: 1 },
+    },
   });
   if (!row) throw new Error(`Report ${id} not found`);
   const known: Record<IntakeField, unknown> = {
@@ -145,6 +155,8 @@ export async function findMissingFields(
     barangay: row.barangayId,
     severity: row.severity,
     anyoneHurt: row.anyoneHurt,
+    // Only missing once someone is hurt; filled by the first victim.
+    victims: row.anyoneHurt !== 'yes' || row.victims.length ? true : null,
     contactNumber: row.resident?.contactNumber,
   };
   return INTAKE_FIELDS.filter((field) => known[field] == null);
