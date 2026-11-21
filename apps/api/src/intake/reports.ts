@@ -8,11 +8,8 @@ import {
 } from '@repo/shared';
 import { and, desc, eq, gt, inArray, sql } from 'drizzle-orm';
 import type { Database } from '../database/client.js';
+import type { Executor } from '../database/transaction.js';
 import { message, report, victim } from '../database/schema/index.js';
-
-/** The database, or a transaction on it. */
-export type Executor =
-  Database | Parameters<Parameters<Database['transaction']>[0]>[0];
 
 /**
  * How long a resident's report stays open after their last message.

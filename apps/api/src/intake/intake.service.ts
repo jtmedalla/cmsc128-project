@@ -7,9 +7,10 @@ import {
   type SourceChannel,
   type VictimInput,
 } from '@repo/shared';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import type { Database } from '../database/client.js';
 import { DB } from '../database/database.module.js';
+import { advisoryLock } from '../database/transaction.js';
 import { incidentType, resident } from '../database/schema/index.js';
 import { RealtimeService } from '../realtime/realtime.service.js';
 // The feed belongs to triage (docs/intake.md, docs/realtime.md); intake only pushes new reports to it.
@@ -70,9 +71,7 @@ export class IntakeService {
   }: IncomingMessage): Promise<ReceivedMessage> {
     const received = await this.db.transaction(async (tx) => {
       // Serializes a resident's messages so a burst opens one report.
-      await tx.execute(
-        sql`select pg_advisory_xact_lock(hashtext(${`intake:${residentId}`}))`,
-      );
+      await advisoryLock(tx, `intake:${residentId}`);
       const open = newReport
         ? null
         : await findOpenReport(tx, residentId, channel);
@@ -114,9 +113,7 @@ export class IntakeService {
    */
   withVictimLock<T>(reportId: string, fn: () => Promise<T>): Promise<T> {
     return this.db.transaction(async (tx) => {
-      await tx.execute(
-        sql`select pg_advisory_xact_lock(hashtext(${`victims:${reportId}`}))`,
-      );
+      await advisoryLock(tx, `victims:${reportId}`);
       return fn();
     });
   }
