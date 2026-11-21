@@ -6,8 +6,8 @@ import { memoryAdapter } from 'better-auth/adapters/memory';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { adminPlugin } from '../auth/roles.js';
-import { BroadcastController } from './broadcast.controller.js';
-import { BroadcastService } from './broadcast.service.js';
+import { BroadcastsController } from './broadcasts.controller.js';
+import { BroadcastsService } from './broadcasts.service.js';
 
 vi.mock('../config/env.js', () => ({ env: {} }));
 
@@ -43,8 +43,8 @@ describe('broadcast advisory routes by role', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AuthModule.forRoot({ auth })],
-      controllers: [BroadcastController],
-      providers: [{ provide: BroadcastService, useValue: broadcasts }],
+      controllers: [BroadcastsController],
+      providers: [{ provide: BroadcastsService, useValue: broadcasts }],
     }).compile();
     app = moduleRef.createNestApplication({ bodyParser: false });
     await app.init();
@@ -55,14 +55,16 @@ describe('broadcast advisory routes by role', () => {
   });
 
   it('rejects requests without a session', async () => {
-    const res = await request(app.getHttpServer()).get('/broadcast/advisories');
+    const res = await request(app.getHttpServer()).get(
+      '/broadcasts/advisories',
+    );
     expect(res.status).toBe(401);
   });
 
   it('lets responders and admins list advisories', async () => {
     for (const role of ['responder', 'admin']) {
       const res = await request(app.getHttpServer())
-        .get('/broadcast/advisories')
+        .get('/broadcasts/advisories')
         .set('Cookie', await signInAs(role));
       expect(res.status).toBe(200);
     }
@@ -70,7 +72,7 @@ describe('broadcast advisory routes by role', () => {
 
   it('rejects any other role', async () => {
     const res = await request(app.getHttpServer())
-      .get('/broadcast/advisories')
+      .get('/broadcasts/advisories')
       .set('Cookie', await signInAs('guest'));
     expect(res.status).toBe(403);
     expect(broadcasts.findRecentAdvisories).not.toHaveBeenCalled();

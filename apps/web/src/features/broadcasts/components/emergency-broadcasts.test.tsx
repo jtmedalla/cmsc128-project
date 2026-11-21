@@ -10,7 +10,7 @@ function renderWorkspace() {
     defaultOptions: { queries: { retry: false } },
   });
   queryClient.setQueryData(
-    ['broadcast', 'advisories', 'recent'],
+    ['broadcasts', 'advisories', 'recent'],
     [
       {
         id: '0b9a3f4e-8c1d-4e2a-9f6b-1c2d3e4f5a6b',

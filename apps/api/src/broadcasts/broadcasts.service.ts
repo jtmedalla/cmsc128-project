@@ -6,7 +6,7 @@ import { DB } from '../database/database.module.js';
 import { broadcast } from '../database/schema/index.js';
 
 @Injectable()
-export class BroadcastService {
+export class BroadcastsService {
   constructor(@Inject(DB) private readonly db: Database) {}
 
   async findRecentAdvisories(): Promise<RecentAdvisory[]> {

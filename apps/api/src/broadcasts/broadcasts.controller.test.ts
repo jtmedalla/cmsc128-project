@@ -13,8 +13,8 @@ import {
   it,
   vi,
 } from 'vitest';
-import { BroadcastController } from './broadcast.controller.js';
-import { BroadcastService } from './broadcast.service.js';
+import { BroadcastsController } from './broadcasts.controller.js';
+import { BroadcastsService } from './broadcasts.service.js';
 
 vi.mock('../config/env.js', () => ({ env: {} }));
 
@@ -29,15 +29,15 @@ const advisory: RecentAdvisory = {
   createdBy: { id: 'responder-1', name: 'Maria Santos' },
 };
 
-describe('/broadcast/advisories', () => {
+describe('/broadcasts/advisories', () => {
   let app: INestApplication;
   const broadcasts = { findRecentAdvisories: vi.fn() };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
-      controllers: [BroadcastController],
+      controllers: [BroadcastsController],
       providers: [
-        { provide: BroadcastService, useValue: broadcasts },
+        { provide: BroadcastsService, useValue: broadcasts },
         { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
       ],
     }).compile();
@@ -53,7 +53,7 @@ describe('/broadcast/advisories', () => {
     await app.close();
   });
 
-  it.each(['/broadcast/advisories', '/broadcast/advisories/recent'])(
+  it.each(['/broadcasts/advisories', '/broadcasts/advisories/recent'])(
     'returns recent advisories from %s',
     async (path) => {
       broadcasts.findRecentAdvisories.mockResolvedValue([advisory]);
@@ -74,7 +74,9 @@ describe('/broadcast/advisories', () => {
   it('returns an empty list when there are no advisories', async () => {
     broadcasts.findRecentAdvisories.mockResolvedValue([]);
 
-    const res = await request(app.getHttpServer()).get('/broadcast/advisories');
+    const res = await request(app.getHttpServer()).get(
+      '/broadcasts/advisories',
+    );
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual([]);
