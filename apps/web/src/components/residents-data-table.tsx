@@ -20,8 +20,6 @@ import {
   SortingState,
   tableFeatures,
 } from '@tanstack/react-table'; //table features
-
-import { createColumnHelper } from '@tanstack/react-table';
 import { useTable, type ColumnDef, type RowData } from '@tanstack/react-table';
 import {
   Table,
@@ -31,9 +29,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowUpDown } from 'lucide-react';
+import { ResidentListItem } from 'node_modules/@repo/shared/dist/residents';
 const features = tableFeatures({
   columnFilteringFeature,
   columnVisibilityFeature,
@@ -49,55 +46,7 @@ const features = tableFeatures({
 
 type DataTableFeatures = typeof features;
 
-export type ResidentData = {
-  //TODO change this with actual types from the api
-  name: string;
-  contactNumber?: string;
-  lastMessaged: Date;
-};
-
-const columnHelper = createColumnHelper<DataTableFeatures, ResidentData>();
-
-export const columns = columnHelper.columns([
-  columnHelper.accessor('name', {
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Name
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-  }),
-  columnHelper.accessor('contactNumber', {
-    header: 'Contact Number',
-  }),
-  columnHelper.accessor('lastMessaged', {
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Last Messaged
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const lastMessaged = row.getValue('lastMessaged');
-      const minutes = Math.floor(
-        (new Date().getTime() - lastMessaged.getTime()) / 60000,
-      );
-      const hours = Math.floor(minutes / 60);
-      const remainingMinutes = minutes % 60;
-      return `${hours}h ${remainingMinutes}m ago`;
-    },
-  }),
-]);
+export type ResidentData = ResidentListItem;
 
 interface DataTableProps<TData extends RowData> {
   columns: ColumnDef<DataTableFeatures, TData>[];
@@ -125,7 +74,7 @@ export function ResidentTable<TData extends RowData>({
   });
   return (
     <div>
-      <div className="flex items-center py-4 flex-col gap-2 flex-wrap:wrap sm:flex-row sm:gap-4">
+      <div className="flex flex-col items-center py-4 gap-2 flex-wrap:wrap sm:flex-row sm:gap-4">
         <Input
           placeholder="Filter name..."
           value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}

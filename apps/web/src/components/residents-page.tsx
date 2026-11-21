@@ -1,30 +1,37 @@
-import { columns, ResidentData } from '@/components/residents-data-table';
+import { useQuery } from '@tanstack/react-query';
+import { RefreshCw } from 'lucide-react';
+import { columns } from '@/components/residents-columns';
 import { ResidentTable } from '@/components/residents-data-table';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { residentsQuery } from '@/lib/residents';
+import { cn } from '@/lib/utils';
 
 export function ResidentsPage() {
-  const dateNow = new Date();
-  const residentSamples: ResidentData[] = [
-    {
-      name: 'John Doe',
-      lastMessaged: new Date(dateNow.getTime() - 600000), // 10 mins ago
-      contactNumber: '09099923581',
-    },
-    {
-      name: 'Jane Smith',
-      lastMessaged: new Date(dateNow.getTime() - 7200000), // 2 hours ago
-      contactNumber: '09781234567',
-    },
-    {
-      name: 'Alice Johnson',
-      lastMessaged: new Date(dateNow.getTime() - 10800000), // 3 hours ago
-      contactNumber: '09123456789',
-    },
-  ];
-  const data = residentSamples;
+  const { data, isPending, isError, isFetching, refetch } =
+    useQuery(residentsQuery);
+
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold">Residents Directory</h1>
-      <ResidentTable columns={columns} data={data} />
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Residents Directory</h1>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Refresh"
+          disabled={isFetching}
+          onClick={() => void refetch()}
+        >
+          <RefreshCw className={cn(isFetching && 'animate-spin')} />
+        </Button>
+      </div>
+      {isPending ? (
+        <Skeleton className="h-64" />
+      ) : isError ? (
+        <p className="text-sm text-destructive">Couldn't load residents.</p>
+      ) : (
+        <ResidentTable columns={columns} data={data} />
+      )}
     </div>
   );
 }
