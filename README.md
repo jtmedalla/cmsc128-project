@@ -4,7 +4,7 @@ Miagao Incident Gateway for Operations.
 
 ## Wireframe
 
-[Figma](https://www.figma.com/design/YBshm4KSFoGAK5pbSPx38U/CMSC128_Final-Project)
+[Figma](https://www.figma.com/design/hW0DADlcpwQ231WD1uCaZX/CMSC128_Final-Project)
 
 ## Structure
 
