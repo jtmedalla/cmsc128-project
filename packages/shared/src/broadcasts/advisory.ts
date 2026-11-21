@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { broadcastKindSchema } from './enums.js';
-import { stringToDate } from './codecs.js';
+import { broadcastKindSchema } from '../enums.js';
+import { stringToDate } from '../codecs.js';
 
 /** A sent broadcast as it appears in the responder recent-advisories list. */
 export const recentAdvisorySchema = z.object({

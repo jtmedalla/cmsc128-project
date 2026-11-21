@@ -1,42 +1,14 @@
 import { z } from 'zod';
 import { geoPoint, stringToDate } from '../codecs.js';
+import { messageAttachmentsSchema } from '../channels/message.js';
 import {
-  anyoneHurtSchema,
   directionSchema,
   reportStatusSchema,
   severityLevelSchema,
   sexSchema,
   sourceChannelSchema,
 } from '../enums.js';
-import { parseConfidenceSchema } from './parsed.js';
-import { victimInputSchema } from './victim.js';
-
-/**
- * A new report from any intake path: Messenger, web chat, the classifier or
- * the guided form. Unknown fields stay null for triage to fill in.
- */
-export const reportInputSchema = z.object({
-  /** Always the sender, even for proxy reports. */
-  residentId: z.uuid(),
-  sourceChannel: sourceChannelSchema,
-  isProxy: z.boolean().default(false),
-  incidentTypeId: z.uuid().nullish(),
-  severity: severityLevelSchema.nullish(),
-  barangayId: z.uuid().nullish(),
-  locationText: z.string().trim().min(1).nullish(),
-  location: geoPoint.nullish(),
-  /** A `Date`, or an ISO string over the wire. */
-  incidentAt: z.coerce.date<Date | string>().nullish(),
-  /** Defaults to `yes` when `victims` isn't empty. */
-  anyoneHurt: anyoneHurtSchema.nullish(),
-  victims: z.array(victimInputSchema).default([]),
-  /** The resident's messages the report came from; linked to it. */
-  messageIds: z.array(z.uuid()).default([]),
-  /** False for form reports and classifier fallbacks. */
-  parsedAutomatically: z.boolean().default(false),
-  parseConfidence: parseConfidenceSchema.nullish(),
-});
-export type ReportInput = z.input<typeof reportInputSchema>;
+import { parseConfidenceSchema } from '../intake/parsed.js';
 
 /** A report as the triage feed lists it. */
 export const reportFeedItemSchema = z.object({
@@ -63,12 +35,6 @@ export const reportFeedItemSchema = z.object({
   updatedAt: stringToDate,
 });
 export type ReportFeedItem = z.output<typeof reportFeedItemSchema>;
-
-/**
- * `message.attachments`: location payloads and media (docs/database.md). Only
- * `type` is kept; the page needs just enough to tell a location share apart.
- */
-export const messageAttachmentsSchema = z.array(z.object({ type: z.string() }));
 
 /**
  * One report as a signed-in responder reviews it. Unlike the feed item, it
