@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { residentQuery } from '../api';
@@ -23,10 +24,20 @@ function Field({ label, value }: { label: string; value?: string | null }) {
 
 export function ResidentProfilePage() {
   const { residentId } = route.useParams();
-  const { data, isPending, isError } = useQuery(residentQuery(residentId));
+  const { data, isPending, isError, refetch } = useQuery(
+    residentQuery(residentId),
+  );
 
   if (isPending) return <Skeleton className="h-64 w-full" />;
-  if (isError || !data) return <p>Resident not found.</p>;
+  if (isError) {
+    return (
+      <div className="flex flex-col items-start gap-2">
+        <p>Couldn't load this resident.</p>
+        <Button onClick={() => void refetch()}>Try again</Button>
+      </div>
+    );
+  }
+  if (!data) return <p>Resident not found.</p>;
 
   return (
     <div className="flex flex-col gap-4">
