@@ -16,7 +16,13 @@ import { agencyReferral } from './agency.js';
 import { user } from './auth.js';
 import { barangay } from './barangay.js';
 import { geometryPoint, timestamps } from './columns.js';
-import { reportStatus, severityLevel, sex, sourceChannel } from './enums.js';
+import {
+  anyoneHurt,
+  reportStatus,
+  severityLevel,
+  sex,
+  sourceChannel,
+} from './enums.js';
 import { message } from './message.js';
 import { resident } from './resident.js';
 
@@ -57,6 +63,8 @@ export const report = pgTable(
       onDelete: 'restrict',
     }),
     severity: severityLevel('severity'),
+    /** Null until the reporter says; `yes` with no victims means no details yet. */
+    anyoneHurt: anyoneHurt('anyone_hurt'),
     barangayId: uuid('barangay_id').references(() => barangay.id, {
       onDelete: 'restrict',
     }),
@@ -88,11 +96,18 @@ export const victim = pgTable(
       .notNull()
       .references(() => report.id, { onDelete: 'restrict' }),
     sex: sex('sex'),
-    age: integer('age'),
+    /** Equal to `age_max` for an exact age. */
+    ageMin: integer('age_min'),
+    /** Null for an open range like 60+. */
+    ageMax: integer('age_max'),
     medicalCondition: text('medical_condition'),
   },
   (table) => [
-    check('victim_age_check', sql`${table.age} >= 0`),
+    check('victim_age_min_check', sql`${table.ageMin} >= 0`),
+    check(
+      'victim_age_range_check',
+      sql`${table.ageMax} >= coalesce(${table.ageMin}, 0)`,
+    ),
     index('victim_report_id_idx').on(table.reportId),
   ],
 );

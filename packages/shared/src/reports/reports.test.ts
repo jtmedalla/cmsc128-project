@@ -21,7 +21,10 @@ describe('confidenceOf', () => {
       locationText: { value: null, confidence: 0 },
       incidentAt: { value: null, confidence: 0 },
       isProxy: { value: true, confidence: 0.7 },
-      victims: { value: [{ sex: 'female', age: 80 }], confidence: 0.6 },
+      victims: {
+        value: [{ sex: 'female', ageMin: 80, ageMax: 80 }],
+        confidence: 0.6,
+      },
     };
     expect(confidenceOf(parsed)).toEqual({
       incidentType: 0.9,
@@ -45,9 +48,12 @@ describe('parsedReportSchema', () => {
       locationText: none,
       incidentAt: none,
       isProxy: none,
-      victims: { value: [{ name: 'Juan dela Cruz', age: 40 }], confidence: 1 },
+      victims: {
+        value: [{ name: 'Juan dela Cruz', ageMin: 40, ageMax: 40 }],
+        confidence: 1,
+      },
     });
-    expect(victims.value).toEqual([{ age: 40 }]);
+    expect(victims.value).toEqual([{ ageMin: 40, ageMax: 40 }]);
   });
 });
 
@@ -82,9 +88,19 @@ describe('reportInputSchema', () => {
     const { victims } = reportInputSchema.parse({
       residentId,
       sourceChannel: 'web',
-      victims: [{ name: 'Juan dela Cruz', age: 40 }],
+      victims: [{ name: 'Juan dela Cruz', ageMin: 40, ageMax: 40 }],
     });
-    expect(victims).toEqual([{ age: 40 }]);
+    expect(victims).toEqual([{ ageMin: 40, ageMax: 40 }]);
+  });
+
+  it('rejects a victim age range that ends before it starts', () => {
+    expect(
+      reportInputSchema.safeParse({
+        residentId,
+        sourceChannel: 'web',
+        victims: [{ ageMin: 60, ageMax: 40 }],
+      }).success,
+    ).toBe(false);
   });
 
   it('rejects unknown confidence fields', () => {
@@ -166,7 +182,13 @@ describe('reportDetailSchema', () => {
       parseConfidence: null,
       resident: { id: residentId, name: null, contactNumber: '09171234567' },
       victims: [
-        { id: residentId, sex: 'female', age: 78, medicalCondition: null },
+        {
+          id: residentId,
+          sex: 'female',
+          ageMin: 60,
+          ageMax: null,
+          medicalCondition: null,
+        },
       ],
       messages: [
         {

@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { type SeverityLevel, severityLevelSchema } from '../enums.js';
+import {
+  type AnyoneHurt,
+  anyoneHurtSchema,
+  type SeverityLevel,
+  severityLevelSchema,
+  type Sex,
+  sexSchema,
+} from '../enums.js';
 
 /**
  * Details intake asks residents for, in the order they're asked. Chat skips
@@ -9,6 +16,12 @@ export const intakeFieldSchema = z.enum([
   'incidentType',
   'barangay',
   'severity',
+  'anyoneHurt',
+  /**
+   * Missing when someone is hurt and no victim is known yet. Chat then asks
+   * about each person in turn (`VICTIM_STEPS` in the API).
+   */
+  'victims',
   'contactNumber',
 ]);
 export type IntakeField = z.infer<typeof intakeFieldSchema>;
@@ -43,6 +56,71 @@ export function parseSeverity(text: string): SeverityLevel | null {
   return matchChoice(text, severityLevelSchema.options, (level) => [
     level,
     SEVERITY_LABELS[level],
+  ]);
+}
+
+/** The "Don't know" choice offered on questions residents may not know. */
+export const DONT_KNOW = "Don't know";
+
+const DONT_KNOW_WORDS = [
+  DONT_KNOW,
+  'dont know',
+  'don’t know',
+  'unknown',
+  'not sure',
+  'ambot',
+  'hindi ko alam',
+];
+
+/** Whether the resident answered that they don't know. */
+export function isDontKnow(text: string): boolean {
+  return (
+    matchChoice(
+      text.replace(/[.!]+$/, ''),
+      [DONT_KNOW],
+      () => DONT_KNOW_WORDS,
+    ) !== null
+  );
+}
+
+export const ANYONE_HURT_LABELS: Record<AnyoneHurt, string> = {
+  yes: 'Yes',
+  no: 'No',
+  unknown: DONT_KNOW,
+};
+
+/** Other words residents use for each answer, in English and local languages. */
+const ANYONE_HURT_WORDS: Record<AnyoneHurt, string[]> = {
+  yes: ['oo', 'huo', 'meron', 'may ara'],
+  no: ['none', 'no one', 'nobody', 'wala', 'wala man', 'hindi', 'indi'],
+  unknown: DONT_KNOW_WORDS,
+};
+
+/** Matches an "Is anyone hurt?" answer as its value, label or a known word. */
+export function parseAnyoneHurt(text: string): AnyoneHurt | null {
+  return matchChoice(
+    text.replace(/[.!]+$/, ''),
+    anyoneHurtSchema.options,
+    (a) => [a, ANYONE_HURT_LABELS[a], ...ANYONE_HURT_WORDS[a]],
+  );
+}
+
+export const SEX_LABELS: Record<Sex, string> = {
+  male: 'Male',
+  female: 'Female',
+};
+
+const SEX_WORDS: Record<Sex, string[]> = {
+  male: ['m', 'man', 'boy', 'lalaki', 'lalake'],
+  female: ['f', 'woman', 'girl', 'babae', 'babayi'],
+};
+
+/** Matches a sex as its value, label or a known word, ignoring case. */
+export function parseSex(text: string): Sex | null {
+  return matchChoice(text.replace(/[.!]+$/, ''), sexSchema.options, (sex) => [
+    sex,
+    SEX_LABELS[sex],
+    ...SEX_WORDS[sex],
   ]);
 }
 

@@ -26,7 +26,9 @@ const wire = {
   parsedAutomatically: true,
   parseConfidence: { incidentType: 0.9 },
   resident: { id, name: 'Pedro Cruz', contactNumber: '09171234567' },
-  victims: [{ id, sex: 'female', age: 78, medicalCondition: 'Asthma' }],
+  victims: [
+    { id, sex: 'female', ageMin: 60, ageMax: null, medicalCondition: 'Asthma' },
+  ],
   messages: [
     {
       id,
@@ -80,7 +82,7 @@ describe('ReportDetails', () => {
       screen.getByRole('link', { name: '09171234567' }).getAttribute('href'),
     ).toBe('tel:09171234567');
     expect(screen.getByText('Baha diri')).toBeDefined();
-    expect(screen.getByText('Female · 78 years old · Asthma')).toBeDefined();
+    expect(screen.getByText('Female · 60+ years old · Asthma')).toBeDefined();
   });
 
   it('sends the session cookie', async () => {

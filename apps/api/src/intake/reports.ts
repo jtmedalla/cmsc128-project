@@ -4,6 +4,7 @@ import {
   type ReportInput,
   reportInputSchema,
   type SourceChannel,
+  type VictimInput,
 } from '@repo/shared';
 import { and, desc, eq, gt, inArray, sql } from 'drizzle-orm';
 import type { Database } from '../database/client.js';
@@ -34,6 +35,7 @@ export function insertReport(
   input: ReportInput,
 ): Promise<CreatedReport> {
   const { victims, messageIds, ...fields } = reportInputSchema.parse(input);
+  if (victims.length) fields.anyoneHurt ??= 'yes';
   return db.transaction(async (tx) => {
     const [created] = await tx
       .insert(report)
@@ -41,11 +43,7 @@ export function insertReport(
       .returning({ id: report.id, trackingToken: report.trackingToken });
     const { id } = created!;
 
-    if (victims.length) {
-      await tx
-        .insert(victim)
-        .values(victims.map((v) => ({ ...v, reportId: id })));
-    }
+    await insertVictims(tx, id, victims);
 
     if (messageIds.length) {
       const linked = await tx
@@ -107,9 +105,22 @@ export async function linkMessage(
   await db.update(message).set({ reportId }).where(eq(message.id, messageId));
 }
 
+/** Adds anonymous victims to a report. */
+export async function insertVictims(
+  db: Executor,
+  reportId: string,
+  victims: VictimInput[],
+) {
+  if (!victims.length) return;
+  await db.insert(victim).values(victims.map((v) => ({ ...v, reportId })));
+}
+
 /** Report fields residents can fill in during intake. */
 export type IntakeAnswers = Partial<
-  Pick<typeof report.$inferInsert, 'incidentTypeId' | 'barangayId' | 'severity'>
+  Pick<
+    typeof report.$inferInsert,
+    'incidentTypeId' | 'barangayId' | 'severity' | 'anyoneHurt'
+  >
 >;
 
 export async function updateReport(
@@ -127,14 +138,25 @@ export async function findMissingFields(
 ): Promise<IntakeField[]> {
   const row = await db.query.report.findFirst({
     where: eq(report.id, id),
-    columns: { incidentTypeId: true, barangayId: true, severity: true },
-    with: { resident: { columns: { contactNumber: true } } },
+    columns: {
+      incidentTypeId: true,
+      barangayId: true,
+      severity: true,
+      anyoneHurt: true,
+    },
+    with: {
+      resident: { columns: { contactNumber: true } },
+      victims: { columns: { id: true }, limit: 1 },
+    },
   });
   if (!row) throw new Error(`Report ${id} not found`);
   const known: Record<IntakeField, unknown> = {
     incidentType: row.incidentTypeId,
     barangay: row.barangayId,
     severity: row.severity,
+    anyoneHurt: row.anyoneHurt,
+    // Only missing once someone is hurt; filled by the first victim.
+    victims: row.anyoneHurt !== 'yes' || row.victims.length ? true : null,
     contactNumber: row.resident?.contactNumber,
   };
   return INTAKE_FIELDS.filter((field) => known[field] == null);

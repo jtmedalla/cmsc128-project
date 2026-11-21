@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { geoPoint, stringToDate } from '../codecs.js';
 import {
+  anyoneHurtSchema,
   directionSchema,
   reportStatusSchema,
   severityLevelSchema,
@@ -26,6 +27,8 @@ export const reportInputSchema = z.object({
   location: geoPoint.nullish(),
   /** A `Date`, or an ISO string over the wire. */
   incidentAt: z.coerce.date<Date | string>().nullish(),
+  /** Defaults to `yes` when `victims` isn't empty. */
+  anyoneHurt: anyoneHurtSchema.nullish(),
   victims: z.array(victimInputSchema).default([]),
   /** The resident's messages the report came from; linked to it. */
   messageIds: z.array(z.uuid()).default([]),
@@ -86,7 +89,8 @@ export const reportDetailSchema = reportFeedItemSchema
       z.object({
         id: z.uuid(),
         sex: sexSchema.nullable(),
-        age: z.int().min(0).nullable(),
+        ageMin: z.int().min(0).nullable(),
+        ageMax: z.int().min(0).nullable(),
         medicalCondition: z.string().nullable(),
       }),
     ),

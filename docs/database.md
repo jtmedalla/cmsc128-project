@@ -137,6 +137,7 @@ erDiagram
         report_status status
         uuid incident_type_id FK "nullable"
         severity_level severity "nullable"
+        anyone_hurt anyone_hurt "nullable"
         uuid barangay_id FK "nullable"
         text location_text "nullable"
         geometry_point location "nullable"
@@ -152,7 +153,8 @@ erDiagram
         uuid id PK
         uuid report_id FK
         sex sex "nullable"
-        integer age "nullable"
+        integer age_min "nullable"
+        integer age_max "nullable"
         text medical_condition "nullable"
     }
 
@@ -364,6 +366,7 @@ An incident report. `resident_id` is the sender; `is_proxy` marks reports about 
 | `status`               | `report_status`   | no   | `pending` | index (`status`, `created_at`) |                                             |
 | `incident_type_id`     | `uuid`            | yes  |           | FK → `incident_type`, index    |                                             |
 | `severity`             | `severity_level`  | yes  |           |                                |                                             |
+| `anyone_hurt`          | `anyone_hurt`     | yes  |           |                                | Null until asked; see `victim`              |
 | `barangay_id`          | `uuid`            | yes  |           | FK → `barangay`, index         |                                             |
 | `location_text`        | `text`            | yes  |           |                                | As reported                                 |
 | `location`             | `geometry(Point)` | yes  |           | GiST                           |                                             |
@@ -376,15 +379,16 @@ An incident report. `resident_id` is the sender; `is_proxy` marks reports about 
 
 ### victim
 
-A person affected by a report. No names are stored (FR9).
+A person affected by a report. No names are stored (FR9). A report with `anyone_hurt = 'yes'` and no victims has no details yet; a victim with every column null means the reporter couldn't tell. Age is a range because reporters often guess: "18" is 18 to 18, "60s" is 60 to 69, and Senior is 60 with no `age_max`.
 
-| Column              | Type      | Null | Default | Constraint           | Description |
-| ------------------- | --------- | ---- | ------- | -------------------- | ----------- |
-| `id`                | `uuid`    | no   | random  | PK                   |             |
-| `report_id`         | `uuid`    | no   |         | FK → `report`, index |             |
-| `sex`               | `sex`     | yes  |         |                      |             |
-| `age`               | `integer` | yes  |         | `>= 0`               |             |
-| `medical_condition` | `text`    | yes  |         |                      |             |
+| Column              | Type      | Null | Default | Constraint           | Description                         |
+| ------------------- | --------- | ---- | ------- | -------------------- | ----------------------------------- |
+| `id`                | `uuid`    | no   | random  | PK                   |                                     |
+| `report_id`         | `uuid`    | no   |         | FK → `report`, index |                                     |
+| `sex`               | `sex`     | yes  |         |                      |                                     |
+| `age_min`           | `integer` | yes  |         | `>= 0`               | Equal to `age_max` for an exact age |
+| `age_max`           | `integer` | yes  |         | `>= age_min`         | Null for an open range like 60+     |
+| `medical_condition` | `text`    | yes  |         |                      |                                     |
 
 ### message
 
@@ -538,6 +542,7 @@ Defined as Zod enums in `packages/shared/src/enums.ts`; the `pgEnum`s are built 
 | `source_channel`  | `messenger`, `web`, `dashboard`                                       | `resident_channel.channel`, `report.source_channel`, `message.channel`, `broadcast_delivery.channel` |
 | `report_status`   | `pending`, `validated`, `dispatched`, `resolved`, `closed`, `invalid` | `report.status`                                                                                      |
 | `severity_level`  | `low`, `moderate`, `high`, `critical`                                 | `report.severity`                                                                                    |
+| `anyone_hurt`     | `yes`, `no`, `unknown`                                                | `report.anyone_hurt`                                                                                 |
 | `direction`       | `inbound`, `outbound`                                                 | `message.direction`                                                                                  |
 | `broadcast_kind`  | `advisory`, `survey`                                                  | `broadcast.kind`                                                                                     |
 | `delivery_status` | `queued`, `sent`, `failed`, `outside_window`                          | `broadcast_delivery.status`                                                                          |
