@@ -26,11 +26,11 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { NavUser } from '@/components/nav-user';
+import { NavUser } from '@/features/auth';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Wordmark } from '@/components/wordmark';
-import { useRealtimeConnection } from '@/hooks/use-realtime';
+import { useRealtimeConnection } from '@/features/realtime';
 
 const route = getRouteApi('/dashboard/_app');
 

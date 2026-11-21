@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { IncidentsWorkspace } from '@/components/incidents-workspace';
+import { IncidentsWorkspace } from '@/features/triage';
 
 // /dashboard/incidents: the feed, with the selected report's quick view beside it.
 export const Route = createFileRoute('/dashboard/_app/incidents/')({

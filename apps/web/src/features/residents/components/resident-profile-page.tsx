@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { residentQuery } from '@/lib/residents';
+import { residentQuery } from '../api';
 import { getRouteApi, Link } from '@tanstack/react-router';
 const route = getRouteApi('/dashboard/_app/residents/$residentId');
 

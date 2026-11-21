@@ -1,7 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import { LoginForm } from '@/components/login-form';
 import { RouteError } from '@/components/route-error';
-import { sessionQuery } from '@/lib/session';
+import { LoginForm, sessionQuery } from '@/features/auth';
 
 /**
  * Only same-site paths, so `?redirect=` can't send users to another site.

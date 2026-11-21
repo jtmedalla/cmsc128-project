@@ -18,7 +18,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { authClient } from '@/lib/auth-client';
+import { authClient } from '../auth-client';
 
 type User = { name: string; email: string; avatar?: string };
 

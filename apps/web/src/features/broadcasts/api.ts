@@ -1,6 +1,6 @@
 import { recentAdvisorySchema, type RecentAdvisory } from '@repo/shared';
 import { queryOptions } from '@tanstack/react-query';
-import { API_URL } from './env';
+import { API_URL } from '@/lib/env';
 
 /** The five most recently sent advisories, newest first. */
 export const recentAdvisoriesQuery = queryOptions({

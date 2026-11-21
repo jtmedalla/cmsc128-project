@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { healthQuery } from '@/lib/health';
+import { healthQuery } from '../api';
 import { cn } from '@/lib/utils';
 
 const statusLabel: Record<HealthStatus, string> = {

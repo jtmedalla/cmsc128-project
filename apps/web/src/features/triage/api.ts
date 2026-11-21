@@ -5,7 +5,7 @@ import {
   reportFeedItemSchema,
 } from '@repo/shared';
 import { queryOptions } from '@tanstack/react-query';
-import { API_URL } from './env';
+import { API_URL } from '@/lib/env';
 
 /** Every report for the incidents list, newest first. */
 // TODO(#38): invalidate on report:created / report:updated for live updates.
@@ -21,12 +21,6 @@ export const reportFeedQuery = queryOptions({
     return reportFeedItemSchema.array().parse(await res.json());
   },
 });
-
-/** "Flood · Mat-y": the incident type, plus the barangay when known. */
-export function reportTitle(report: ReportDetail) {
-  const type = report.incidentType?.name ?? 'Unclassified incident';
-  return report.barangay ? `${type} · ${report.barangay.name}` : type;
-}
 
 /** One report for responders, or null when no report has that ID. */
 export function reportDetailQuery(id: string) {

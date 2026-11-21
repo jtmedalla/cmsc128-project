@@ -1,13 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { RefreshCw } from 'lucide-react';
-import {
-  COLUMN_LABELS,
-  columns,
-} from '@/components/residents-directory-columns';
-import { ResidentTable } from '@/components/residents-directory-data-table';
+import { COLUMN_LABELS, columns } from './residents-directory-columns';
+import { ResidentTable } from './residents-directory-data-table';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { residentsQuery } from '@/lib/residents';
+import { residentsQuery } from '../api';
 import { cn } from '@/lib/utils';
 
 export function ResidentsDirectory() {

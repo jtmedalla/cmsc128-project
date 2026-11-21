@@ -2,13 +2,13 @@ import type { ReportFeedItem } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { ArrowDownUp } from 'lucide-react';
-import { SeverityBadge, StatusBadge } from '@/components/report-badges';
-import { ReportDetails, SelectReportPrompt } from '@/components/report-details';
+import { SeverityBadge, StatusBadge } from './report-badges';
+import { ReportDetails, SelectReportPrompt } from './report-details';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatTime } from '@/lib/format';
-import { reportFeedQuery } from '@/lib/reports';
+import { reportFeedQuery } from '../api';
 
 /**
  * `/dashboard/incidents`: the wireframe's Incident Feed. The report list stays

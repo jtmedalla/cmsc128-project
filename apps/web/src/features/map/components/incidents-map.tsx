@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { reportFeedQuery } from '@/lib/reports';
+import { reportFeedQuery } from '@/features/triage';
 
 /* Ship MapLibre's worker with Vite; without it the map is blank. */
 maplibregl.setWorkerUrl(workerUrl);

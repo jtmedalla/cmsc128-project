@@ -1,5 +1,5 @@
 import { useEffect, useEffectEvent } from 'react';
-import { socket } from '@/lib/socket';
+import { socket } from '../socket';
 
 /** Keeps the realtime connection open while the calling component is mounted. */
 export function useRealtimeConnection() {

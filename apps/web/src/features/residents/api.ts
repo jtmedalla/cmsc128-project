@@ -1,6 +1,6 @@
 import { residentListSchema, residentProfileSchema } from '@repo/shared';
 import { queryOptions } from '@tanstack/react-query';
-import { API_URL } from './env';
+import { API_URL } from '@/lib/env';
 
 /** Residents directory. Needs a signed-in responder or admin. */
 export const residentsQuery = queryOptions({
