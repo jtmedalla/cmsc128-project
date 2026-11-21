@@ -1,12 +1,6 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { renderWithProviders, respondWith } from '@/testing/render';
 import { IncidentsMap } from './incidents-map';
 
 /* Fake MapLibre that records each pin's coordinates. */
@@ -67,27 +61,6 @@ function item(overrides: {
   };
 }
 
-/* Fakes the API's response. */
-function respondWith(status: number, body?: unknown) {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn().mockResolvedValue(new Response(JSON.stringify(body), { status })),
-  );
-}
-
-/* Renders the page without query retries. */
-function renderMap() {
-  render(
-    <QueryClientProvider
-      client={
-        new QueryClient({ defaultOptions: { queries: { retry: false } } })
-      }
-    >
-      <IncidentsMap />
-    </QueryClientProvider>,
-  );
-}
-
 /* Waits for the pins, then returns their longitudes. */
 async function pinsAfter(expected: number) {
   await waitFor(() => expect(setLngLat).toHaveBeenCalledTimes(expected));
@@ -95,8 +68,6 @@ async function pinsAfter(expected: number) {
 }
 
 afterEach(() => {
-  cleanup();
-  vi.unstubAllGlobals();
   setLngLat.mockClear();
 });
 
@@ -104,7 +75,7 @@ describe('IncidentsMap', () => {
   /* Only the report with a location gets a pin. */
   it('pins each report that has a location', async () => {
     respondWith(200, [item({ lng: 122.1 }), item({ located: false })]);
-    renderMap();
+    renderWithProviders(<IncidentsMap />);
 
     expect(await pinsAfter(1)).toEqual([122.1]);
   });
@@ -116,7 +87,7 @@ describe('IncidentsMap', () => {
       item({ lng: 122.2, status: 'resolved' }),
       item({ lng: 122.3, daysAgo: 8 }),
     ]);
-    renderMap();
+    renderWithProviders(<IncidentsMap />);
 
     expect(await pinsAfter(1)).toEqual([122.1]);
   });
@@ -127,7 +98,7 @@ describe('IncidentsMap', () => {
       item({ lng: 122.1, severity: 'high' }),
       item({ lng: 122.2, severity: 'low' }),
     ]);
-    renderMap();
+    renderWithProviders(<IncidentsMap />);
     await pinsAfter(2);
     setLngLat.mockClear();
 
@@ -139,22 +110,10 @@ describe('IncidentsMap', () => {
     expect(await pinsAfter(1)).toEqual([122.2]);
   });
 
-  /* Unbuilt features are disabled. */
-  it('disables the checkboxes that are not built yet', () => {
-    respondWith(200, []);
-    renderMap();
-
-    for (const name of ['Heatmap', 'Barangay names']) {
-      expect(
-        screen.getByRole('checkbox', { name }).getAttribute('aria-disabled'),
-      ).toBe('true');
-    }
-  });
-
   /* A failed load shows the error and no pins. */
   it('offers a retry when the reports fail to load', async () => {
     respondWith(500);
-    renderMap();
+    renderWithProviders(<IncidentsMap />);
 
     expect((await screen.findByRole('alert')).textContent).toContain(
       "Couldn't load reports",

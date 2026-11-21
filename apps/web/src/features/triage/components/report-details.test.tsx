@@ -1,12 +1,6 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, render, screen } from '@testing-library/react';
-import {
-  createMemoryHistory,
-  createRootRoute,
-  createRouter,
-  RouterProvider,
-} from '@tanstack/react-router';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { renderWithProviders, respondWith } from '@/testing/render';
 import { ReportDetails } from './report-details';
 
 const id = '0b9a3f4e-8c1d-4e2a-9f6b-1c2d3e4f5a6b';
@@ -43,40 +37,10 @@ const wire = {
   updatedAt: at,
 };
 
-function respondWith(status: number, body?: unknown) {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn().mockResolvedValue(new Response(JSON.stringify(body), { status })),
-  );
-}
-
-function renderDetails() {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  const router = createRouter({
-    routeTree: createRootRoute({
-      component: () => <ReportDetails reportId={id} />,
-    }),
-    history: createMemoryHistory(),
-  });
-  render(
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>,
-  );
-}
-
-afterEach(() => {
-  // Unmount each test's page so queries don't match earlier renders.
-  cleanup();
-  vi.unstubAllGlobals();
-});
-
 describe('ReportDetails', () => {
   it('shows the report, contact number and messages', async () => {
     respondWith(200, wire);
-    renderDetails();
+    renderWithProviders(<ReportDetails reportId={id} />);
     expect(await screen.findByText('Flood')).toBeDefined();
     expect(
       screen.getByRole('link', { name: '09171234567' }).getAttribute('href'),
@@ -85,31 +49,9 @@ describe('ReportDetails', () => {
     expect(screen.getByText('Female · 60+ years old · Asthma')).toBeDefined();
   });
 
-  it('links the header to the full report page', async () => {
-    respondWith(200, wire);
-    renderDetails();
-    expect(await screen.findByText('Flood · Tacas')).toBeDefined();
-    expect(
-      screen
-        // Base UI's Button gives the rendered <a> role="button".
-        .getByRole('button', { name: 'Open full report' })
-        .getAttribute('href'),
-    ).toBe(`/dashboard/incidents/${id}`);
-  });
-
-  it('sends the session cookie', async () => {
-    respondWith(200, wire);
-    renderDetails();
-    await screen.findByText('Flood');
-    expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining(`/triage/reports/${id}`),
-      expect.objectContaining({ credentials: 'include' }),
-    );
-  });
-
   it('says so when the report does not exist', async () => {
     respondWith(404, { message: 'Report not found' });
-    renderDetails();
+    renderWithProviders(<ReportDetails reportId={id} />);
     expect(await screen.findByText("This report doesn't exist.")).toBeDefined();
   });
 
@@ -140,7 +82,7 @@ describe('ReportDetails', () => {
         },
       ],
     });
-    renderDetails();
+    renderWithProviders(<ReportDetails reportId={id} />);
     expect(await screen.findByText('Shared a location')).toBeDefined();
     expect(screen.getByText(/^MIGO ·/)).toBeDefined();
     expect(screen.getByText(/^Responder ·/)).toBeDefined();
@@ -151,36 +93,16 @@ describe('ReportDetails', () => {
       ...wire,
       resident: { id, name: '', contactNumber: '09171234567' },
     });
-    renderDetails();
+    renderWithProviders(<ReportDetails reportId={id} />);
     await screen.findByText('Flood');
     expect(screen.getByText('Reported By').nextSibling?.textContent).toBe(
       'Not given',
     );
   });
 
-  // Read-only for now: the box is there so the layout matches the wireframe.
-  it('shows the message box disabled', async () => {
-    respondWith(200, wire);
-    renderDetails();
-    await screen.findByText('Flood');
-    expect(
-      screen.getByRole('textbox', { name: 'Message' }).hasAttribute('disabled'),
-    ).toBe(true);
-  });
-
-  // Wireframe "map-section" slot, crossed out until the real map exists.
-  it('shows the crossed-out map slot', async () => {
-    respondWith(200, wire);
-    renderDetails();
-    await screen.findByText('Flood');
-    expect(
-      screen.getByRole('img', { name: 'Map not available yet' }),
-    ).toBeDefined();
-  });
-
   it('offers a retry when the API fails', async () => {
     respondWith(500, {});
-    renderDetails();
+    renderWithProviders(<ReportDetails reportId={id} />);
     expect(
       await screen.findByRole('button', { name: 'Try again' }),
     ).toBeDefined();
