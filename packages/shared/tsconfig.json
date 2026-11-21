@@ -6,6 +6,6 @@
     "composite": true,
     "tsBuildInfoFile": "dist/.tsbuildinfo"
   },
-  "include": ["src", "../../apps/api/src/residents/residents.service.ts"],
+  "include": ["src"],
   "exclude": ["src/**/*.test.ts"]
 }
