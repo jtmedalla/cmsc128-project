@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { type SeverityLevel, severityLevelSchema } from '../enums.js';
+import {
+  type SeverityLevel,
+  severityLevelSchema,
+  type Sex,
+  sexSchema,
+} from '../enums.js';
 
 /**
  * Details intake asks residents for, in the order they're asked. Chat skips
@@ -68,6 +73,25 @@ export function isDontKnow(text: string): boolean {
       () => DONT_KNOW_WORDS,
     ) !== null
   );
+}
+
+export const SEX_LABELS: Record<Sex, string> = {
+  male: 'Male',
+  female: 'Female',
+};
+
+const SEX_WORDS: Record<Sex, string[]> = {
+  male: ['m', 'man', 'boy', 'lalaki', 'lalake'],
+  female: ['f', 'woman', 'girl', 'babae', 'babayi'],
+};
+
+/** Matches a sex as its value, label or a known word, ignoring case. */
+export function parseSex(text: string): Sex | null {
+  return matchChoice(text.replace(/[.!]+$/, ''), sexSchema.options, (sex) => [
+    sex,
+    SEX_LABELS[sex],
+    ...SEX_WORDS[sex],
+  ]);
 }
 
 /**

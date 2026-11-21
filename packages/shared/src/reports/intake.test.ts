@@ -4,6 +4,7 @@ import {
   matchChoice,
   isDontKnow,
   parseSeverity,
+  parseSex,
 } from './intake.js';
 
 describe('matchChoice', () => {
@@ -54,5 +55,20 @@ describe('isDontKnow', () => {
 
   it('rejects other answers', () => {
     expect(isDontKnow('no')).toBe(false);
+  });
+});
+
+describe('parseSex', () => {
+  it.each([
+    ['Female', 'female'],
+    ['babayi', 'female'],
+    ['M', 'male'],
+    ['lalaki', 'male'],
+  ] as const)('reads %s as %s', (input, expected) => {
+    expect(parseSex(input)).toBe(expected);
+  });
+
+  it('rejects anything else', () => {
+    expect(parseSex('two of them')).toBeNull();
   });
 });
