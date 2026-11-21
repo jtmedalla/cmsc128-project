@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { stringToDate } from '../codecs.js';
-import { languageSchema } from '../enums.js';
+import { languageSchema, sexSchema } from '../enums.js';
 
 export const residentListItemSchema = z.object({
   id: z.uuid(),
@@ -16,3 +16,13 @@ export const residentListItemSchema = z.object({
 export const residentListSchema = z.array(residentListItemSchema);
 
 export type ResidentListItem = z.infer<typeof residentListItemSchema>;
+
+export const residentProfileSchema = residentListItemSchema.extend({
+  age: z.number().int().nonnegative().nullable(),
+  sex: sexSchema.nullable(),
+  locationText: z.string().nullable(),
+});
+
+export const residentIdParamsSchema = z.object({ id: z.uuid() });
+
+export type ResidentProfile = z.infer<typeof residentProfileSchema>;

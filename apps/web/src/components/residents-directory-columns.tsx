@@ -3,6 +3,7 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { DataTableColumnHeader } from '@/components/ui/data-table-column-header';
 import { Badge } from '@/components/ui/badge';
 import type { DataTableFeatures } from '@/lib/data-table-features';
+import { Link } from '@tanstack/react-router';
 
 const LANGUAGE_LABELS: Record<ResidentListItem['languagePreference'], string> =
   {
@@ -30,7 +31,15 @@ export const columns = columnHelper.columns([
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Name" />
     ),
-    cell: ({ row }) => row.original.name ?? 'Unknown',
+    cell: ({ row }) => (
+      <Link
+        to="/dashboard/residents/$residentId"
+        params={{ residentId: row.original.id }}
+        className="text-primary font-bold underline-offset-4 hover:underline"
+      >
+        {row.original.name ?? 'Unnamed resident'}
+      </Link>
+    ),
   }),
   columnHelper.accessor((row) => row.contactNumber ?? '', {
     id: 'contactNumber',
