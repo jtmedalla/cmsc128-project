@@ -46,6 +46,30 @@ export function parseSeverity(text: string): SeverityLevel | null {
   ]);
 }
 
+/** The "Don't know" choice offered on questions residents may not know. */
+export const DONT_KNOW = "Don't know";
+
+const DONT_KNOW_WORDS = [
+  DONT_KNOW,
+  'dont know',
+  'don’t know',
+  'unknown',
+  'not sure',
+  'ambot',
+  'hindi ko alam',
+];
+
+/** Whether the resident answered that they don't know. */
+export function isDontKnow(text: string): boolean {
+  return (
+    matchChoice(
+      text.replace(/[.!]+$/, ''),
+      [DONT_KNOW],
+      () => DONT_KNOW_WORDS,
+    ) !== null
+  );
+}
+
 /**
  * A Philippine mobile number, normalized to `09XXXXXXXXX`. Accepts spaces,
  * dashes and a `+63` or `63` prefix.

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { contactNumberSchema, matchChoice, parseSeverity } from './intake.js';
+import {
+  contactNumberSchema,
+  matchChoice,
+  isDontKnow,
+  parseSeverity,
+} from './intake.js';
 
 describe('matchChoice', () => {
   const types = [
@@ -39,5 +44,15 @@ describe('contactNumberSchema', () => {
 
   it.each(['12345', '0817123456', 'call me'])('rejects %s', (input) => {
     expect(contactNumberSchema.safeParse(input).success).toBe(false);
+  });
+});
+
+describe('isDontKnow', () => {
+  it.each(["Don't know", 'dont know', 'Ambot.'])('accepts %s', (input) => {
+    expect(isDontKnow(input)).toBe(true);
+  });
+
+  it('rejects other answers', () => {
+    expect(isDontKnow('no')).toBe(false);
   });
 });
