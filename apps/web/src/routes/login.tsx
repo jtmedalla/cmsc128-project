@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { RouteError } from '@/components/route-error';
-import { LoginForm, sessionQuery } from '@/features/auth';
+import { authQueries, LoginForm } from '@/features/auth';
 
 /**
  * Only same-site paths, so `?redirect=` can't send users to another site.
@@ -24,7 +24,7 @@ export const Route = createFileRoute('/login')({
   }),
   beforeLoad: async ({ context, search }) => {
     const session = await context.queryClient.ensureQueryData({
-      ...sessionQuery,
+      ...authQueries.session(),
       revalidateIfStale: true,
     });
     if (session) {

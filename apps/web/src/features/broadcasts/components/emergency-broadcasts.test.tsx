@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { recentAdvisoriesQuery } from '../api';
+import { broadcastQueries } from '../queries';
 import { EmergencyBroadcasts } from './emergency-broadcasts';
 
 afterEach(cleanup);
@@ -10,7 +10,7 @@ function renderWorkspace() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  queryClient.setQueryData(recentAdvisoriesQuery.queryKey, [
+  queryClient.setQueryData(broadcastQueries.recentAdvisories().queryKey, [
     {
       id: '0b9a3f4e-8c1d-4e2a-9f6b-1c2d3e4f5a6b',
       kind: 'advisory',

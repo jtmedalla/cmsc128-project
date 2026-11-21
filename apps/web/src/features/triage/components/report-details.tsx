@@ -8,7 +8,7 @@ import { ReportMap } from './report-map';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatTime, label } from '@/lib/format';
-import { reportDetailQuery } from '../api';
+import { reportQueries } from '../queries';
 import { reportTitle } from '../lib/report-title';
 
 function Field({ name, value }: { name: string; value: React.ReactNode }) {
@@ -139,7 +139,7 @@ export function SelectReportPrompt() {
 /** The quick view: read-only panes for one report; editing arrives with #39. */
 export function ReportDetails({ reportId }: { reportId: string }) {
   const { data, isPending, isError, refetch } = useQuery(
-    reportDetailQuery(reportId),
+    reportQueries.detail(reportId),
   );
 
   if (isPending) {

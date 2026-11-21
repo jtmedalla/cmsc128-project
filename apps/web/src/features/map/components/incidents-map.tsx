@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { reportFeedQuery } from '@/features/triage';
+import { reportQueries } from '@/features/triage';
 
 /* Ship MapLibre's worker with Vite; without it the map is blank. */
 maplibregl.setWorkerUrl(workerUrl);
@@ -104,7 +104,7 @@ function pinElement(severity: SeverityLevel | null) {
 export function IncidentsMap() {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
-  const { data, isError, refetch } = useQuery(reportFeedQuery);
+  const { data, isError, refetch } = useQuery(reportQueries.feed());
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
 
   /* Updates one filter from its select. */

@@ -4,12 +4,13 @@ import { COLUMN_LABELS, columns } from './residents-directory-columns';
 import { ResidentTable } from './residents-directory-data-table';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { residentsQuery } from '../api';
+import { residentQueries } from '../queries';
 import { cn } from '@/lib/utils';
 
 export function ResidentsDirectory() {
-  const { data, isPending, isError, isFetching, refetch } =
-    useQuery(residentsQuery);
+  const { data, isPending, isError, isFetching, refetch } = useQuery(
+    residentQueries.list(),
+  );
 
   return (
     <div className="flex flex-col gap-4">
