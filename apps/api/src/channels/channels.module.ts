@@ -1,13 +1,13 @@
 import { createPostgresState } from '@chat-adapter/state-pg';
-import { Global, Module } from '@nestjs/common';
-import { pool } from '../database/client.js';
+import { Module } from '@nestjs/common';
+import type { Pool } from 'pg';
+import { POOL } from '../database/database.module.js';
 import { BOT, createBot } from './bot.js';
 import { ChatLogger } from './chat-logger.js';
 import { ChannelsService } from './channels.service.js';
 import { MessageLogService } from './message-log.service.js';
 import { WebhooksController } from './webhooks.controller.js';
 
-@Global()
 @Module({
   controllers: [WebhooksController],
   providers: [
@@ -16,7 +16,8 @@ import { WebhooksController } from './webhooks.controller.js';
     // State-pg creates its own chat_state_* tables, outside drizzle-kit.
     {
       provide: BOT,
-      useFactory: () =>
+      inject: [POOL],
+      useFactory: (pool: Pool) =>
         createBot(
           createPostgresState({
             client: pool,

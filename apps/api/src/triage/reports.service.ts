@@ -5,6 +5,7 @@ import { DB } from '../database/database.module.js';
 import {
   checkAttachments,
   checkConfidence,
+  findFeedItem,
   findFeedItems,
   reportColumns,
   reportRelations,
@@ -18,6 +19,11 @@ export class ReportsService {
   // TODO(#38): sort, filters and live updates.
   findFeed(): Promise<ReportFeedItem[]> {
     return findFeedItems(this.db);
+  }
+
+  /** One report as the feed shows it, e.g. to push a new report live. */
+  findFeedItem(id: string): Promise<ReportFeedItem | null> {
+    return findFeedItem(this.db, id);
   }
 
   /** One report with everything a responder reviews, or null if none. */

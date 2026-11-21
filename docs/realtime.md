@@ -16,7 +16,7 @@ The socket shares the API origin and authenticates with the Better Auth session 
 
 ## Emitting from a module
 
-`RealtimeModule` is global; inject `RealtimeService`:
+Import `RealtimeModule` and inject `RealtimeService`:
 
 ```ts
 @Injectable()

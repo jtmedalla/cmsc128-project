@@ -2,8 +2,8 @@ import type { ReportFeedItem } from '@repo/shared';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Database } from '../database/client.js';
 import type { RealtimeService } from '../realtime/realtime.service.js';
+import type { ReportsService } from '../triage/reports.service.js';
 import { IntakeService } from './intake.service.js';
-import { findFeedItem } from '../triage/feed.js';
 import { findOpenReport, insertReport, linkMessage } from './reports.js';
 
 vi.mock('../config/env.js', () => ({ env: {} }));
@@ -12,7 +12,10 @@ vi.mock('./reports.js', () => ({
   findOpenReport: vi.fn(),
   linkMessage: vi.fn(),
 }));
-vi.mock('../triage/feed.js', () => ({ findFeedItem: vi.fn() }));
+
+/** Triage's feed lookup, which intake calls to push new reports. */
+const reports = { findFeedItem: vi.fn() };
+const asReports = reports as unknown as ReportsService;
 
 const id = '0b9a3f4e-8c1d-4e2a-9f6b-1c2d3e4f5a6b';
 const createdAt = new Date('2026-10-29T08:30:00.000Z');
@@ -39,11 +42,12 @@ const item: ReportFeedItem = {
 describe('IntakeService.createReport', () => {
   it('saves the report and pushes it to the feed', async () => {
     vi.mocked(insertReport).mockResolvedValue({ id, trackingToken: 'tok' });
-    vi.mocked(findFeedItem).mockResolvedValue(item);
+    reports.findFeedItem.mockResolvedValue(item);
     const realtime = { toDashboard: vi.fn() };
     const intake = new IntakeService(
       {} as Database,
       realtime as unknown as RealtimeService,
+      asReports,
     );
 
     const input = { residentId: id, sourceChannel: 'messenger' } as const;
@@ -66,7 +70,11 @@ describe('IntakeService.receiveMessage', () => {
     transaction: (run: (t: typeof tx) => unknown) => run(tx),
   } as unknown as Database;
   const realtime = { toDashboard: vi.fn() };
-  const intake = new IntakeService(db, realtime as unknown as RealtimeService);
+  const intake = new IntakeService(
+    db,
+    realtime as unknown as RealtimeService,
+    asReports,
+  );
   const input = {
     residentId: id,
     messageId: 'a1b2c3d4-0000-4000-8000-000000000001',
@@ -78,7 +86,7 @@ describe('IntakeService.receiveMessage', () => {
   it('starts a pending report from the first message', async () => {
     vi.mocked(findOpenReport).mockResolvedValue(null);
     vi.mocked(insertReport).mockResolvedValue({ id, trackingToken: 'tok' });
-    vi.mocked(findFeedItem).mockResolvedValue(item);
+    reports.findFeedItem.mockResolvedValue(item);
 
     await expect(intake.receiveMessage(input)).resolves.toEqual({
       reportId: id,
@@ -112,7 +120,7 @@ describe('IntakeService.receiveMessage', () => {
   it('starts a new report on request despite an open one', async () => {
     vi.mocked(findOpenReport).mockResolvedValue(id);
     vi.mocked(insertReport).mockResolvedValue({ id, trackingToken: 'tok' });
-    vi.mocked(findFeedItem).mockResolvedValue(item);
+    reports.findFeedItem.mockResolvedValue(item);
 
     await expect(
       intake.receiveMessage({ ...input, newReport: true }),

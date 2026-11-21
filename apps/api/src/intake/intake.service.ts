@@ -13,7 +13,7 @@ import { DB } from '../database/database.module.js';
 import { incidentType, resident } from '../database/schema/index.js';
 import { RealtimeService } from '../realtime/realtime.service.js';
 // The feed belongs to triage (docs/intake.md, docs/realtime.md); intake only pushes new reports to it.
-import { findFeedItem } from '../triage/feed.js';
+import { ReportsService } from '../triage/reports.service.js';
 import {
   findMissingFields,
   findOpenReport,
@@ -43,6 +43,7 @@ export class IntakeService {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly realtime: RealtimeService,
+    private readonly reports: ReportsService,
   ) {}
 
   /**
@@ -143,7 +144,7 @@ export class IntakeService {
 
   /** Pushes the report's feed item to the dashboard. */
   private async publish(event: keyof typeof REPORT_EVENTS, id: string) {
-    const item = await findFeedItem(this.db, id);
+    const item = await this.reports.findFeedItem(id);
     const schema =
       event === 'created' ? reportCreatedEventSchema : reportUpdatedEventSchema;
     this.realtime.toDashboard(REPORT_EVENTS[event], schema.encode(item!));
