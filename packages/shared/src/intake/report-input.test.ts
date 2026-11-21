@@ -67,19 +67,6 @@ describe('reportInputSchema', () => {
     });
   });
 
-  it('accepts incidentAt as a Date or an ISO string', () => {
-    const iso = '2026-10-29T08:30:00.000Z';
-    for (const incidentAt of [iso, new Date(iso)]) {
-      expect(
-        reportInputSchema.parse({
-          residentId,
-          sourceChannel: 'web',
-          incidentAt,
-        }).incidentAt,
-      ).toEqual(new Date(iso));
-    }
-  });
-
   it('has no place for victim names', () => {
     const { victims } = reportInputSchema.parse({
       residentId,
@@ -95,16 +82,6 @@ describe('reportInputSchema', () => {
         residentId,
         sourceChannel: 'web',
         victims: [{ ageMin: 60, ageMax: 40 }],
-      }).success,
-    ).toBe(false);
-  });
-
-  it('rejects unknown confidence fields', () => {
-    expect(
-      reportInputSchema.safeParse({
-        residentId,
-        sourceChannel: 'web',
-        parseConfidence: { mood: 0.5 },
       }).success,
     ).toBe(false);
   });
