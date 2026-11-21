@@ -609,6 +609,6 @@ Migrations seed reference data every environment needs: incident types, the 119 
 | Info, admin | Agency hotlines (fake numbers), knowledge-base entries, and invites that are pending, accepted, revoked and expired                                                                                   |
 
 - It runs in one transaction after creating the accounts, so a failure leaves no partial data. It skips when it finds seeded chat identities (`seed-` external IDs) and refuses when `NODE_ENV` is `production`.
-- To start over, recreate the database (`docker compose down -v && docker compose up -d`, or a new Neon branch), then `pnpm db:migrate && pnpm db:seed`.
+- To start over, run `pnpm db:reset`: it drops the app's tables, enums and migration history (PostGIS stays), then migrates and seeds. It refuses in production and on non-local hosts unless `RESET_REMOTE_DATABASE=yes`, so a stray `DATABASE_URL` can't wipe a shared database.
 - Times are relative to when the seed runs, so the dashboard's date filters always have data.
 - The seed lives in `apps/api/src/database/seed/`, one file per area. When a feature needs data, add it there: real barangay names, `pointIn` for locations, fake numbers from `fakeMobile`. Use `pnpm --filter api db:seed-user` for an extra account.

@@ -82,6 +82,7 @@ pnpm dev
 | `pnpm db:generate`                | Generate a migration from the Drizzle schema       |
 | `pnpm db:migrate`                 | Apply migrations                                   |
 | `pnpm db:seed`                    | Load the development dataset (see Database)        |
+| `pnpm db:reset`                   | Wipe, migrate and reseed a local database          |
 | `pnpm --filter api db:seed-user`  | Create a dashboard account (see Database)          |
 | `pnpm --filter api auth:generate` | Regenerate Better Auth tables after config changes |
 | `pnpm format`                     | Format with Prettier                               |
