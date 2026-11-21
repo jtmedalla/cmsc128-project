@@ -3,6 +3,7 @@
 Turns resident messages and form answers into reports.
 
 - API: `apps/api/src/intake/`
+- Web: `apps/web/src/features/intake/` (`/report` stub)
 - Shared: `packages/shared/src/intake/`
 
 ## Creating a report
