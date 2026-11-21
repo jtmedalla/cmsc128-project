@@ -593,3 +593,22 @@ App tables reference `user.id` (`text`). There is no separate responder table.
 pnpm db:generate   # then review the SQL in apps/api/drizzle/
 pnpm db:migrate
 ```
+
+## Seed data
+
+Migrations seed reference data every environment needs: incident types, the 119 barangays and partner agencies. `pnpm db:seed` adds a development dataset on top, so everyone builds against the same realistic Miagao data:
+
+| Data        | What's there                                                                                                                                                                                          |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Accounts    | `admin@migo.local` (admin), `responder@migo.local` and `golez@migo.local` (responders), password `12345678`                                                                                           |
+| Residents   | 14 in coastal, lowland and upland barangays, in all four languages, on Messenger and web chat; some with full profiles, some never finished, one opted out of broadcasts                              |
+| Reports     | 20 over the last 30 days: every status, incident type and severity; proxies, victims, two hotline calls logged by responders, a duplicate, an abandoned report; pins inside their barangay boundaries |
+| Messages    | Each report's conversation with the bot's real questions, answers, location shares and responder replies                                                                                              |
+| History     | `report_edit` rows for each status change and correction, reviewers, and `agency_referral` rows by incident type                                                                                      |
+| Broadcasts  | Municipality-wide, coastal-only and upland-only advisories, a draft, and a survey with options, deliveries (`sent`, `failed`, `outside_window`) and responses, one escalated into a report            |
+| Info, admin | Agency hotlines (fake numbers), knowledge-base entries, and invites that are pending, accepted, revoked and expired                                                                                   |
+
+- It runs in one transaction after creating the accounts, so a failure leaves no partial data. It skips when it finds seeded chat identities (`seed-` external IDs) and refuses when `NODE_ENV` is `production`.
+- To start over, recreate the database (`docker compose down -v && docker compose up -d`, or a new Neon branch), then `pnpm db:migrate && pnpm db:seed`.
+- Times are relative to when the seed runs, so the dashboard's date filters always have data.
+- The seed lives in `apps/api/src/database/seed/`, one file per area. When a feature needs data, add it there: real barangay names, `pointIn` for locations, fake numbers from `fakeMobile`. Use `pnpm --filter api db:seed-user` for an extra account.
