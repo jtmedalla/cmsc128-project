@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { SearchIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,45 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { BroadcastCard } from '@/components/broadcast-card';
 import { Label } from '@/components/ui/label';
-
-/**
- * Representative advisory records. These can later be replaced with TanStack
- * Query data while keeping the presentational structure unchanged.
- */
-const advisories = [
-  {
-    id: 1,
-    recipient: 'Another Lloyd Magana',
-    posted: 'Sep 3, 2026, 6:09 AM',
-    title: 'Pre-Evacuation Advisory',
-    message:
-      'Residents in high-risk zones are advised to prepare for possible evacuation. Keep communication lines open, assist vulnerable household members, and follow barangay teams for updates.',
-  },
-  {
-    id: 2,
-    recipient: 'Response team assigned',
-    posted: 'Apr 4, 2026, 4:58 AM',
-    title: 'Community Advisory #01',
-    message:
-      'Road monitoring in progress. Expect rerouting along main thoroughfares. Stay tuned for updates.',
-  },
-  {
-    id: 3,
-    recipient: 'Response team assigned',
-    posted: 'Mar 31, 2026, 11:59 PM',
-    title: 'Community Advisory #02',
-    message:
-      'Report injuries and urgent medical concerns to the barangay health officer immediately.',
-  },
-  {
-    id: 4,
-    recipient: 'Response team assigned',
-    posted: 'Mar 28, 2026, 6:58 PM',
-    title: 'Community Advisory #03',
-    message:
-      'Stockpile clean drinking water and non-perishable food for at least three days. Coordinate with barangay captains.',
-  },
-];
+import { recentAdvisoriesQuery } from '@/lib/broadcasts';
+import { formatTime } from '@/lib/format';
 
 const quickTemplates = [
   'Aftershock Safety Reminder',
@@ -59,11 +23,10 @@ export function EmergencyBroadcasts() {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [filter, setFilter] = useState('');
+  const { data, isPending, isError, refetch } = useQuery(recentAdvisoriesQuery);
 
-  const visibleAdvisories = advisories.filter((advisory) =>
-    `${advisory.title} ${advisory.message}`
-      .toLowerCase()
-      .includes(filter.toLowerCase()),
+  const visibleAdvisories = (data ?? []).filter((advisory) =>
+    advisory.messageBody.toLowerCase().includes(filter.toLowerCase()),
   );
 
   return (
@@ -232,25 +195,48 @@ export function EmergencyBroadcasts() {
             </div>
 
             <div className="space-y-2 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-0.5">
-              {visibleAdvisories.map((advisory) => (
-                <BroadcastCard
-                  key={advisory.id}
-                  recipient={advisory.recipient}
-                  posted={advisory.posted}
-                  title={advisory.title}
-                  message={advisory.message}
-                  onViewRecipients={() => {
-                    // Open the recipient details for this advisory.
-                  }}
-                  onResend={() => {
-                    // Send this advisory again.
-                  }}
-                />
-              ))}
-
-              {visibleAdvisories.length === 0 && (
+              {isPending && (
                 <div className="rounded-md border border-dashed border-border py-8 text-center text-xs text-muted-foreground">
-                  No advisories match this filter.
+                  Loading advisories...
+                </div>
+              )}
+
+              {isError && (
+                <div className="flex flex-col items-center gap-2 rounded-md border border-dashed border-border py-6 text-center text-xs text-muted-foreground">
+                  <p>Couldn't load advisories.</p>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => void refetch()}
+                  >
+                    Try again
+                  </Button>
+                </div>
+              )}
+
+              {!isPending &&
+                !isError &&
+                visibleAdvisories.map((advisory) => (
+                  <BroadcastCard
+                    key={advisory.id}
+                    sender={advisory.createdBy.name}
+                    posted={formatTime(advisory.sentAt)}
+                    title="Emergency Advisory"
+                    message={advisory.messageBody}
+                    onViewSender={() => {
+                      // Open the recipient details for this advisory.
+                    }}
+                    onResend={() => {
+                      // Send this advisory again.
+                    }}
+                  />
+                ))}
+
+              {!isPending && !isError && visibleAdvisories.length === 0 && (
+                <div className="rounded-md border border-dashed border-border py-8 text-center text-xs text-muted-foreground">
+                  {filter
+                    ? 'No advisories match this filter.'
+                    : 'No advisories yet.'}
                 </div>
               )}
             </div>

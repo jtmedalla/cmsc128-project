@@ -3,6 +3,7 @@ import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { AuthModule } from '@thallesp/nestjs-better-auth';
 import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 import { auth } from './auth/auth.js';
+import { BroadcastModule } from './broadcast/broadcast.module.js';
 import { ChannelsModule } from './channels/channels.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { GeoModule } from './geo/geo.module.js';
@@ -19,6 +20,7 @@ import { TriageModule } from './triage/triage.module.js';
     AuthModule.forRoot({ auth, bodyParser: { rawBody: true } }),
     HealthModule,
     RealtimeModule,
+    BroadcastModule,
     GeoModule,
     ChannelsModule,
     IntakeModule,

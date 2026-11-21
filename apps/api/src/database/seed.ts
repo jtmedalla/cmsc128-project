@@ -8,20 +8,55 @@ import type {
   SeverityLevel,
   VictimInput,
 } from '@repo/shared';
-import { and, eq, like } from 'drizzle-orm';
+import { and, eq, inArray, like } from 'drizzle-orm';
 import { env } from '../config/env.js';
 import { insertReport } from '../intake/reports.js';
 import { db, pool } from './client.js';
 import {
   barangay,
+  broadcast,
   incidentType,
   message,
   report,
   resident,
   residentChannel,
+  user,
 } from './schema/index.js';
 
 const SEED_PREFIX = 'seed-';
+
+const advisorySeeds = [
+  {
+    messageBody:
+      'Residents in high-risk zones are advised to prepare for possible evacuation. Keep communication lines open, assist vulnerable household members, and follow barangay teams for updates.',
+    minutesAgo: 3,
+    targetHazard: 'fire' as const,
+  },
+  {
+    messageBody:
+      'Road monitoring in progress. Expect rerouting along main thoroughfares. Stay tuned for updates.',
+    minutesAgo: 24,
+    targetHazard: 'flood' as const,
+  },
+  {
+    messageBody:
+      'Report injuries and urgent medical concerns to the barangay health officer immediately.',
+    minutesAgo: 36,
+    targetHazard: 'earthquake' as const,
+  },
+  {
+    messageBody:
+      'Stockpile clean drinking water and non-perishable food for at least three days. Coordinate with barangay captains.',
+    minutesAgo: 58,
+    targetHazard: 'storm_surge' as const,
+  },
+  {
+    messageBody:
+      'Stay away from unstable slopes and riverbanks. Move to higher ground when ordered and follow official evacuation instructions.',
+    minutesAgo: 180,
+    targetHazard: 'landslide' as const,
+  },
+];
 
 interface Sample {
   resident: string | null;
@@ -128,10 +163,52 @@ const samples: Sample[] = [
   },
 ];
 
+async function seedAdvisories() {
+  const [existing] = await db
+    .select({ id: broadcast.id })
+    .from(broadcast)
+    .where(
+      inArray(
+        broadcast.messageBody,
+        advisorySeeds.map((advisory) => advisory.messageBody),
+      ),
+    )
+    .limit(1);
+  if (existing) {
+    console.log('Sample advisories already seeded; skipping.');
+    return;
+  }
+
+  const [creator] = await db.select({ id: user.id }).from(user).limit(1);
+  if (!creator) {
+    console.log('No responder account found; skipping advisories.');
+    return;
+  }
+
+  const now = Date.now();
+  await db.insert(broadcast).values(
+    advisorySeeds.map((advisory) => {
+      const sentAt = new Date(now - advisory.minutesAgo * 60_000);
+      return {
+        createdBy: creator.id,
+        kind: 'advisory' as const,
+        messageBody: advisory.messageBody,
+        targetBarangayIds: [],
+        targetHazard: advisory.targetHazard,
+        sentAt,
+        createdAt: sentAt,
+      };
+    }),
+  );
+  console.log(`Seeded ${advisorySeeds.length} sample advisories.`);
+}
+
 async function seed() {
   if (env.NODE_ENV === 'production') {
     throw new Error('Refusing to seed sample reports in production');
   }
+
+  await seedAdvisories();
 
   const [existing] = await db
     .select({ id: residentChannel.id })
