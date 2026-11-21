@@ -83,6 +83,18 @@ describe('ReportDetails', () => {
     expect(screen.getByText('Female · 78 years old · Asthma')).toBeDefined();
   });
 
+  it('links the header to the full report page', async () => {
+    respondWith(200, wire);
+    renderDetails();
+    expect(await screen.findByText('Flood · Tacas')).toBeDefined();
+    expect(
+      screen
+        // Base UI's Button gives the rendered <a> role="button".
+        .getByRole('button', { name: 'Open full report' })
+        .getAttribute('href'),
+    ).toBe(`/dashboard/incidents/${id}`);
+  });
+
   it('sends the session cookie', async () => {
     respondWith(200, wire);
     renderDetails();

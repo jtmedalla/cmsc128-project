@@ -22,6 +22,12 @@ export const reportFeedQuery = queryOptions({
   },
 });
 
+/** "Flood · Mat-y": the incident type, plus the barangay when known. */
+export function reportTitle(report: ReportDetail) {
+  const type = report.incidentType?.name ?? 'Unclassified incident';
+  return report.barangay ? `${type} · ${report.barangay.name}` : type;
+}
+
 /** One report for responders, or null when no report has that ID. */
 export function reportDetailQuery(id: string) {
   return queryOptions({

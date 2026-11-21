@@ -1,10 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { ReportDetails } from '@/components/report-details';
+import { IncidentDetail } from '@/components/incident-detail';
+import { requireRole } from '@/lib/session';
 
-// The selected report's panes, beside the list from incidents/route.tsx.
+// /dashboard/incidents/:reportId: the full report page.
 export const Route = createFileRoute('/dashboard/_app/incidents/$reportId')({
+  beforeLoad: ({ context }) => {
+    requireRole(context.session, ['responder', 'admin']);
+  },
   // Named (rules-of-hooks) but not a separate declaration (fast refresh export rule).
   component: function IncidentPage() {
-    return <ReportDetails reportId={Route.useParams().reportId} />;
+    return <IncidentDetail reportId={Route.useParams().reportId} />;
   },
 });
