@@ -5,7 +5,7 @@ import { BarangayService } from './barangay.service.js';
 
 class BarangayDto extends createZodDto(barangaySchema) {}
 
-@Controller('barangays')
+@Controller('geo/barangays')
 export class BarangayController {
   constructor(private readonly barangays: BarangayService) {}
 
