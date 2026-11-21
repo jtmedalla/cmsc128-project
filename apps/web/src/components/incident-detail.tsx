@@ -1,4 +1,4 @@
-import type { ReportDetail } from '@repo/shared';
+import { formatAgeRange, type ReportDetail } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
@@ -254,7 +254,9 @@ function VictimsCard({ victims }: { victims: ReportDetail['victims'] }) {
               {victims.map((v) => (
                 <TableRow key={v.id}>
                   <TableCell>{v.sex ? label(v.sex) : 'Not given'}</TableCell>
-                  <TableCell>{v.age ?? 'Not given'}</TableCell>
+                  <TableCell>
+                    {formatAgeRange(v.ageMin, v.ageMax) ?? 'Not given'}
+                  </TableCell>
                   <TableCell className="whitespace-normal">
                     {v.medicalCondition || 'None reported'}
                   </TableCell>

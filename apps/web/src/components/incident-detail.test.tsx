@@ -31,7 +31,8 @@ const wire = {
     {
       id,
       sex: 'female',
-      age: 72,
+      ageMin: 72,
+      ageMax: 72,
       medicalCondition: 'Cannot walk, needs evacuation',
     },
   ],
@@ -95,6 +96,7 @@ describe('IncidentDetail', () => {
     expect(
       screen.getByRole('cell', { name: 'Cannot walk, needs evacuation' }),
     ).toBeDefined();
+    expect(screen.getByRole('cell', { name: '72 years old' })).toBeDefined();
     expect(screen.getByText('Gataas na baha diri')).toBeDefined();
   });
 
