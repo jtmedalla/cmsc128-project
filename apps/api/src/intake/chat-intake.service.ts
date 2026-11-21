@@ -1,8 +1,10 @@
 import { Injectable, type OnModuleInit } from '@nestjs/common';
 import type { IntakeField, SourceChannel } from '@repo/shared';
 import type { Thread } from 'chat';
-import { ChannelsService } from '../channels/channels.service.js';
-import type { RecordedMessage } from '../channels/message-log.service.js';
+import {
+  ChannelsService,
+  type RecordedMessage,
+} from '../channels/channels.service.js';
 import { BarangayService } from '../geo/barangay.service.js';
 import { IntakeService } from './intake.service.js';
 import {

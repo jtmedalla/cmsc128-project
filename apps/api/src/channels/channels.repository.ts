@@ -36,7 +36,7 @@ export interface OutboundRecord {
 
 /** Keeps every message sent or received as a permanent Message row. */
 @Injectable()
-export class MessageLogService {
+export class ChannelsRepository {
   constructor(@Inject(DB) private readonly db: Database) {}
 
   /**
