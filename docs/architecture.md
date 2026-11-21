@@ -35,6 +35,7 @@ The dashboard home (`/dashboard`) belongs to no module. Its summary widgets come
 - The module that owns the data owns its endpoints and screens, wherever they appear. Knowledge-base edit pages belong to `info`, not `admin`.
 - A module may own a view over another module's data if the dependency goes one way. `map` reads reports through triage's exports and owns spatial queries; triage never imports `map`.
 - Aggregates (counts, stats) live with the module that owns the data.
+- API modules list what they use in `imports` and expose only what others need in `exports`. Only `DatabaseModule` is `@Global`. Code outside Nest DI (Better Auth config, seed scripts) may import `database/client.ts` directly.
 
 ## Web layout
 

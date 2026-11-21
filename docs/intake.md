@@ -8,7 +8,7 @@ Turns resident messages and form answers into reports.
 
 ## Creating a report
 
-`IntakeService` is the only way to create a report: `receiveMessage` for chat messages and `createReport` for everything else. `IntakeModule` is global.
+`IntakeService` is the only way to create a report: `receiveMessage` for chat messages and `createReport` for everything else.
 
 ### From a chat message
 

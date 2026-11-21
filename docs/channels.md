@@ -14,7 +14,7 @@ One Chat SDK bot (`bot.ts`) holds an adapter per channel, keyed by `source_chann
 2. is dropped if its `(channel, external_id)` already exists, so retries never reach handlers twice
 3. goes to every handler registered with `onMessage`
 
-`ChannelsModule` is global; inject `ChannelsService`:
+Import `ChannelsModule` and inject `ChannelsService`:
 
 ```ts
 @Injectable()

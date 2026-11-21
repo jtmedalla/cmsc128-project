@@ -1,5 +1,5 @@
 import { createPostgresState } from '@chat-adapter/state-pg';
-import { Global, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import type { Pool } from 'pg';
 import { POOL } from '../database/database.module.js';
 import { BOT, createBot } from './bot.js';
@@ -8,7 +8,6 @@ import { ChannelsService } from './channels.service.js';
 import { MessageLogService } from './message-log.service.js';
 import { WebhooksController } from './webhooks.controller.js';
 
-@Global()
 @Module({
   controllers: [WebhooksController],
   providers: [

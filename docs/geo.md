@@ -10,7 +10,7 @@ Shared location lookup for intake and broadcast targeting.
 
 `GET /geo/barangays` returns all 119 with centroid, boundary and targeting flags, for any signed-in user.
 
-`GeoModule` is global; inject `BarangayService`:
+Import `GeoModule` and inject `BarangayService`:
 
 - `findByName(name)`: matches names as residents write them, ignoring case, accents, punctuation, "Brgy." and "(Pob.)"
 - `findContaining(point)`: the barangay covering a point, or null outside Miagao

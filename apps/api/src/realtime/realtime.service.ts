@@ -5,7 +5,7 @@ import {
   userRoom,
 } from './realtime.gateway.js';
 
-/** Pushes server events to dashboard clients. Inject it from other modules. */
+/** Pushes server events to dashboard clients. Import `RealtimeModule` to inject it. */
 @Injectable()
 export class RealtimeService {
   constructor(private readonly gateway: RealtimeGateway) {}
