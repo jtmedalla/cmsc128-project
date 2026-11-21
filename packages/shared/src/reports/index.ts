@@ -1,3 +1,4 @@
+export * from './age.js';
 export * from './events.js';
 export * from './intake.js';
 export * from './parsed.js';
