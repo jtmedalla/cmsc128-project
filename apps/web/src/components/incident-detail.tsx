@@ -164,9 +164,10 @@ function PageHeader({ report }: { report: ReportDetail }) {
 /** One label and value; empty values read "Not given". */
 function DetailRow({ name, value }: { name: string; value: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-[8rem_1fr] gap-2">
+    // minmax(0, 1fr) lets the value column shrink, so long values wrap instead of overflowing.
+    <div className="grid grid-cols-[8rem_minmax(0,1fr)] gap-2">
       <dt className="text-muted-foreground">{name}</dt>
-      <dd>
+      <dd className="wrap-break-word">
         {value === null || value === undefined || value === ''
           ? 'Not given'
           : value}
@@ -180,11 +181,12 @@ function DetailsCard({ report }: { report: ReportDetail }) {
   const reporter = report.resident?.name ?? 'Unknown caller';
 
   return (
-    <Card>
+    // A container, so the columns follow the card's width rather than the window's.
+    <Card className="@container">
       <CardHeader>
         <CardTitle>Details</CardTitle>
       </CardHeader>
-      <CardContent className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+      <CardContent className="grid gap-x-6 gap-y-3 @lg:grid-cols-2">
         <dl className="flex flex-col gap-3">
           <DetailRow name="Incident type" value={report.incidentType?.name} />
           <DetailRow
