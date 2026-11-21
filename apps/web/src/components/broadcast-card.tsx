@@ -2,20 +2,20 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 type BroadcastCardProps = {
-  recipient: string;
+  sender: string;
   posted: string;
   title: string;
   message: string;
-  onViewRecipients: () => void;
+  onViewSender: () => void;
   onResend: () => void;
 };
 
 export function BroadcastCard({
-  recipient,
+  sender,
   posted,
   title,
   message,
-  onViewRecipients,
+  onViewSender,
   onResend,
 }: BroadcastCardProps) {
   return (
@@ -23,7 +23,7 @@ export function BroadcastCard({
       <div className="mb-2 flex items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-2">
           <p className="truncate text-sm text-muted-foreground">
-            {recipient} posted {posted}
+            {sender} posted {posted}
           </p>
         </div>
 
@@ -45,9 +45,9 @@ export function BroadcastCard({
           variant="ghost"
           size="sm"
           className="h-9 px-2 text-sm font-medium"
-          onClick={onViewRecipients}
+          onClick={onViewSender}
         >
-          View recipients
+          View sender
         </Button>
 
         <Button

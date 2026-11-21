@@ -219,11 +219,11 @@ export function EmergencyBroadcasts() {
                 visibleAdvisories.map((advisory) => (
                   <BroadcastCard
                     key={advisory.id}
-                    recipient={advisory.createdBy.name}
+                    sender={advisory.createdBy.name}
                     posted={formatTime(advisory.sentAt)}
                     title="Emergency Advisory"
                     message={advisory.messageBody}
-                    onViewRecipients={() => {
+                    onViewSender={() => {
                       // Open the recipient details for this advisory.
                     }}
                     onResend={() => {
