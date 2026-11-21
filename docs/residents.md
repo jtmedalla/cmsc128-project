@@ -22,7 +22,7 @@ Both need a signed-in responder or admin (`@Roles` on the controller); any other
 
 Both routes live under the dashboard layout, not `_resident`, which is the public view.
 
-The web app caches the list under `['residents']` and each profile under `['residents', 'detail', id]`.
+The web app reads the list with `residentQueries.list()` and each profile with `residentQueries.detail(id)`, both under `residentQueries.all()`.
 
 ## Contracts
 

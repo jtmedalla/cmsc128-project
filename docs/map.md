@@ -7,6 +7,6 @@ Incident map pins and, later, the heatmap (EP7).
 
 ## Dashboard
 
-- `/dashboard/map`: pins from `reportFeedQuery`, filtered by type, severity, status and date. Loaded lazily (NFR9).
+- `/dashboard/map`: pins from `reportQueries.feed()`, filtered by type, severity, status and date. Loaded lazily (NFR9).
 
 Map depends on triage, never the reverse. Spatial queries (heatmap aggregation, GeoJSON pins) belong here, not in triage.
