@@ -1,12 +1,12 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { RouteError } from '@/components/route-error';
-import { sessionQuery } from '@/features/auth';
+import { authQueries } from '@/features/auth';
 
 export const Route = createFileRoute('/dashboard/_app')({
   beforeLoad: async ({ context, location }) => {
     const session = await context.queryClient.ensureQueryData({
-      ...sessionQuery,
+      ...authQueries.session(),
       revalidateIfStale: true,
     });
     if (!session) {

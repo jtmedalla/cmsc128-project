@@ -31,13 +31,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatTime, label } from '@/lib/format';
-import { reportDetailQuery } from '../api';
+import { reportQueries } from '../queries';
 import { reportTitle } from '../lib/report-title';
 
 /** `/dashboard/incidents/:reportId`: one report on its own page, read-only until #39. */
 export function IncidentDetail({ reportId }: { reportId: string }) {
   const { data, isPending, isError, refetch } = useQuery(
-    reportDetailQuery(reportId),
+    reportQueries.detail(reportId),
   );
 
   if (isPending) {

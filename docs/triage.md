@@ -27,7 +27,7 @@ The quick view's header links to `/dashboard/incidents/:reportId`, the full repo
 
 The chat pane labels messages by `direction` and `sender_id`: inbound is the resident, outbound with a sender is a responder, outbound without one is the bot.
 
-The web app caches the list under `['reports', 'feed']` and each report under `['reports', 'detail', id]`, both under the `['reports']` key the feed invalidates (realtime.md).
+The web app reads the list with `reportQueries.feed()` and each report with `reportQueries.detail(id)`. Invalidating `reportQueries.all()` refreshes both, including open reports.
 
 ## Contracts
 

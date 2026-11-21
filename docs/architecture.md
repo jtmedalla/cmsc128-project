@@ -50,7 +50,8 @@ apps/web/src/
 
 A feature folder holds what it needs from:
 
-- `api.ts`: TanStack Query options for the module's endpoints, calling the shared client `api` from `@/lib/api` (`get`, `getOrNull`, `post`, `put`, `patch`, `delete`)
+- `queries.ts`: the module's query factory (see Data fetching)
+- `mutations.ts`: the module's mutation hooks, created with its first mutation
 - `components/`: React components, with tests beside them
 - `hooks/`, `lib/`: feature-only hooks and helpers
 - `index.ts`: the public surface
@@ -62,3 +63,27 @@ A feature folder holds what it needs from:
 - Feature dependencies go one way. `map` may import `triage`; `triage` never imports `map`.
 - Route files only wire a feature in: guards, search params, and the feature's page component.
 - Code moves to `components/` or `lib/` once a second feature needs it.
+
+## Data fetching
+
+All requests go through `api` from `@/lib/api` (`get`, `getOrNull`, `post`, `put`, `patch`, `delete`). It sends the session cookie, parses responses with the `@repo/shared` schema, and throws `ApiError` (with `issues` for validation failures).
+
+Each module exports one query factory from `queries.ts`, following TanStack Query's [Query Options API](https://tkdodo.eu/blog/the-query-options-api):
+
+```ts
+export const residentQueries = {
+  all: () => ['residents'] as const,
+  list: () =>
+    queryOptions({ queryKey: [...residentQueries.all(), 'list'], queryFn }),
+  detail: (id: string) =>
+    queryOptions({
+      queryKey: [...residentQueries.all(), 'detail', id],
+      queryFn,
+    }),
+};
+```
+
+- Every key starts with the module's `all()`, so `invalidateQueries({ queryKey: residentQueries.all() })` refreshes all of a module's data.
+- Components call `useQuery(residentQueries.detail(id))` directly; don't wrap a plain query in a custom hook. Loaders and prefetching use the same options.
+- Never type a key by hand; read it from the factory (`residentQueries.detail(id).queryKey`). ESLint's `@tanstack/query/prefer-query-options` enforces this.
+- Mutations live in `mutations.ts` as `useXMutation` hooks around `useMutation`. `onSuccess` returns the `invalidateQueries` promise for the narrowest affected key, so the mutation stays pending until fresh data arrives.

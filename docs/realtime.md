@@ -40,7 +40,7 @@ Name events `<entity>:<verb>` (`report:created`, `report:updated`). Define each 
 const queryClient = useQueryClient();
 
 useRealtimeEvent<ReportFeedItem>('report:created', () => {
-  void queryClient.invalidateQueries({ queryKey: ['reports'] });
+  void queryClient.invalidateQueries({ queryKey: reportQueries.all() });
 });
 ```
 

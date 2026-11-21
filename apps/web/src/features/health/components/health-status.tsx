@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { healthQuery } from '../api';
+import { healthQueries } from '../queries';
 import { cn } from '@/lib/utils';
 
 const statusLabel: Record<HealthStatus, string> = {
@@ -44,8 +44,9 @@ function formatUptime(seconds: number) {
 }
 
 export function HealthStatusCard() {
-  const { data, isPending, isError, isFetching, refetch } =
-    useQuery(healthQuery);
+  const { data, isPending, isError, isFetching, refetch } = useQuery(
+    healthQueries.status(),
+  );
 
   return (
     <Card className="max-w-md">

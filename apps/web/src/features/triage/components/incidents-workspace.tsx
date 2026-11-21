@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatTime } from '@/lib/format';
-import { reportFeedQuery } from '../api';
+import { reportQueries } from '../queries';
 
 /**
  * `/dashboard/incidents`: the wireframe's Incident Feed. The report list stays
@@ -56,7 +56,7 @@ export function IncidentsWorkspace({ selectedId }: { selectedId?: string }) {
 
 /** The feed as cards; each opens its report's quick view beside the list. */
 function ReportList() {
-  const { data, isPending, isError, refetch } = useQuery(reportFeedQuery);
+  const { data, isPending, isError, refetch } = useQuery(reportQueries.feed());
 
   if (isPending) {
     return (

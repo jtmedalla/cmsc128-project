@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { BroadcastCard } from './broadcast-card';
 import { Label } from '@/components/ui/label';
-import { recentAdvisoriesQuery } from '../api';
+import { broadcastQueries } from '../queries';
 import { formatTime } from '@/lib/format';
 
 const quickTemplates = [
@@ -23,7 +23,9 @@ export function EmergencyBroadcasts() {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [filter, setFilter] = useState('');
-  const { data, isPending, isError, refetch } = useQuery(recentAdvisoriesQuery);
+  const { data, isPending, isError, refetch } = useQuery(
+    broadcastQueries.recentAdvisories(),
+  );
 
   const visibleAdvisories = (data ?? []).filter((advisory) =>
     advisory.messageBody.toLowerCase().includes(filter.toLowerCase()),

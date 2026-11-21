@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { residentQuery } from '../api';
+import { residentQueries } from '../queries';
 import { getRouteApi, Link } from '@tanstack/react-router';
 const route = getRouteApi('/dashboard/_app/residents/$residentId');
 
@@ -25,7 +25,7 @@ function Field({ label, value }: { label: string; value?: string | null }) {
 export function ResidentProfilePage() {
   const { residentId } = route.useParams();
   const { data, isPending, isError, refetch } = useQuery(
-    residentQuery(residentId),
+    residentQueries.detail(residentId),
   );
 
   if (isPending) return <Skeleton className="h-64 w-full" />;

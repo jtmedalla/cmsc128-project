@@ -19,7 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Wordmark } from '@/components/wordmark';
 import { authClient } from '../auth-client';
-import { sessionQuery } from '../session';
+import { authQueries } from '../queries';
 import { z } from 'zod';
 
 const route = getRouteApi('/login');
@@ -54,7 +54,7 @@ export function LoginForm() {
       }
       // The cache may still hold "signed out" from before; drop it so the
       // dashboard guard fetches the new session.
-      queryClient.removeQueries({ queryKey: sessionQuery.queryKey });
+      queryClient.removeQueries({ queryKey: authQueries.session().queryKey });
       await navigate({ href: search.redirect ?? '/dashboard' });
     },
   });
