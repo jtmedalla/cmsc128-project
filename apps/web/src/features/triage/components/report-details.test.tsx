@@ -103,7 +103,7 @@ describe('ReportDetails', () => {
     await screen.findByText('Flood');
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining(`/triage/reports/${id}`),
-      { credentials: 'include' },
+      expect.objectContaining({ credentials: 'include' }),
     );
   });
 

@@ -1,6 +1,6 @@
 import { healthSchema } from '@repo/shared';
 import { queryOptions } from '@tanstack/react-query';
-import { API_URL } from '@/lib/env';
+import { apiFetch } from '@/lib/api';
 
 /**
  * API health. A 503 still carries a report of which check failed, so it
@@ -8,9 +8,7 @@ import { API_URL } from '@/lib/env';
  */
 export const healthQuery = queryOptions({
   queryKey: ['health'],
-  queryFn: async ({ signal }) => {
-    const res = await fetch(`${API_URL}/health`, { signal });
-    return healthSchema.parse(await res.json());
-  },
+  queryFn: ({ signal }) =>
+    apiFetch('/health', healthSchema, { signal, acceptStatuses: [503] }),
   refetchInterval: 30_000,
 });

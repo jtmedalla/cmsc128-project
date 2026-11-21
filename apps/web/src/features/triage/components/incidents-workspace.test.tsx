@@ -81,7 +81,7 @@ describe('IncidentsWorkspace', () => {
     ).toBe(`/dashboard/incidents?report=${id}`);
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/triage/reports'),
-      { credentials: 'include' },
+      expect.objectContaining({ credentials: 'include' }),
     );
   });
 

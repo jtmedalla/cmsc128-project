@@ -1,17 +1,12 @@
-import { recentAdvisorySchema, type RecentAdvisory } from '@repo/shared';
+import { recentAdvisorySchema } from '@repo/shared';
 import { queryOptions } from '@tanstack/react-query';
-import { API_URL } from '@/lib/env';
+import { apiFetch } from '@/lib/api';
 
 /** The five most recently sent advisories, newest first. */
 export const recentAdvisoriesQuery = queryOptions({
   queryKey: ['broadcasts', 'advisories', 'recent'],
-  queryFn: async (): Promise<RecentAdvisory[]> => {
-    const res = await fetch(`${API_URL}/broadcasts/advisories/recent`, {
-      credentials: 'include',
-    });
-    if (!res.ok) {
-      throw new Error(`Couldn't load advisories (${res.status})`);
-    }
-    return recentAdvisorySchema.array().parse(await res.json());
-  },
+  queryFn: ({ signal }) =>
+    apiFetch('/broadcasts/advisories/recent', recentAdvisorySchema.array(), {
+      signal,
+    }),
 });
