@@ -2,12 +2,13 @@ import { formatAgeRange, type ReportDetail } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { cn } from 'cn';
+import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { Button } from '@/components/ui/button';
 import { ReportMap } from '@/components/report-map';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatTime, label } from '@/lib/format';
-import { reportDetailQuery } from '@/lib/reports';
+import { reportDetailQuery, reportTitle } from '@/lib/reports';
 
 function Field({ name, value }: { name: string; value: React.ReactNode }) {
   return (
@@ -39,41 +40,78 @@ function contentOf(m: Message) {
     : '(attachment)';
 }
 
-/** The chat and details panes, side by side in the outlet's two columns. */
+/** The quick view's chat and details panes, side by side in the workspace's last two columns. */
 function ReportPanes({
+  header,
   chat,
   details,
 }: {
+  header?: React.ReactNode;
   chat: React.ReactNode;
   details: React.ReactNode;
 }) {
   return (
-    <div className="grid min-h-0 lg:col-span-2 lg:grid-cols-2 lg:divide-x">
-      <section aria-label="Chat" className="flex min-h-0 flex-col">
-        <h2 className="p-4 text-lg font-semibold">Chat</h2>
-        <div className="min-h-48 flex-1 px-4 lg:overflow-y-auto">{chat}</div>
-        {/* TODO(#12): enable replies. #12 is the messaging epic; no task issue
-            covers replies yet. Disabled so the layout matches the wireframe. */}
-        <div className="border-t p-3">
-          <Input
-            placeholder="Type your message"
-            aria-label="Message"
-            disabled
-          />
+    <div className="flex min-h-0 flex-col lg:col-span-2">
+      {header}
+      <div className="grid min-h-0 flex-1 lg:grid-cols-2 lg:divide-x">
+        <section aria-label="Chat" className="flex min-h-0 flex-col">
+          <h2 className="p-4 text-lg font-semibold">Chat</h2>
+          <div className="min-h-48 flex-1 px-4 lg:overflow-y-auto">{chat}</div>
+          {/* TODO(#12): enable replies. #12 is the messaging epic; no task issue
+              covers replies yet. Disabled so the layout matches the wireframe. */}
+          <div className="border-t p-3">
+            <Input
+              placeholder="Type your message"
+              aria-label="Message"
+              disabled
+            />
+          </div>
+        </section>
+        <section
+          aria-label="Details"
+          className="flex min-h-0 flex-col gap-4 p-4 lg:overflow-y-auto"
+        >
+          {details}
+        </section>
+      </div>
+    </div>
+  );
+}
+
+/** Title, badges and when it arrived, with the link to the full report page. */
+function QuickViewHeader({ report }: { report: ReportDetail }) {
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-2 border-b p-4">
+      <div className="flex flex-col gap-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-lg font-semibold">{reportTitle(report)}</h2>
+          {report.severity && <SeverityBadge severity={report.severity} />}
+          <StatusBadge status={report.status} />
         </div>
-      </section>
-      <section
-        aria-label="Details"
-        className="flex min-h-0 flex-col gap-4 p-4 lg:overflow-y-auto"
+        <p className="text-sm text-muted-foreground">
+          Received {formatTime(report.createdAt)} via{' '}
+          {label(report.sourceChannel)}
+        </p>
+      </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        nativeButton={false}
+        render={
+          <Link
+            to="/dashboard/incidents/$reportId"
+            params={{ reportId: report.id }}
+          />
+        }
       >
-        {details}
-      </section>
+        Open full report
+      </Button>
     </div>
   );
 }
 
 /** Centered helper text inside a pane. */
-function PaneMessage({ children }: { children: React.ReactNode }) {
+export function PaneMessage({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 py-8 text-center text-muted-foreground">
       {children}
@@ -97,7 +135,7 @@ export function SelectReportPrompt() {
   );
 }
 
-/** Read-only panes for one report; editing arrives with #39. */
+/** The quick view: read-only panes for one report; editing arrives with #39. */
 export function ReportDetails({ reportId }: { reportId: string }) {
   const { data, isPending, isError, refetch } = useQuery(
     reportDetailQuery(reportId),
@@ -154,6 +192,7 @@ export function ReportDetails({ reportId }: { reportId: string }) {
 
   return (
     <ReportPanes
+      header={<QuickViewHeader report={data} />}
       chat={<ChatMessages messages={data.messages} />}
       details={<ReportFields report={data} />}
     />
@@ -161,7 +200,7 @@ export function ReportDetails({ reportId }: { reportId: string }) {
 }
 
 /** The report's conversation as wireframe bubbles: resident left, MIGO and responders right. */
-function ChatMessages({ messages }: { messages: Message[] }) {
+export function ChatMessages({ messages }: { messages: Message[] }) {
   if (!messages.length) return <PaneMessage>No messages yet</PaneMessage>;
 
   return (

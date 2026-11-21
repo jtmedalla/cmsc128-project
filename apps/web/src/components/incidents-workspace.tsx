@@ -1,8 +1,9 @@
 import type { ReportFeedItem } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
-import { Link, Outlet } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import { ArrowDownUp } from 'lucide-react';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
+import { ReportDetails, SelectReportPrompt } from '@/components/report-details';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,9 +12,9 @@ import { reportFeedQuery } from '@/lib/reports';
 
 /**
  * `/dashboard/incidents`: the wireframe's Incident Feed. The report list stays
- * on the left; the selected report's panes render in the outlet beside it.
+ * on the left; the quick view of `selectedId` (from `?report=`) sits beside it.
  */
-export function IncidentsWorkspace() {
+export function IncidentsWorkspace({ selectedId }: { selectedId?: string }) {
   return (
     // Exactly fills the window on large screens so only the panes scroll, never the page:
     // 100svh minus the header (h-14, 3.5rem), main's padding (p-4, 2rem) and the
@@ -43,13 +44,17 @@ export function IncidentsWorkspace() {
           </Button>
           <ReportList />
         </section>
-        <Outlet />
+        {selectedId ? (
+          <ReportDetails reportId={selectedId} />
+        ) : (
+          <SelectReportPrompt />
+        )}
       </div>
     </div>
   );
 }
 
-/** The feed as cards; each opens its report beside the list. */
+/** The feed as cards; each opens its report's quick view beside the list. */
 function ReportList() {
   const { data, isPending, isError, refetch } = useQuery(reportFeedQuery);
 
@@ -91,10 +96,11 @@ function ReportCard({ report }: { report: ReportFeedItem }) {
 
   return (
     <Link
-      to="/dashboard/incidents/$reportId"
-      params={{ reportId: report.id }}
+      to="/dashboard/incidents"
+      search={{ report: report.id }}
       className="flex flex-col gap-2 rounded-xl border p-4 hover:bg-muted/50"
-      // The selected card stays highlighted while its report is open.
+      // Every card shares the path, so only the matching ?report= marks it active.
+      activeOptions={{ exact: true, includeSearch: true }}
       activeProps={{ className: 'bg-muted', 'aria-current': 'page' }}
     >
       <div className="flex items-start justify-between gap-2">

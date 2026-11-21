@@ -9,7 +9,6 @@ import {
 } from '@tanstack/react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { IncidentsWorkspace } from './incidents-workspace';
-import { SelectReportPrompt } from './report-details';
 
 const id = '0b9a3f4e-8c1d-4e2a-9f6b-1c2d3e4f5a6b';
 const at = '2026-10-29T08:30:00.000Z';
@@ -42,21 +41,16 @@ function respondWith(status: number, body?: unknown) {
   );
 }
 
-// The workspace at /dashboard/incidents with its index child (the prompt).
+// The workspace at /dashboard/incidents with nothing selected.
 function renderWorkspace() {
   const root = createRootRoute();
   const incidents = createRoute({
     getParentRoute: () => root,
     path: '/dashboard/incidents',
-    component: IncidentsWorkspace,
-  });
-  const index = createRoute({
-    getParentRoute: () => incidents,
-    path: '/',
-    component: SelectReportPrompt,
+    component: () => <IncidentsWorkspace />,
   });
   const router = createRouter({
-    routeTree: root.addChildren([incidents.addChildren([index])]),
+    routeTree: root.addChildren([incidents]),
     history: createMemoryHistory({ initialEntries: ['/dashboard/incidents'] }),
   });
   render(
@@ -76,7 +70,7 @@ afterEach(() => {
 });
 
 describe('IncidentsWorkspace', () => {
-  it('lists reports as cards that open the report', async () => {
+  it('lists reports as cards that open the quick view on the same route', async () => {
     respondWith(200, [item]);
     renderWorkspace();
     expect(await screen.findByText('Gataas na baha diri')).toBeDefined();
@@ -84,7 +78,7 @@ describe('IncidentsWorkspace', () => {
     expect(screen.getByText('Location: Tacas')).toBeDefined();
     expect(
       screen.getByRole('link', { name: /Flood/ }).getAttribute('href'),
-    ).toBe(`/dashboard/incidents/${id}`);
+    ).toBe(`/dashboard/incidents?report=${id}`);
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/triage/reports'),
       { credentials: 'include' },
