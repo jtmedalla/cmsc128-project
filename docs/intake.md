@@ -53,9 +53,48 @@ flowchart TD
 | `incidentType`  | What happened?                          | Tap or type an active incident type's name or code       |
 | `barangay`      | Which barangay is it in?                | Typed; matched by `BarangayService.findByName`           |
 | `severity`      | How serious is it?                      | Tap or type a level (`parseSeverity`)                    |
+| `anyoneHurt`    | Is anyone hurt?                         | Yes, No or Don't know (`parseAnyoneHurt`)                |
+| `victims`       | Per person, see below                   | Tap or type each detail, or "Don't know"                 |
 | `contactNumber` | What number can responders call you on? | PH mobile (`contactNumberSchema`); saved on the resident |
 
-Each field's question, retry text, choices and answer parsing live in `QUESTIONS` (`apps/api/src/intake/questions.ts`); add a field there and to `INTAKE_FIELDS`. No question state is stored. Each follow-up message answers the first field still missing (`IntakeService.missingFields`), so a field filled any other way is never asked. An answer that doesn't fit gets the question again. After the last answer the bot thanks the resident once, with a "New report" quick reply. Later messages stay on the report as updates (the victim's condition, say), and each gets `FOLLOW_UP_REPLY` with the same quick reply, so no message goes unanswered.
+### People hurt
+
+After a Yes, `victims` is missing until the report has a victim. Chat then asks about each person in turn, from `VICTIM_STEPS`:
+
+```mermaid
+flowchart TD
+    S["Is the person male or female?<br/>Male · Female · Don't know"] --> A["About how old are they?<br/>Child · Adult · Senior · Don't know, or typed"]
+    A --> C["How are they hurt?<br/>Bleeding · Can't breathe · Unconscious · Broken bone · Burns · Can't walk · Don't know, or typed"]
+    C --> SAVE["Save the victim"] --> E{"Is anyone else hurt?<br/>Yes · No"}
+    E -->|Yes| S
+    E -->|No| NEXT["Next missing field"]
+```
+
+Age is stored as a range (`parseAgeRange`). Answers can be typed in English, Tagalog or Hiligaynon, with numbers as digits or words ("eighteen", "disiotso", "labing-anim"); every form is listed in `AGE_RULES` (`packages/shared/src/reports/age.ts`).
+
+| Answer                                   | `ageMin`   | `ageMax`   |
+| ---------------------------------------- | ---------- | ---------- |
+| "18", "about 18", "18 years old"         | 18         | 18         |
+| "60-70", "60 to 70", "between 60 and 70" | 60         | 70         |
+| "60s"                                    | 60         | 69         |
+| "early 60s", "mid-60s", "late 60s"       | 60, 64, 67 | 63, 66, 69 |
+| "60+", "60 and above", "at least 60"     | 60         | null       |
+| "over 60", "more than 60", "lampas 60"   | 61         | null       |
+| "under 18", "below 18", "wala pang 18"   | 0          | 17         |
+| "18 and below", "up to 18", "18 pababa"  | 0          | 18         |
+| "6 months", "2 weeks", "apat na buwan"   | 0          | 0          |
+| Child (or "kid", "bata")                 | 0          | 17         |
+| Adult (or "grown up", "tito", "tita")    | 18         | 59         |
+| Senior (or "lolo", "lola", "matanda")    | 60         | null       |
+| Don't know                               | null       | null       |
+
+`formatAgeRange` shows it as "18 years old", "60-69 years old", "60+ years old" or "Under 18".
+
+Each answer goes into a `VictimDraft` in the Chat SDK thread state (`IntakeState.victim`), and the person is saved as a victim after their condition. A draft holds its `reportId`, so one left from an older report is ignored. If the draft expires mid-person, the next message starts that person over. Answers about a person run under a per-report advisory lock (`IntakeService.withVictimLock`) that rereads the draft, so a quick second message ("Bleeding", then "from his head") stays on the report instead of saving the person twice.
+
+Names are never asked for, and victims have no name field (FR9). A name typed anyway can only land in the condition.
+
+Each field's question, retry text, choices and answer parsing live in `QUESTIONS` (`apps/api/src/intake/questions.ts`); add a field there and to `INTAKE_FIELDS`. Apart from the person being asked about, no question state is stored. Each follow-up message answers the first field still missing (`IntakeService.missingFields`), so a field filled any other way is never asked. Missing fields are rechecked after each answer, since one answer can add a question. An answer that doesn't fit gets the question again. After the last answer the bot thanks the resident once, with a "New report" quick reply. Later messages stay on the report as updates (the victim's condition, say), and each gets `FOLLOW_UP_REPLY` with the same quick reply, so no message goes unanswered.
 
 ### Another report
 
@@ -109,11 +148,12 @@ if (!parsed) {
 | `parseConfidenceSchema`                                | `report.parse_confidence`: field → confidence                                 |
 | `reportInputSchema`                                    | `createReport` input                                                          |
 | `reportFeedItemSchema`                                 | A report as the triage feed shows it                                          |
+| `reportDetailSchema`                                   | One report as a responder reviews it, with the contact number; see triage.md  |
 | `reportCreatedEventSchema`, `reportUpdatedEventSchema` | Feed item payloads of `report:created` and `report:updated` (`REPORT_EVENTS`) |
 
-Victims have no name field (FR9). In a `ParsedReport`, `victims.value` is null when the message doesn't say and `[]` when it says no one is hurt.
+Victims have no name field (FR9). In a `ParsedReport`, `victims.value` is null when the message doesn't say and `[]` when it says no one is hurt; pass `anyoneHurt: 'no'` for `[]`. `createReport` sets `anyoneHurt` to `yes` when given victims.
 
-Emit feed items encoded (`reportFeedItemSchema.encode(item)`) so dates go out as ISO strings, and decode them on the client. `findFeedItems(db, where?)` and `findFeedItem(db, id)` in `intake/reports.ts` load them.
+Emit feed items encoded (`reportFeedItemSchema.encode(item)`) so dates go out as ISO strings, and decode them on the client. `findFeedItems(db, where?)` and `findFeedItem(db, id)` in `triage/feed.ts` load them; see [triage.md](triage.md).
 
 ## Sample data
 

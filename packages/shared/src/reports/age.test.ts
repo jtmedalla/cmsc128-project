@@ -1,0 +1,109 @@
+import { describe, expect, it } from 'vitest';
+import { formatAgeRange, parseAgeRange } from './age.js';
+
+describe('parseAgeRange', () => {
+  it.each([
+    ['18', 18, 18],
+    ['about 8 yrs old', 8, 8],
+    ['60-70', 60, 70],
+    ['60 to 70', 60, 70],
+    ['70-60', 60, 70],
+    ['18 years old', 18, 18],
+    ['18yo', 18, 18],
+    ['18 y/o', 18, 18],
+    ['1 yr 6 months', 1, 1],
+    ['6 months', 0, 0],
+    ['18 months old', 1, 1],
+    ['6 buwan', 0, 0],
+    ['2 weeks', 0, 0],
+    ['5 days old', 0, 0],
+    ['18 hanggang 20', 18, 20],
+    ['between 18 and 20', 18, 20],
+    ['Under 18', 0, 17],
+    ['below 18', 0, 17],
+    ['less than 18', 0, 17],
+    ['younger than 18', 0, 17],
+    ['wala pang 18', 0, 17],
+    ['<18', 0, 17],
+    ['up to 18', 0, 18],
+    ['at most 18', 0, 18],
+    ['<= 18', 0, 18],
+    ['18 and below', 0, 18],
+    ['18 years old and below', 0, 18],
+    ['18 or younger', 0, 18],
+    ['18 under', 0, 18],
+    ['18 pababa', 0, 18],
+    ['over 60', 61, null],
+    ['more than 60', 61, null],
+    ['older than 60', 61, null],
+    ['lampas 60', 61, null],
+    ['>60', 61, null],
+    ['at least 60', 60, null],
+    ['>=60', 60, null],
+    ['60s', 60, 69],
+    ["60's", 60, 69],
+    ['early 60s', 60, 63],
+    ['mid-60s', 64, 66],
+    ['late 60s', 67, 69],
+    ['60+', 60, null],
+    ['60 and up', 60, null],
+    ['60 years and above', 60, null],
+    ['60 or older', 60, null],
+    ['60 above', 60, null],
+    ['60 pataas', 60, null],
+    ['Child', 0, 17],
+    ['adult', 18, 59],
+    ['eighteen', 18, 18],
+    ['Twenty-one', 21, 21],
+    ['sixty five years old', 65, 65],
+    ['one hundred and five', 105, 105],
+    ['a hundred', 100, 100],
+    ['disiotso', 18, 18],
+    ['disi-otso', 18, 18],
+    ['bente uno', 21, 21],
+    ['bentiuno', 21, 21],
+    ["kwarenta'y singko", 45, 45],
+    ['labing-anim', 16, 16],
+    ['labinlima', 15, 15],
+    ["dalawampu't isa", 21, 21],
+    ['limang taon', 5, 5],
+    ['18 taong gulang', 18, 18],
+    ['dalawang buwan', 0, 0],
+    ['apat na buwan', 0, 0],
+    ['tatlo ka semana', 0, 0],
+    ['duha ka pulo kag lima', 25, 25],
+    ['napulo kag isa', 11, 11],
+    ['under eighteen', 0, 17],
+    ['sixty pataas', 60, null],
+    ['between twenty and thirty', 20, 30],
+    ['twenty-thirty', 20, 30],
+    ['five-six', 5, 6],
+    ['sixties', 60, 69],
+    ['late sixties', 67, 69],
+    ['tita', 18, 59],
+    ['grown up', 18, 59],
+    ['lola', 60, null],
+    ['matanda', 60, null],
+  ])('reads %s as %s to %s', (input, min, max) => {
+    expect(parseAgeRange(input)).toEqual({ min, max });
+  });
+
+  it.each(['young', '500', '20-500', 'under 0', 'over 120'])(
+    'rejects %s',
+    (input) => {
+      expect(parseAgeRange(input)).toBeNull();
+    },
+  );
+});
+
+describe('formatAgeRange', () => {
+  it.each([
+    [18, 18, '18 years old'],
+    [60, 69, '60-69 years old'],
+    [60, null, '60+ years old'],
+    [0, 17, 'Under 18'],
+    [null, null, null],
+  ])('formats %s to %s as %s', (min, max, expected) => {
+    expect(formatAgeRange(min, max)).toBe(expected);
+  });
+});

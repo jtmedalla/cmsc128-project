@@ -10,6 +10,7 @@ import { HealthModule } from './health/health.module.js';
 import { IntakeModule } from './intake/intake.module.js';
 import { RealtimeModule } from './realtime/realtime.module.js';
 import { ResidentsModule } from './residents/residents.module.js';
+import { TriageModule } from './triage/triage.module.js';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ResidentsModule } from './residents/residents.module.js';
     ChannelsModule,
     IntakeModule,
     ResidentsModule,
+    TriageModule,
   ],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },

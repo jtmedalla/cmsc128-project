@@ -4,7 +4,11 @@ import {
   type ParsedReport,
   parsedReportSchema,
 } from './parsed.js';
-import { reportFeedItemSchema, reportInputSchema } from './report.js';
+import {
+  reportDetailSchema,
+  reportFeedItemSchema,
+  reportInputSchema,
+} from './report.js';
 
 const residentId = '0b9a3f4e-8c1d-4e2a-9f6b-1c2d3e4f5a6b';
 
@@ -17,7 +21,10 @@ describe('confidenceOf', () => {
       locationText: { value: null, confidence: 0 },
       incidentAt: { value: null, confidence: 0 },
       isProxy: { value: true, confidence: 0.7 },
-      victims: { value: [{ sex: 'female', age: 80 }], confidence: 0.6 },
+      victims: {
+        value: [{ sex: 'female', ageMin: 80, ageMax: 80 }],
+        confidence: 0.6,
+      },
     };
     expect(confidenceOf(parsed)).toEqual({
       incidentType: 0.9,
@@ -41,9 +48,12 @@ describe('parsedReportSchema', () => {
       locationText: none,
       incidentAt: none,
       isProxy: none,
-      victims: { value: [{ name: 'Juan dela Cruz', age: 40 }], confidence: 1 },
+      victims: {
+        value: [{ name: 'Juan dela Cruz', ageMin: 40, ageMax: 40 }],
+        confidence: 1,
+      },
     });
-    expect(victims.value).toEqual([{ age: 40 }]);
+    expect(victims.value).toEqual([{ ageMin: 40, ageMax: 40 }]);
   });
 });
 
@@ -78,9 +88,19 @@ describe('reportInputSchema', () => {
     const { victims } = reportInputSchema.parse({
       residentId,
       sourceChannel: 'web',
-      victims: [{ name: 'Juan dela Cruz', age: 40 }],
+      victims: [{ name: 'Juan dela Cruz', ageMin: 40, ageMax: 40 }],
     });
-    expect(victims).toEqual([{ age: 40 }]);
+    expect(victims).toEqual([{ ageMin: 40, ageMax: 40 }]);
+  });
+
+  it('rejects a victim age range that ends before it starts', () => {
+    expect(
+      reportInputSchema.safeParse({
+        residentId,
+        sourceChannel: 'web',
+        victims: [{ ageMin: 60, ageMax: 40 }],
+      }).success,
+    ).toBe(false);
   });
 
   it('rejects unknown confidence fields', () => {
@@ -111,6 +131,7 @@ describe('reportFeedItemSchema', () => {
       parseConfidence: null,
       resident: { id: residentId, name: null },
       victimCount: 0,
+      firstMessage: null,
       createdAt: '2026-10-29T08:30:00.000Z',
       updatedAt: '2026-10-29T08:30:00.000Z',
     });
@@ -136,9 +157,53 @@ describe('reportFeedItemSchema', () => {
       parseConfidence: null,
       resident: null,
       victimCount: 0,
+      firstMessage: null,
       createdAt: '2026-10-29T08:30:00.000Z',
       updatedAt: '2026-10-29T08:30:00.000Z',
     });
     expect(item.resident).toBeNull();
+  });
+});
+
+describe('reportDetailSchema', () => {
+  it('decodes message dates and keeps the contact number', () => {
+    const detail = reportDetailSchema.decode({
+      id: residentId,
+      status: 'pending',
+      isProxy: false,
+      incidentType: null,
+      severity: null,
+      barangay: null,
+      locationText: null,
+      location: null,
+      incidentAt: null,
+      sourceChannel: 'messenger',
+      parsedAutomatically: false,
+      parseConfidence: null,
+      resident: { id: residentId, name: null, contactNumber: '09171234567' },
+      victims: [
+        {
+          id: residentId,
+          sex: 'female',
+          ageMin: 60,
+          ageMax: null,
+          medicalCondition: null,
+        },
+      ],
+      messages: [
+        {
+          id: residentId,
+          direction: 'inbound',
+          senderId: null,
+          body: 'tulong',
+          attachments: null,
+          createdAt: '2026-10-29T08:30:00.000Z',
+        },
+      ],
+      createdAt: '2026-10-29T08:30:00.000Z',
+      updatedAt: '2026-10-29T08:30:00.000Z',
+    });
+    expect(detail.resident?.contactNumber).toBe('09171234567');
+    expect(detail.messages[0]!.createdAt).toBeInstanceOf(Date);
   });
 });

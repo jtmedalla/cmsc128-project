@@ -5,18 +5,21 @@ import {
   reportCreatedEventSchema,
   reportUpdatedEventSchema,
   type SourceChannel,
+  type VictimInput,
 } from '@repo/shared';
 import { eq, sql } from 'drizzle-orm';
 import type { Database } from '../database/client.js';
 import { DB } from '../database/database.module.js';
 import { incidentType, resident } from '../database/schema/index.js';
 import { RealtimeService } from '../realtime/realtime.service.js';
+// The feed belongs to triage (docs/intake.md, docs/realtime.md); intake only pushes new reports to it.
+import { findFeedItem } from '../triage/feed.js';
 import {
-  findFeedItem,
   findMissingFields,
   findOpenReport,
   type IntakeAnswers,
   insertReport,
+  insertVictims,
   linkMessage,
   updateReport,
 } from './reports.js';
@@ -96,6 +99,25 @@ export class IntakeService {
   async answer(reportId: string, answers: IntakeAnswers) {
     await updateReport(this.db, reportId, answers);
     await this.publish('updated', reportId);
+  }
+
+  /** Adds anonymous victims to a report; names have no field (FR9). */
+  async addVictims(reportId: string, victims: VictimInput[]) {
+    await insertVictims(this.db, reportId, victims);
+    await this.publish('updated', reportId);
+  }
+
+  /**
+   * Runs `fn` holding the report's victim lock, so overlapping messages
+   * answer each victim question once, across app instances.
+   */
+  withVictimLock<T>(reportId: string, fn: () => Promise<T>): Promise<T> {
+    return this.db.transaction(async (tx) => {
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtext(${`victims:${reportId}`}))`,
+      );
+      return fn();
+    });
   }
 
   // TODO(#99): save through the profile service once it lands.

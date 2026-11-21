@@ -1,4 +1,5 @@
 import {
+  anyoneHurtSchema,
   broadcastKindSchema,
   deliveryStatusSchema,
   directionSchema,
@@ -27,6 +28,7 @@ export const severityLevel = pgEnum(
   'severity_level',
   values(severityLevelSchema),
 );
+export const anyoneHurt = pgEnum('anyone_hurt', values(anyoneHurtSchema));
 export const direction = pgEnum('direction', values(directionSchema));
 export const broadcastKind = pgEnum(
   'broadcast_kind',
