@@ -7,6 +7,7 @@ import {
 import {
   Activity,
   LayoutDashboard,
+  UsersIcon,
   MapIcon,
   TriangleAlert,
   Radio,
@@ -44,6 +45,12 @@ const navItems = [
     fuzzy: true,
   },
   { to: '/dashboard/map', label: 'Map', icon: MapIcon, fuzzy: false },
+  {
+    to: '/dashboard/residents',
+    label: 'Residents',
+    icon: UsersIcon,
+    fuzzy: true,
+  },
   {
     to: '/dashboard/emergency-broadcasts',
     label: 'Emergency Broadcasts',

@@ -4,3 +4,4 @@ export * from './enums.js';
 export * from './geo/index.js';
 export * from './health/index.js';
 export * from './reports/index.js';
+export * from './residents/index.js';

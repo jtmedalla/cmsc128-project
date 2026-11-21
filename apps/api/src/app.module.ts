@@ -9,6 +9,7 @@ import { GeoModule } from './geo/geo.module.js';
 import { HealthModule } from './health/health.module.js';
 import { IntakeModule } from './intake/intake.module.js';
 import { RealtimeModule } from './realtime/realtime.module.js';
+import { ResidentsModule } from './residents/residents.module.js';
 import { TriageModule } from './triage/triage.module.js';
 
 @Module({
@@ -21,6 +22,7 @@ import { TriageModule } from './triage/triage.module.js';
     GeoModule,
     ChannelsModule,
     IntakeModule,
+    ResidentsModule,
     TriageModule,
   ],
   providers: [

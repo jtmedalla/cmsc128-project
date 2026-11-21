@@ -19,6 +19,8 @@ import { Route as DashboardAppHealthRouteImport } from './routes/dashboard/_app/
 import { Route as DashboardAppMapRouteImport } from './routes/dashboard/_app/map'
 import { Route as DashboardAppIncidentsIndexRouteImport } from './routes/dashboard/_app/incidents/index'
 import { Route as DashboardAppIncidentsReportIdRouteImport } from './routes/dashboard/_app/incidents/$reportId'
+import { Route as DashboardAppResidentsIndexRouteImport } from './routes/dashboard/_app/residents/index'
+import { Route as DashboardAppResidentsResidentIdRouteImport } from './routes/dashboard/_app/residents/$residentId'
 
 const ResidentRouteRoute = ResidentRouteRouteImport.update({
   id: '/_resident',
@@ -72,6 +74,18 @@ const DashboardAppIncidentsReportIdRoute =
     path: '/incidents/$reportId',
     getParentRoute: () => DashboardAppRouteRoute,
   } as any)
+const DashboardAppResidentsIndexRoute =
+  DashboardAppResidentsIndexRouteImport.update({
+    id: '/residents/',
+    path: '/residents/',
+    getParentRoute: () => DashboardAppRouteRoute,
+  } as any)
+const DashboardAppResidentsResidentIdRoute =
+  DashboardAppResidentsResidentIdRouteImport.update({
+    id: '/residents/$residentId',
+    path: '/residents/$residentId',
+    getParentRoute: () => DashboardAppRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof ResidentIndexRoute
@@ -82,7 +96,9 @@ export interface FileRoutesByFullPath {
   '/dashboard/map': typeof DashboardAppMapRoute
   '/dashboard/': typeof DashboardAppIndexRoute
   '/dashboard/incidents/$reportId': typeof DashboardAppIncidentsReportIdRoute
+  '/dashboard/residents/$residentId': typeof DashboardAppResidentsResidentIdRoute
   '/dashboard/incidents/': typeof DashboardAppIncidentsIndexRoute
+  '/dashboard/residents/': typeof DashboardAppResidentsIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -92,7 +108,9 @@ export interface FileRoutesByTo {
   '/dashboard/map': typeof DashboardAppMapRoute
   '/dashboard': typeof DashboardAppIndexRoute
   '/dashboard/incidents/$reportId': typeof DashboardAppIncidentsReportIdRoute
+  '/dashboard/residents/$residentId': typeof DashboardAppResidentsResidentIdRoute
   '/dashboard/incidents': typeof DashboardAppIncidentsIndexRoute
+  '/dashboard/residents': typeof DashboardAppResidentsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -105,7 +123,9 @@ export interface FileRoutesById {
   '/dashboard/_app/map': typeof DashboardAppMapRoute
   '/dashboard/_app/': typeof DashboardAppIndexRoute
   '/dashboard/_app/incidents/$reportId': typeof DashboardAppIncidentsReportIdRoute
+  '/dashboard/_app/residents/$residentId': typeof DashboardAppResidentsResidentIdRoute
   '/dashboard/_app/incidents/': typeof DashboardAppIncidentsIndexRoute
+  '/dashboard/_app/residents/': typeof DashboardAppResidentsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -118,7 +138,9 @@ export interface FileRouteTypes {
     | '/dashboard/map'
     | '/dashboard/'
     | '/dashboard/incidents/$reportId'
+    | '/dashboard/residents/$residentId'
     | '/dashboard/incidents/'
+    | '/dashboard/residents/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -128,7 +150,9 @@ export interface FileRouteTypes {
     | '/dashboard/map'
     | '/dashboard'
     | '/dashboard/incidents/$reportId'
+    | '/dashboard/residents/$residentId'
     | '/dashboard/incidents'
+    | '/dashboard/residents'
   id:
     | '__root__'
     | '/_resident'
@@ -140,7 +164,9 @@ export interface FileRouteTypes {
     | '/dashboard/_app/map'
     | '/dashboard/_app/'
     | '/dashboard/_app/incidents/$reportId'
+    | '/dashboard/_app/residents/$residentId'
     | '/dashboard/_app/incidents/'
+    | '/dashboard/_app/residents/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -221,6 +247,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAppIncidentsReportIdRouteImport
       parentRoute: typeof DashboardAppRouteRoute
     }
+    '/dashboard/_app/residents/': {
+      id: '/dashboard/_app/residents/'
+      path: '/residents'
+      fullPath: '/dashboard/residents/'
+      preLoaderRoute: typeof DashboardAppResidentsIndexRouteImport
+      parentRoute: typeof DashboardAppRouteRoute
+    }
+    '/dashboard/_app/residents/$residentId': {
+      id: '/dashboard/_app/residents/$residentId'
+      path: '/residents/$residentId'
+      fullPath: '/dashboard/residents/$residentId'
+      preLoaderRoute: typeof DashboardAppResidentsResidentIdRouteImport
+      parentRoute: typeof DashboardAppRouteRoute
+    }
   }
 }
 
@@ -242,7 +282,9 @@ interface DashboardAppRouteRouteChildren {
   DashboardAppMapRoute: typeof DashboardAppMapRoute
   DashboardAppIndexRoute: typeof DashboardAppIndexRoute
   DashboardAppIncidentsReportIdRoute: typeof DashboardAppIncidentsReportIdRoute
+  DashboardAppResidentsResidentIdRoute: typeof DashboardAppResidentsResidentIdRoute
   DashboardAppIncidentsIndexRoute: typeof DashboardAppIncidentsIndexRoute
+  DashboardAppResidentsIndexRoute: typeof DashboardAppResidentsIndexRoute
 }
 
 const DashboardAppRouteRouteChildren: DashboardAppRouteRouteChildren = {
@@ -251,7 +293,9 @@ const DashboardAppRouteRouteChildren: DashboardAppRouteRouteChildren = {
   DashboardAppMapRoute: DashboardAppMapRoute,
   DashboardAppIndexRoute: DashboardAppIndexRoute,
   DashboardAppIncidentsReportIdRoute: DashboardAppIncidentsReportIdRoute,
+  DashboardAppResidentsResidentIdRoute: DashboardAppResidentsResidentIdRoute,
   DashboardAppIncidentsIndexRoute: DashboardAppIncidentsIndexRoute,
+  DashboardAppResidentsIndexRoute: DashboardAppResidentsIndexRoute,
 }
 
 const DashboardAppRouteRouteWithChildren =
