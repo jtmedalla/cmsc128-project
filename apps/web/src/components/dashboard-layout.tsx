@@ -5,12 +5,15 @@ import {
   useMatchRoute,
 } from '@tanstack/react-router';
 import {
-  Activity,
-  LayoutDashboard,
-  UsersIcon,
+  Building2,
+  Download,
+  House,
+  type LucideIcon,
   MapIcon,
-  TriangleAlert,
   Radio,
+  Settings,
+  TriangleAlert,
+  UsersIcon,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -18,6 +21,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
@@ -34,10 +38,26 @@ import { useRealtimeConnection } from '@/features/realtime';
 
 const route = getRouteApi('/dashboard/_app');
 
-// Order follows the wireframe's sidebar. fuzzy keeps an item active on its child
-// pages (an open report under Incidents); Home must match exactly.
-const navItems = [
-  { to: '/dashboard', label: 'Home', icon: LayoutDashboard, fuzzy: false },
+type NavItem = {
+  to:
+    | '/dashboard'
+    | '/dashboard/incidents'
+    | '/dashboard/map'
+    | '/dashboard/residents'
+    | '/dashboard/broadcasts'
+    | '/dashboard/export'
+    | '/dashboard/admin/users'
+    | '/dashboard/admin/incident-types'
+    | '/dashboard/admin/agencies';
+  label: string;
+  icon: LucideIcon;
+  /** Keeps the item active on its child pages; Home must match exactly. */
+  fuzzy: boolean;
+};
+
+// Order and labels follow the Figma "App Sidebar"; Help & Docs sits in the user menu.
+const navItems: NavItem[] = [
+  { to: '/dashboard', label: 'Home', icon: House, fuzzy: false },
   {
     to: '/dashboard/incidents',
     label: 'Incidents',
@@ -53,20 +73,60 @@ const navItems = [
   },
   {
     to: '/dashboard/broadcasts',
-    label: 'Emergency Broadcasts',
+    label: 'Broadcasts',
     icon: Radio,
+    fuzzy: true,
+  },
+  { to: '/dashboard/export', label: 'Export', icon: Download, fuzzy: false },
+];
+
+const adminNavItems: NavItem[] = [
+  {
+    to: '/dashboard/admin/users',
+    label: 'Users',
+    icon: UsersIcon,
     fuzzy: false,
   },
   {
-    to: '/dashboard/health',
-    label: 'System status',
-    icon: Activity,
+    to: '/dashboard/admin/incident-types',
+    label: 'Incident types',
+    icon: Settings,
     fuzzy: false,
   },
-] as const;
+  {
+    to: '/dashboard/admin/agencies',
+    label: 'Agencies',
+    icon: Building2,
+    fuzzy: false,
+  },
+];
+
+function NavGroup({ label, items }: { label?: string; items: NavItem[] }) {
+  const matchRoute = useMatchRoute();
+  return (
+    <SidebarGroup>
+      {label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {items.map((item) => (
+            <SidebarMenuItem key={item.to}>
+              <SidebarMenuButton
+                render={<Link to={item.to} />}
+                isActive={!!matchRoute({ to: item.to, fuzzy: item.fuzzy })}
+                tooltip={item.label}
+              >
+                <item.icon />
+                <span>{item.label}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
+}
 
 export function DashboardLayout() {
-  const matchRoute = useMatchRoute();
   const { session } = route.useRouteContext();
   useRealtimeConnection();
 
@@ -88,26 +148,10 @@ export function DashboardLayout() {
             </SidebarMenu>
           </SidebarHeader>
           <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {navItems.map((item) => (
-                    <SidebarMenuItem key={item.to}>
-                      <SidebarMenuButton
-                        render={<Link to={item.to} />}
-                        isActive={
-                          !!matchRoute({ to: item.to, fuzzy: item.fuzzy })
-                        }
-                        tooltip={item.label}
-                      >
-                        <item.icon />
-                        <span>{item.label}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+            <NavGroup items={navItems} />
+            {session.user.role === 'admin' && (
+              <NavGroup label="Admin" items={adminNavItems} />
+            )}
           </SidebarContent>
           <SidebarFooter>
             <NavUser
