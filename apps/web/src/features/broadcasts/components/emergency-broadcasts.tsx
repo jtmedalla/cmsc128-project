@@ -6,9 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { BroadcastCard } from '@/components/broadcast-card';
+import { BroadcastCard } from './broadcast-card';
 import { Label } from '@/components/ui/label';
-import { recentAdvisoriesQuery } from '@/lib/broadcasts';
+import { recentAdvisoriesQuery } from '../api';
 import { formatTime } from '@/lib/format';
 
 const quickTemplates = [
