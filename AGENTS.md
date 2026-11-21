@@ -41,6 +41,7 @@ pnpm + Turborepo. Run scripts from the root (`pnpm <script>`), or one package wi
 
 ## Verifying
 
+- Write and prune tests by [docs/testing.md](docs/testing.md): what to test, what not to, and how.
 - Run `pnpm lint && pnpm typecheck && pnpm test && pnpm build` before calling work done.
 - For web changes, load the affected page in a browser and check the console; a 200 on `index.html` proves nothing about module resolution.
 
