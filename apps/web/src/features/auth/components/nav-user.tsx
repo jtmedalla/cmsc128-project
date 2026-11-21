@@ -1,6 +1,12 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from '@tanstack/react-router';
-import { ChevronsUpDownIcon, LogOutIcon, SettingsIcon } from 'lucide-react';
+import { Link, useNavigate } from '@tanstack/react-router';
+import {
+  ActivityIcon,
+  ChevronsUpDownIcon,
+  CircleHelpIcon,
+  LogOutIcon,
+  SettingsIcon,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -95,6 +101,14 @@ export function NavUser({ user }: { user: User }) {
             <DropdownMenuItem>
               <SettingsIcon />
               Settings
+            </DropdownMenuItem>
+            <DropdownMenuItem render={<Link to="/dashboard/health" />}>
+              <ActivityIcon />
+              System status
+            </DropdownMenuItem>
+            <DropdownMenuItem render={<Link to="/dashboard/help" />}>
+              <CircleHelpIcon />
+              Help &amp; Docs
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logOut}>

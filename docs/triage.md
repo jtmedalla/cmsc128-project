@@ -4,7 +4,7 @@ Lets responders review reports. Read-only for now; editing arrives with #39.
 
 - API: `apps/api/src/triage/`
 - Web: `apps/web/src/features/triage/`
-- Schemas: `packages/shared/src/reports/`
+- Schemas: `packages/shared/src/triage/`
 
 ## Endpoints
 

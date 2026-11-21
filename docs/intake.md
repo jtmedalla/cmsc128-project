@@ -3,7 +3,8 @@
 Turns resident messages and form answers into reports.
 
 - API: `apps/api/src/intake/`
-- Shared: `packages/shared/src/reports/`
+- Web: `apps/web/src/features/intake/` (`/report` stub)
+- Shared: `packages/shared/src/intake/`
 
 ## Creating a report
 
@@ -70,7 +71,7 @@ flowchart TD
     E -->|No| NEXT["Next missing field"]
 ```
 
-Age is stored as a range (`parseAgeRange`). Answers can be typed in English, Tagalog or Hiligaynon, with numbers as digits or words ("eighteen", "disiotso", "labing-anim"); every form is listed in `AGE_RULES` (`packages/shared/src/reports/age.ts`).
+Age is stored as a range (`parseAgeRange`). Answers can be typed in English, Tagalog or Hiligaynon, with numbers as digits or words ("eighteen", "disiotso", "labing-anim"); every form is listed in `AGE_RULES` (`packages/shared/src/intake/age.ts`).
 
 | Answer                                   | `ageMin`   | `ageMax`   |
 | ---------------------------------------- | ---------- | ---------- |

@@ -8,7 +8,7 @@ Shared location lookup for intake and broadcast targeting.
 
 ## Barangays
 
-`GET /barangays` returns all 119 with centroid, boundary and targeting flags, for any signed-in user.
+`GET /geo/barangays` returns all 119 with centroid, boundary and targeting flags, for any signed-in user.
 
 `GeoModule` is global; inject `BarangayService`:
 

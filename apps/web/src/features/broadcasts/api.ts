@@ -4,9 +4,9 @@ import { API_URL } from '@/lib/env';
 
 /** The five most recently sent advisories, newest first. */
 export const recentAdvisoriesQuery = queryOptions({
-  queryKey: ['broadcast', 'advisories', 'recent'],
+  queryKey: ['broadcasts', 'advisories', 'recent'],
   queryFn: async (): Promise<RecentAdvisory[]> => {
-    const res = await fetch(`${API_URL}/broadcast/advisories/recent`, {
+    const res = await fetch(`${API_URL}/broadcasts/advisories/recent`, {
       credentials: 'include',
     });
     if (!res.ok) {
