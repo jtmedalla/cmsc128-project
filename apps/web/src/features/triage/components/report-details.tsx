@@ -5,6 +5,7 @@ import { cn } from 'cn';
 import { DetailItem } from '@/components/detail-item';
 import { IncidentTypeLabel } from '@/components/incident-type-label';
 import { LoadError } from '@/components/load-error';
+import { ResidentLabel } from '@/components/resident-label';
 import { LocationLabel } from '@/components/location-label';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { Button } from '@/components/ui/button';
@@ -252,15 +253,15 @@ function ReportFields({ report }: { report: ReportDetail }) {
           }
         />
         <DetailItem
-          label="Reported By"
-          value={report.resident?.name ?? 'Unknown caller'}
+          label="Reporter"
+          value={<ResidentLabel resident={report.resident} />}
         />
         <DetailItem
           label="Location"
           value={place && <LocationLabel text={place} reportId={report.id} />}
         />
       </dl>
-      {/* Below Reported By, where the wireframe puts the map. */}
+      {/* Below the reporter, where the wireframe puts the map. */}
       <ReportMap />
       {/* Not in the wireframe: #103 requires the contact number; victims kept by decision. */}
       <dl className="flex flex-col gap-4">

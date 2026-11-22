@@ -91,11 +91,11 @@ describe('ReportDetails', () => {
   it('shows "Not given" for an empty field', async () => {
     respondWith(200, {
       ...wire,
-      resident: { id, name: '', contactNumber: '09171234567' },
+      resident: { id, name: 'Juan Dela Cruz', contactNumber: '' },
     });
     renderWithProviders(<ReportDetails reportId={id} />);
     await screen.findByText('Flood');
-    expect(screen.getByText('Reported By').nextSibling?.textContent).toBe(
+    expect(screen.getByText('Contact number').nextSibling?.textContent).toBe(
       'Not given',
     );
   });

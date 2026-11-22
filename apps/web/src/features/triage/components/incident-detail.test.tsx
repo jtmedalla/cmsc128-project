@@ -57,7 +57,8 @@ describe('IncidentDetail', () => {
         .getByRole('link', { name: 'Santillan Street, near the bridge, Mat-y' })
         .getAttribute('href'),
     ).toBe(`/dashboard/map?report=${id}`);
-    expect(screen.getByText('Juan Dela Cruz (for someone else)')).toBeDefined();
+    expect(screen.getByRole('link', { name: 'Juan Dela Cruz' })).toBeDefined();
+    expect(screen.getByText('(for someone else)')).toBeDefined();
     expect(
       screen.getByRole('link', { name: '09171234567' }).getAttribute('href'),
     ).toBe('tel:09171234567');

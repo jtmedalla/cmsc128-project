@@ -4,7 +4,7 @@ import { DataTableColumnHeader } from '@/components/ui/data-table-column-header'
 import { Badge } from '@/components/ui/badge';
 import type { DataTableFeatures } from '@/lib/data-table-features';
 import { LANGUAGE_LABELS } from '@/lib/format';
-import { Link } from '@tanstack/react-router';
+import { ResidentLabel } from '@/components/resident-label';
 
 export const COLUMN_LABELS: Record<string, string> = {
   name: 'Name',
@@ -25,13 +25,7 @@ export const columns = columnHelper.columns([
       <DataTableColumnHeader column={column} title="Name" />
     ),
     cell: ({ row }) => (
-      <Link
-        to="/dashboard/residents/$residentId"
-        params={{ residentId: row.original.id }}
-        className="text-primary font-bold underline-offset-4 hover:underline"
-      >
-        {row.original.name ?? 'Unnamed resident'}
-      </Link>
+      <ResidentLabel resident={row.original} className="font-medium" />
     ),
   }),
   columnHelper.accessor((row) => row.contactNumber ?? '', {

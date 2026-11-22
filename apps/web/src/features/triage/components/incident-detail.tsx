@@ -4,6 +4,7 @@ import { Link } from '@tanstack/react-router';
 import { DetailItem } from '@/components/detail-item';
 import { IncidentTypeLabel } from '@/components/incident-type-label';
 import { LoadError } from '@/components/load-error';
+import { ResidentLabel } from '@/components/resident-label';
 import { LocationLabel } from '@/components/location-label';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { ChatMessages, ReportNotFound } from './report-details';
@@ -167,7 +168,6 @@ function DetailRow(props: { label: string; value: React.ReactNode }) {
 
 /** The report's fields in two columns: what happened, then where and who reported it. */
 function DetailsCard({ report }: { report: ReportDetail }) {
-  const reporter = report.resident?.name ?? 'Unknown caller';
   const place = formatLocation(report.locationText, report.barangay?.name);
 
   return (
@@ -209,7 +209,17 @@ function DetailsCard({ report }: { report: ReportDetail }) {
           <DetailRow label="Source" value={label(report.sourceChannel)} />
           <DetailRow
             label="Reporter"
-            value={report.isProxy ? `${reporter} (for someone else)` : reporter}
+            value={
+              <>
+                <ResidentLabel resident={report.resident} />
+                {report.isProxy && (
+                  <span className="text-muted-foreground">
+                    {' '}
+                    (for someone else)
+                  </span>
+                )}
+              </>
+            }
           />
           {/* Responders call back on this number (#103). */}
           <DetailRow

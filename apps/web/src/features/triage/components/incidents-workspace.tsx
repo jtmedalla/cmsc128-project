@@ -4,6 +4,7 @@ import { Link } from '@tanstack/react-router';
 import { ArrowDownUp } from 'lucide-react';
 import { IncidentTypeLabel } from '@/components/incident-type-label';
 import { LoadError } from '@/components/load-error';
+import { ResidentLabel } from '@/components/resident-label';
 import { LocationLabel } from '@/components/location-label';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { ReportDetails, SelectReportPrompt } from './report-details';
@@ -112,7 +113,7 @@ function ReportCard({ report }: { report: ReportFeedItem }) {
       </div>
       <p>{report.firstMessage ?? 'No message'}</p>
       <div className="text-sm text-muted-foreground">
-        <p>Reported by: {report.resident?.name ?? 'Unknown caller'}</p>
+        <ResidentLabel resident={report.resident} link={false} />
         <p>{formatTime(report.createdAt)}</p>
         {/* Plain, not a link: the whole card already is one. */}
         {location && <LocationLabel text={location} />}
