@@ -1,4 +1,5 @@
 import type { Language } from '@repo/shared';
+import { formatDistanceToNowStrict } from 'date-fns';
 
 /** Language names; ISO codes don't title-case into them. */
 export const LANGUAGE_LABELS: Record<Language, string> = {
@@ -23,6 +24,11 @@ export function formatLocation(
   const named =
     barangay && locationText?.toLowerCase().includes(barangay.toLowerCase());
   return [locationText, !named && barangay].filter(Boolean).join(', ') || null;
+}
+
+/** "5 minutes ago", "3 days ago". */
+export function formatTimeAgo(date: Date) {
+  return formatDistanceToNowStrict(date, { addSuffix: true });
 }
 
 /** "Oct 29, 2026, 4:30 PM" in Philippine format. */

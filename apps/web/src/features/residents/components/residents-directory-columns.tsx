@@ -3,7 +3,7 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { DataTableColumnHeader } from '@/components/ui/data-table-column-header';
 import { Badge } from '@/components/ui/badge';
 import type { DataTableFeatures } from '@/lib/data-table-features';
-import { LANGUAGE_LABELS } from '@/lib/format';
+import { formatTime, formatTimeAgo, LANGUAGE_LABELS } from '@/lib/format';
 import { ContactNumber } from '@/components/contact-number';
 import { ResidentLabel } from '@/components/resident-label';
 
@@ -77,9 +77,16 @@ export const columns = columnHelper.columns([
     ),
     cell: ({ row }) => {
       const lastMessaged = row.original.lastMessaged;
-      if (!lastMessaged) return 'Never';
-      const minutes = Math.floor((Date.now() - lastMessaged.getTime()) / 60000);
-      return `${Math.floor(minutes / 60)}h ${minutes % 60}m ago`;
+      return lastMessaged ? (
+        <time
+          dateTime={lastMessaged.toISOString()}
+          title={formatTime(lastMessaged)}
+        >
+          {formatTimeAgo(lastMessaged)}
+        </time>
+      ) : (
+        'Never'
+      );
     },
   }),
 ]);
