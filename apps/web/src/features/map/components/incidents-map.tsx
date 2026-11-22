@@ -103,7 +103,7 @@ export function IncidentsMap({ focusId }: { focusId?: string }) {
 
   /* -m-4 cancels the layout's padding. */
   return (
-    <div className="-m-4 flex h-[calc(100svh-4.5rem)] flex-col gap-4 bg-muted p-6">
+    <div className="-m-4 flex h-[calc(100svh-4.5rem)] flex-col gap-4 p-6">
       <h1 className="text-lg font-semibold">Map</h1>
 
       {/* Filters */}
