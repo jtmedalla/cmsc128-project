@@ -1,15 +1,14 @@
 import { useRouter } from '@tanstack/react-router';
-import { Button } from '@/components/ui/button';
+import { LoadError } from '@/components/load-error';
 
 /** Shown when a guarded route can't load, e.g. the API is unreachable. */
 export function RouteError() {
   const router = useRouter();
 
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center gap-4 p-6 text-center">
-      <p>Couldn't load this page. Check your connection and try again.</p>
+    <main className="flex min-h-svh p-6">
       {/* invalidate() reruns the guards and resets this error boundary. */}
-      <Button onClick={() => void router.invalidate()}>Try again</Button>
+      <LoadError what="this page" onRetry={() => void router.invalidate()} />
     </main>
   );
 }

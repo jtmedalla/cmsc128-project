@@ -1,8 +1,9 @@
 import { formatAgeRange, type ReportDetail } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
+import { LoadError } from '@/components/load-error';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
-import { ChatMessages, PaneMessage } from './report-details';
+import { ChatMessages, ReportNotFound } from './report-details';
 import { ReportMap } from './report-map';
 import {
   Breadcrumb,
@@ -54,26 +55,11 @@ export function IncidentDetail({ reportId }: { reportId: string }) {
   }
 
   if (isError) {
-    return (
-      <PaneMessage>
-        <p>Couldn't load this report. Check your connection and try again.</p>
-        <Button onClick={() => void refetch()}>Try again</Button>
-      </PaneMessage>
-    );
+    return <LoadError what="this report" onRetry={() => void refetch()} />;
   }
 
   if (!data) {
-    return (
-      <PaneMessage>
-        <p>This report doesn't exist.</p>
-        <Button
-          nativeButton={false}
-          render={<Link to="/dashboard/incidents" />}
-        >
-          Back to incidents
-        </Button>
-      </PaneMessage>
-    );
+    return <ReportNotFound />;
   }
 
   return (

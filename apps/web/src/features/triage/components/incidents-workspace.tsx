@@ -2,6 +2,7 @@ import type { ReportFeedItem } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { ArrowDownUp } from 'lucide-react';
+import { LoadError } from '@/components/load-error';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { ReportDetails, SelectReportPrompt } from './report-details';
 import { Button } from '@/components/ui/button';
@@ -68,12 +69,7 @@ function ReportList() {
   }
 
   if (isError) {
-    return (
-      <div className="flex flex-col items-start gap-2">
-        <p>Couldn't load reports.</p>
-        <Button onClick={() => void refetch()}>Try again</Button>
-      </div>
-    );
+    return <LoadError what="reports" onRetry={() => void refetch()} />;
   }
 
   if (!data.length)

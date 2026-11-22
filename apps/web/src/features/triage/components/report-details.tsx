@@ -2,6 +2,7 @@ import { formatAgeRange, type ReportDetail } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { cn } from 'cn';
+import { LoadError } from '@/components/load-error';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { Button } from '@/components/ui/button';
 import { ReportMap } from './report-map';
@@ -120,11 +121,26 @@ export function PaneMessage({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** A report ID that matches nothing, with the way back to the feed. */
+export function ReportNotFound() {
+  return (
+    <PaneMessage>
+      <p>This report doesn't exist.</p>
+      <Button
+        variant="outline"
+        nativeButton={false}
+        render={<Link to="/dashboard/incidents" />}
+      >
+        Back to incidents
+      </Button>
+    </PaneMessage>
+  );
+}
+
 /** `/dashboard/incidents` with no report chosen yet. */
 export function SelectReportPrompt() {
   return (
     <ReportPanes
-      // The wireframe's empty chat state (Figma "chat-body").
       chat={
         <PaneMessage>
           <p className="text-lg text-foreground/70">No messages yet</p>
@@ -161,34 +177,14 @@ export function ReportDetails({ reportId }: { reportId: string }) {
       <ReportPanes
         chat={null}
         details={
-          <PaneMessage>
-            <p>
-              Couldn't load this report. Check your connection and try again.
-            </p>
-            <Button onClick={() => void refetch()}>Try again</Button>
-          </PaneMessage>
+          <LoadError what="this report" onRetry={() => void refetch()} />
         }
       />
     );
   }
 
   if (!data) {
-    return (
-      <ReportPanes
-        chat={null}
-        details={
-          <PaneMessage>
-            <p>This report doesn't exist.</p>
-            <Button
-              nativeButton={false}
-              render={<Link to="/dashboard/incidents" />}
-            >
-              Back to incidents
-            </Button>
-          </PaneMessage>
-        }
-      />
-    );
+    return <ReportPanes chat={null} details={<ReportNotFound />} />;
   }
 
   return (

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
+import { LoadError } from '@/components/load-error';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { residentQueries } from '../queries';
@@ -30,12 +30,7 @@ export function ResidentProfilePage() {
 
   if (isPending) return <Skeleton className="h-64 w-full" />;
   if (isError) {
-    return (
-      <div className="flex flex-col items-start gap-2">
-        <p>Couldn't load this resident.</p>
-        <Button onClick={() => void refetch()}>Try again</Button>
-      </div>
-    );
+    return <LoadError what="this resident" onRetry={() => void refetch()} />;
   }
   if (!data) return <p>Resident not found.</p>;
 

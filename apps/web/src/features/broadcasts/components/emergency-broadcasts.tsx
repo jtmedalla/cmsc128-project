@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { SearchIcon } from 'lucide-react';
+import { LoadError } from '@/components/load-error';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -204,16 +205,7 @@ export function EmergencyBroadcasts() {
               )}
 
               {isError && (
-                <div className="flex flex-col items-center gap-2 rounded-md border border-dashed border-border py-6 text-center text-xs text-muted-foreground">
-                  <p>Couldn't load advisories.</p>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => void refetch()}
-                  >
-                    Try again
-                  </Button>
-                </div>
+                <LoadError what="advisories" onRetry={() => void refetch()} />
               )}
 
               {!isPending &&
