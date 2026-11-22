@@ -32,6 +32,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { NavUser } from '@/features/auth';
+import { NewReportDialog } from '@/features/intake';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Wordmark } from '@/components/wordmark';
@@ -175,7 +176,8 @@ export function DashboardLayout() {
         <SidebarInset className="h-svh overflow-hidden md:h-[calc(100svh-1rem)]">
           <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
             <SidebarTrigger />
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-2">
+              <NewReportDialog />
               <ThemeToggle />
             </div>
           </header>
