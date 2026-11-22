@@ -1,13 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { LoadError } from '@/components/load-error';
 import { Skeleton } from '@/components/ui/skeleton';
 import { adminQueries } from '../queries';
 import { BarangaysTable } from './barangays-data-table';
+import { BarangaysMap } from './barangays-map';
 
 export function BarangaysPage() {
   const { data, isPending, isError, refetch } = useQuery(
     adminQueries.barangays(),
   );
+  const [nameFilter, setNameFilter] = useState('');
 
   return (
     <div className="flex flex-col gap-4">
@@ -22,7 +25,14 @@ export function BarangaysPage() {
       ) : isError ? (
         <LoadError what="barangays" onRetry={() => void refetch()} />
       ) : (
-        <BarangaysTable data={data} />
+        <>
+          <BarangaysMap barangays={data} onSelect={setNameFilter} />
+          <BarangaysTable
+            data={data}
+            nameFilter={nameFilter}
+            onNameFilterChange={setNameFilter}
+          />
+        </>
       )}
     </div>
   );

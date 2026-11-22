@@ -4,11 +4,48 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderWithProviders, respondWith } from '@/testing/render';
 import { BarangaysPage } from './barangays-page';
 
+type Feature = { properties: { name: string } };
+
+// MapLibre needs WebGL; draw each barangay as a button instead.
+vi.mock('@/components/map', () => ({
+  Map: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+vi.mock('@/components/ui/map', () => ({
+  MapControls: () => null,
+  MapGeoJSON: ({
+    data,
+    onClick,
+  }: {
+    data: { features: Feature[] };
+    onClick: (event: { feature: Feature }) => void;
+  }) =>
+    data.features.map((feature) => (
+      <button
+        key={feature.properties.name}
+        onClick={() => onClick({ feature })}
+      >
+        Map: {feature.properties.name}
+      </button>
+    )),
+}));
+
 const tacas: Barangay = {
   id: '3b241101-e2bb-4255-8caf-4136c566a962',
   name: 'Tacas',
   centroid: { lng: 122.23, lat: 10.64 },
-  boundary: null,
+  boundary: {
+    type: 'MultiPolygon',
+    coordinates: [
+      [
+        [
+          [122.2, 10.6],
+          [122.3, 10.6],
+          [122.3, 10.7],
+          [122.2, 10.6],
+        ],
+      ],
+    ],
+  },
   isCoastal: true,
   isUpland: false,
   hazards: ['flood'],
@@ -54,6 +91,25 @@ describe('BarangaysPage', () => {
       isUpland: false,
       hazards: ['flood', 'storm_surge'],
     });
+  });
+
+  it('filters the table to a barangay clicked on the map', async () => {
+    const banga = {
+      ...tacas,
+      id: '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
+      name: 'Banga',
+    };
+    respondWith(200, [banga, tacas]);
+    renderWithProviders(<BarangaysPage />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Map: Tacas' }));
+
+    expect(screen.getByPlaceholderText('Filter barangays...')).toHaveProperty(
+      'value',
+      'Tacas',
+    );
+    expect(screen.queryByLabelText('Banga is coastal')).toBeNull();
+    expect(screen.getByLabelText('Tacas is coastal')).toBeDefined();
   });
 
   it('offers a retry when loading fails', async () => {

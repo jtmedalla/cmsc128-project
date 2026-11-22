@@ -2,6 +2,7 @@ import * as React from 'react';
 import {
   useTable,
   type ColumnFiltersState,
+  type Updater,
   type ColumnVisibilityState,
   type SortingState,
 } from '@tanstack/react-table';
@@ -20,11 +21,26 @@ import {
 import { features, type DataTableFeatures } from '@/lib/data-table-features';
 import { COLUMN_LABELS, columns } from './barangays-columns';
 
-export function BarangaysTable({ data }: { data: Barangay[] }) {
+/** The barangays table; the page owns the name filter so the map can set it. */
+export function BarangaysTable({
+  data,
+  nameFilter,
+  onNameFilterChange,
+}: {
+  data: Barangay[];
+  nameFilter: string;
+  onNameFilterChange: (name: string) => void;
+}) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
-  );
+  const columnFilters: ColumnFiltersState = nameFilter
+    ? [{ id: 'name', value: nameFilter }]
+    : [];
+  const setColumnFilters = (updater: Updater<ColumnFiltersState>) => {
+    const next =
+      typeof updater === 'function' ? updater(columnFilters) : updater;
+    const name = next.find((filter) => filter.id === 'name')?.value;
+    onNameFilterChange(typeof name === 'string' ? name : '');
+  };
   const [columnVisibility, setColumnVisibility] =
     React.useState<ColumnVisibilityState>({});
 
@@ -45,10 +61,8 @@ export function BarangaysTable({ data }: { data: Barangay[] }) {
         <Input
           className="max-w-md"
           placeholder="Filter barangays..."
-          value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
-          onChange={(event) =>
-            table.getColumn('name')?.setFilterValue(event.target.value)
-          }
+          value={nameFilter}
+          onChange={(event) => onNameFilterChange(event.target.value)}
         />
         <DataTableViewOptions table={table} columnLabels={COLUMN_LABELS} />
       </div>
