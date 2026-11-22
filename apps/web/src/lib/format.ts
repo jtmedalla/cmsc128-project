@@ -26,6 +26,16 @@ export function formatLocation(
   return [locationText, !named && barangay].filter(Boolean).join(', ') || null;
 }
 
+/**
+ * A `tel:` href for a number as displayed: "(033) 000-0101" dials as
+ * `tel:0330000101`, and a leading "+" is kept for international numbers.
+ */
+export function toTelHref(number: string) {
+  const trimmed = number.trim();
+  const prefix = trimmed.startsWith('+') ? '+' : '';
+  return `tel:${prefix}${trimmed.replace(/\D/g, '')}`;
+}
+
 /** "5 minutes ago", "3 days ago". */
 export function formatTimeAgo(date: Date) {
   return formatDistanceToNowStrict(date, { addSuffix: true });
