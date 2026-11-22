@@ -10,7 +10,7 @@ import { ResidentLabel } from '@/components/resident-label';
 import { SexLabel } from '@/components/sex-label';
 import { LocationLabel } from '@/components/location-label';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
-import { ReportNotFound } from './report-details';
+import { ReportNotFound } from './report-not-found';
 import { ReportMap } from './report-map';
 import {
   Breadcrumb,

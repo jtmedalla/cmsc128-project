@@ -1,6 +1,7 @@
 import { formatAgeRange, type ReportDetail } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
+import { MousePointerClick } from 'lucide-react';
 import { Fragment } from 'react';
 import { CallButton, ContactNumber } from '@/components/contact-number';
 import { DetailItem } from '@/components/detail-item';
@@ -12,11 +13,18 @@ import { SexLabel } from '@/components/sex-label';
 import { LocationLabel } from '@/components/location-label';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { Button } from '@/components/ui/button';
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { ReportMap } from './report-map';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatLocation, formatTime, label } from '@/lib/format';
 import { MessageComposer, MessageThread } from '@/features/messaging';
 import { reportQueries } from '../queries';
+import { ReportNotFound } from './report-not-found';
 import { reportTitle } from '../lib/report-title';
 
 /** The quick view's chat and details panes, side by side in the workspace's last two columns. */
@@ -95,37 +103,21 @@ function QuickViewHeader({ report }: { report: ReportDetail }) {
   );
 }
 
-/** Centered helper text inside a pane. */
-export function PaneMessage({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 py-8 text-center text-muted-foreground">
-      {children}
-    </div>
-  );
-}
-
-/** A report ID that matches nothing, with the way back to the feed. */
-export function ReportNotFound() {
-  return (
-    <PaneMessage>
-      <p>This report doesn't exist.</p>
-      <Button
-        variant="outline"
-        nativeButton={false}
-        render={<Link to="/dashboard/incidents" />}
-      >
-        Back to incidents
-      </Button>
-    </PaneMessage>
-  );
-}
-
 /** `/dashboard/incidents` with no report chosen yet. */
 export function SelectReportPrompt() {
   return (
     <ReportPanes
       chat={<MessageThread messages={[]} />}
-      details={<PaneMessage>Select a report to see its details</PaneMessage>}
+      details={
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <MousePointerClick />
+            </EmptyMedia>
+            <EmptyTitle>Select a report to see its details</EmptyTitle>
+          </EmptyHeader>
+        </Empty>
+      }
     />
   );
 }
