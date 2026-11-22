@@ -29,7 +29,7 @@ vi.mock('@/components/ui/map', () => ({
     data: { features: Feature[] };
     onClick?: (event: { feature: Feature }) => void;
   }) =>
-    id === 'barangay-selected'
+    id === 'barangays-outlined'
       ? data.features.map((feature) => (
           <p key={feature.properties.name}>
             Outlined: {feature.properties.name}

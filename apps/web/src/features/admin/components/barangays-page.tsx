@@ -1,11 +1,26 @@
+import type { Barangay } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { LoadError } from '@/components/load-error';
 import { Skeleton } from '@/components/ui/skeleton';
-import { adminQueries } from '../queries';
+import { BarangayMap, geoQueries } from '@/features/geo';
 import { BarangaysTable } from './barangays-data-table';
-import { BarangaysMap } from './barangays-map';
 
-/** `barangay` is the selected name, kept in the URL by the route. */
+const TERRAIN = {
+  coastal: { label: 'Coastal', color: '#3b82f6' },
+  upland: { label: 'Upland', color: '#16a34a' },
+  both: { label: 'Both', color: '#9333ea' },
+  neither: { label: 'Neither', color: '#a3a3a3' },
+};
+
+function terrainColor({ isCoastal, isUpland }: Barangay) {
+  if (isCoastal && isUpland) return TERRAIN.both.color;
+  if (isCoastal) return TERRAIN.coastal.color;
+  if (isUpland) return TERRAIN.upland.color;
+  return TERRAIN.neither.color;
+}
+
+/** `barangay` is the name search, kept in the URL by the route. */
 export function BarangaysPage({
   barangay = '',
   onBarangayChange,
@@ -14,8 +29,16 @@ export function BarangaysPage({
   onBarangayChange: (name: string) => void;
 }) {
   const { data, isPending, isError, refetch } = useQuery(
-    adminQueries.barangays(),
+    geoQueries.barangays(),
   );
+  // Outline what the table's name filter matches.
+  const matchedIds = useMemo(() => {
+    const query = barangay.trim().toLowerCase();
+    if (!query || !data) return [];
+    return data
+      .filter((row) => row.name.toLowerCase().includes(query))
+      .map((row) => row.id);
+  }, [data, barangay]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -31,10 +54,13 @@ export function BarangaysPage({
         <LoadError what="barangays" onRetry={() => void refetch()} />
       ) : (
         <>
-          <BarangaysMap
+          <BarangayMap
+            className="h-80"
             barangays={data}
-            selected={barangay}
-            onSelect={onBarangayChange}
+            color={terrainColor}
+            outlinedIds={matchedIds}
+            onBarangayClick={(row) => onBarangayChange(row.name)}
+            legend={Object.values(TERRAIN)}
           />
           <BarangaysTable
             data={data}
