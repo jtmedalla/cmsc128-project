@@ -1,6 +1,7 @@
 import { formatAgeRange, type ReportDetail } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
+import { DetailItem } from '@/components/detail-item';
 import { LoadError } from '@/components/load-error';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { ChatMessages, ReportNotFound } from './report-details';
@@ -148,18 +149,13 @@ function PageHeader({ report }: { report: ReportDetail }) {
   );
 }
 
-/** One label and value; empty values read "Not given". */
-function DetailRow({ name, value }: { name: string; value: React.ReactNode }) {
+/** A label column beside the value; minmax(0, 1fr) lets long values wrap instead of overflowing. */
+function DetailRow(props: { label: string; value: React.ReactNode }) {
   return (
-    // minmax(0, 1fr) lets the value column shrink, so long values wrap instead of overflowing.
-    <div className="grid grid-cols-[8rem_minmax(0,1fr)] gap-2">
-      <dt className="text-muted-foreground">{name}</dt>
-      <dd className="wrap-break-word">
-        {value === null || value === undefined || value === ''
-          ? 'Not given'
-          : value}
-      </dd>
-    </div>
+    <DetailItem
+      className="grid grid-cols-[8rem_minmax(0,1fr)] items-baseline gap-2"
+      {...props}
+    />
   );
 }
 
@@ -175,28 +171,28 @@ function DetailsCard({ report }: { report: ReportDetail }) {
       </CardHeader>
       <CardContent className="grid gap-x-6 gap-y-3 @lg:grid-cols-2">
         <dl className="flex flex-col gap-3">
-          <DetailRow name="Incident type" value={report.incidentType?.name} />
+          <DetailRow label="Incident type" value={report.incidentType?.name} />
           <DetailRow
-            name="Severity"
+            label="Severity"
             value={report.severity && label(report.severity)}
           />
-          <DetailRow name="Status" value={label(report.status)} />
+          <DetailRow label="Status" value={label(report.status)} />
           <DetailRow
-            name="Incident time"
+            label="Incident time"
             value={report.incidentAt && formatTime(report.incidentAt)}
           />
         </dl>
         <dl className="flex flex-col gap-3">
-          <DetailRow name="Barangay" value={report.barangay?.name} />
-          <DetailRow name="Location" value={report.locationText} />
-          <DetailRow name="Source" value={label(report.sourceChannel)} />
+          <DetailRow label="Barangay" value={report.barangay?.name} />
+          <DetailRow label="Location" value={report.locationText} />
+          <DetailRow label="Source" value={label(report.sourceChannel)} />
           <DetailRow
-            name="Reporter"
+            label="Reporter"
             value={report.isProxy ? `${reporter} (for someone else)` : reporter}
           />
           {/* Responders call back on this number (#103). */}
           <DetailRow
-            name="Contact number"
+            label="Contact number"
             value={
               report.resident?.contactNumber && (
                 <a

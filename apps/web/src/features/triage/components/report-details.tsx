@@ -2,6 +2,7 @@ import { formatAgeRange, type ReportDetail } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { cn } from 'cn';
+import { DetailItem } from '@/components/detail-item';
 import { LoadError } from '@/components/load-error';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { Button } from '@/components/ui/button';
@@ -11,20 +12,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatTime, label } from '@/lib/format';
 import { reportQueries } from '../queries';
 import { reportTitle } from '../lib/report-title';
-
-function Field({ name, value }: { name: string; value: React.ReactNode }) {
-  return (
-    <div>
-      <dt className="text-sm font-medium">{name}</dt>
-      {/* An empty string counts as missing too, not only null/undefined. */}
-      <dd className="text-muted-foreground">
-        {value === null || value === undefined || value === ''
-          ? 'Not given'
-          : value}
-      </dd>
-    </div>
-  );
-}
 
 type Message = ReportDetail['messages'][number];
 
@@ -239,14 +226,14 @@ function ReportFields({ report }: { report: ReportDetail }) {
         Report ID: #{report.id.slice(0, 8)}
       </p>
       <dl className="flex flex-col gap-4">
-        <Field name="Status" value={label(report.status)} />
-        <Field
-          name="Severity"
+        <DetailItem label="Status" value={label(report.status)} />
+        <DetailItem
+          label="Severity"
           value={report.severity && label(report.severity)}
         />
-        <Field name="Incident Type" value={report.incidentType?.name} />
-        <Field
-          name="Reported By"
+        <DetailItem label="Incident Type" value={report.incidentType?.name} />
+        <DetailItem
+          label="Reported By"
           value={report.resident?.name ?? 'Unknown caller'}
         />
       </dl>
@@ -254,8 +241,8 @@ function ReportFields({ report }: { report: ReportDetail }) {
       <ReportMap />
       {/* Not in the wireframe: #103 requires the contact number; victims kept by decision. */}
       <dl className="flex flex-col gap-4">
-        <Field
-          name="Contact number"
+        <DetailItem
+          label="Contact number"
           value={
             report.resident?.contactNumber && (
               <a
@@ -267,8 +254,8 @@ function ReportFields({ report }: { report: ReportDetail }) {
             )
           }
         />
-        <Field
-          name={`Victims (${report.victims.length})`}
+        <DetailItem
+          label={`Victims (${report.victims.length})`}
           value={
             report.victims.length ? (
               <ul>

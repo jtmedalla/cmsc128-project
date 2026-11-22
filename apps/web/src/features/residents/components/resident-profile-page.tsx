@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { DetailItem } from '@/components/detail-item';
 import { LoadError } from '@/components/load-error';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -12,15 +13,6 @@ const LANGUAGE_LABELS = {
   tgl: 'Tagalog',
   eng: 'English',
 } as const;
-
-function Field({ label, value }: { label: string; value?: string | null }) {
-  return (
-    <div className="flex flex-col gap-1">
-      <dt className="text-muted-foreground text-sm">{label}</dt>
-      <dd className="font-medium">{value || '—'}</dd>
-    </div>
-  );
-}
 
 export function ResidentProfilePage() {
   const { residentId } = route.useParams();
@@ -49,10 +41,10 @@ export function ResidentProfilePage() {
         </CardHeader>
         <CardContent>
           <dl className="grid gap-4 sm:grid-cols-2">
-            <Field label="Contact number" value={data.contactNumber} />
-            <Field label="Barangay" value={data.barangay} />
-            <Field label="Age" value={data.age?.toString()} />
-            <Field
+            <DetailItem label="Contact number" value={data.contactNumber} />
+            <DetailItem label="Barangay" value={data.barangay} />
+            <DetailItem label="Age" value={data.age?.toString()} />
+            <DetailItem
               label="Sex"
               value={
                 data.sex === 'male'
@@ -62,12 +54,12 @@ export function ResidentProfilePage() {
                     : null
               }
             />
-            <Field label="Home address" value={data.locationText} />
-            <Field
+            <DetailItem label="Home address" value={data.locationText} />
+            <DetailItem
               label="Preferred language"
               value={LANGUAGE_LABELS[data.languagePreference]}
             />
-            <Field
+            <DetailItem
               label="Advisories"
               value={data.broadcastsOptIn ? 'Opted in' : 'Opted out'}
             />
