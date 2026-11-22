@@ -1,11 +1,23 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { SearchIcon } from 'lucide-react';
+import { Radio, SearchIcon } from 'lucide-react';
 import { LoadError } from '@/components/load-error';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { Input } from '@/components/ui/input';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from '@/components/ui/input-group';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { BroadcastCard } from './broadcast-card';
 import { Label } from '@/components/ui/label';
@@ -186,21 +198,22 @@ export function EmergencyBroadcasts() {
           </CardHeader>
 
           <CardContent className="pb-3 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
-            <div className="relative mb-2">
-              <SearchIcon className="absolute left-2.5 top-1/2 size-3 -translate-y-1/2 text-muted-foreground" />
-              <Input
+            <InputGroup className="mb-2">
+              <InputGroupAddon>
+                <SearchIcon />
+              </InputGroupAddon>
+              <InputGroupInput
                 aria-label="Filter recent advisories"
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
                 placeholder="Filter by type..."
-                className="h-8 pl-8 text-xs"
               />
-            </div>
+            </InputGroup>
 
             <div className="space-y-2 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-0.5">
               {isPending && (
-                <div className="rounded-md border border-dashed border-border py-8 text-center text-xs text-muted-foreground">
-                  Loading advisories...
+                <div aria-busy="true" aria-label="Loading advisories">
+                  <Skeleton className="h-40 w-full" />
                 </div>
               )}
 
@@ -227,11 +240,18 @@ export function EmergencyBroadcasts() {
                 ))}
 
               {!isPending && !isError && visibleAdvisories.length === 0 && (
-                <div className="rounded-md border border-dashed border-border py-8 text-center text-xs text-muted-foreground">
-                  {filter
-                    ? 'No advisories match this filter.'
-                    : 'No advisories yet.'}
-                </div>
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <Radio />
+                    </EmptyMedia>
+                    <EmptyTitle>
+                      {filter
+                        ? 'No advisories match this filter.'
+                        : 'No advisories yet.'}
+                    </EmptyTitle>
+                  </EmptyHeader>
+                </Empty>
               )}
             </div>
           </CardContent>
