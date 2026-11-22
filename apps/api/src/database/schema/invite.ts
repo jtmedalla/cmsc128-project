@@ -10,6 +10,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { user } from './auth.js';
 
+/** An emailed invitation to create a dashboard account. Revoked, never deleted. */
 export const invite = pgTable(
   'invite',
   {

@@ -10,6 +10,7 @@ import {
 import { user } from './auth.js';
 import { language } from './enums.js';
 
+/** MDRRMO's maintained content. Admins retire entries with `isActive`. */
 export const knowledgeEntry = pgTable(
   'knowledge_entry',
   {

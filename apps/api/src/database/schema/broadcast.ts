@@ -19,6 +19,7 @@ import {
 import { report } from './report.js';
 import { resident } from './resident.js';
 
+/** An advisory or survey sent to many residents. */
 export const broadcast = pgTable(
   'broadcast',
   {
@@ -33,7 +34,9 @@ export const broadcast = pgTable(
       .array()
       .default([])
       .notNull(),
+    /** Matched against `barangay.hazards`. */
     targetHazard: hazardType('target_hazard'),
+    /** Custom target area (Stretch). */
     targetArea: geometryPolygon('target_area'),
     /** Surveys only; sets the non-respondent window. */
     respondBy: timestamp('respond_by'),
@@ -46,6 +49,7 @@ export const broadcast = pgTable(
   ],
 );
 
+/** A survey answer, shown as a chat quick reply. */
 export const broadcastOption = pgTable(
   'broadcast_option',
   {
@@ -59,6 +63,10 @@ export const broadcastOption = pgTable(
   (table) => [index('broadcast_option_broadcast_id_idx').on(table.broadcastId)],
 );
 
+/**
+ * One send to one resident on one channel. Delivery counts come from here,
+ * not from the size of the target.
+ */
 export const broadcastDelivery = pgTable(
   'broadcast_delivery',
   {
@@ -83,6 +91,7 @@ export const broadcastDelivery = pgTable(
   ],
 );
 
+/** A resident's survey answer, one per resident per survey. */
 export const broadcastResponse = pgTable(
   'broadcast_response',
   {
@@ -97,6 +106,7 @@ export const broadcastResponse = pgTable(
       .notNull()
       .references(() => broadcastOption.id, { onDelete: 'restrict' }),
     respondedAt: timestamp('responded_at').defaultNow().notNull(),
+    /** Set when a responder escalates the response into a report. */
     escalatedReportId: uuid('escalated_report_id')
       .unique()
       .references(() => report.id, { onDelete: 'restrict' }),

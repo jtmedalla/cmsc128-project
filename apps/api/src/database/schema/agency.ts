@@ -10,14 +10,21 @@ import {
 import { user } from './auth.js';
 import { report } from './report.js';
 
+/**
+ * Partner agencies for referrals and the public hotlines page. Seeded by
+ * migration; retired with `isActive`, never deleted.
+ */
 export const agency = pgTable('agency', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull().unique(),
   contactNumber: text('contact_number'),
+  /** Shown on `/info/hotlines`. */
   isPublic: boolean('is_public').default(false).notNull(),
+  /** Offered for referrals. */
   isActive: boolean('is_active').default(true).notNull(),
 });
 
+/** A report handed to a partner agency; a report can have several. */
 export const agencyReferral = pgTable(
   'agency_referral',
   {

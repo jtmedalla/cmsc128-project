@@ -26,17 +26,25 @@ import {
 import { message } from './message.js';
 import { resident } from './resident.js';
 
+/** Kinds of incident. Seeded by migration; admins add types and retire them. */
 export const incidentType = pgTable('incident_type', {
   id: uuid('id').primaryKey().defaultRandom(),
+  /** Stable key the classifier returns. */
   code: text('code').notNull().unique(),
   name: text('name').notNull(),
+  /** Inactive types are hidden from the classifier and forms. */
   isActive: boolean('is_active').default(true).notNull(),
 });
 
+/**
+ * An incident report. `residentId` is the sender, even when `isProxy` marks
+ * the report as being about someone else.
+ */
 export const report = pgTable(
   'report',
   {
     id: uuid('id').primaryKey().defaultRandom(),
+    /** 128-bit, base64url; the key for `/status/:token`. */
     trackingToken: text('tracking_token')
       .notNull()
       .unique()
@@ -45,6 +53,7 @@ export const report = pgTable(
     residentId: uuid('resident_id').references(() => resident.id, {
       onDelete: 'restrict',
     }),
+    /** About someone other than the sender. */
     isProxy: boolean('is_proxy').default(false).notNull(),
     /** The responder who entered it; null for resident reports. */
     createdBy: text('created_by').references(() => user.id, {
@@ -58,6 +67,7 @@ export const report = pgTable(
       (): AnyPgColumn => report.id,
       { onDelete: 'restrict' },
     ),
+    /** `invalid` retires false alarms and duplicates; reports are never deleted. */
     status: reportStatus('status').default('pending').notNull(),
     incidentTypeId: uuid('incident_type_id').references(() => incidentType.id, {
       onDelete: 'restrict',
@@ -68,13 +78,16 @@ export const report = pgTable(
     barangayId: uuid('barangay_id').references(() => barangay.id, {
       onDelete: 'restrict',
     }),
+    /** As reported. */
     locationText: text('location_text'),
     location: geometryPoint('location'),
     incidentAt: timestamp('incident_at'),
     sourceChannel: sourceChannel('source_channel').notNull(),
+    /** False for form and fallback reports. */
     parsedAutomatically: boolean('parsed_automatically')
       .default(false)
       .notNull(),
+    /** Field → confidence, shaped by `parseConfidenceSchema`. */
     parseConfidence: jsonb('parse_confidence'),
     ...timestamps,
   },
@@ -88,6 +101,11 @@ export const report = pgTable(
   ],
 );
 
+/**
+ * A person hurt in a report. No name is ever stored (FR9). A victim with every
+ * column null means the reporter couldn't tell. Age is a range because
+ * reporters guess: "60s" is 60 to 69, and Senior is 60 with no maximum.
+ */
 export const victim = pgTable(
   'victim',
   {
@@ -112,6 +130,7 @@ export const victim = pgTable(
   ],
 );
 
+/** Audit trail: one row per corrected field or status change. */
 export const reportEdit = pgTable(
   'report_edit',
   {
@@ -122,6 +141,7 @@ export const reportEdit = pgTable(
     responderId: text('responder_id')
       .notNull()
       .references(() => user.id, { onDelete: 'restrict' }),
+    /** Column name, including `status`. */
     field: text('field').notNull(),
     oldValue: jsonb('old_value'),
     newValue: jsonb('new_value'),

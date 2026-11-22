@@ -17,23 +17,27 @@ import { language, sex, sourceChannel } from './enums.js';
 import { message } from './message.js';
 import { report } from './report.js';
 
+/** A person who has messaged MIGO. Every detail is optional. */
 export const resident = pgTable(
   'resident',
   {
     id: uuid('id').primaryKey().defaultRandom(),
     name: text('name'),
+    /** Asked for first, and reused on later reports. */
     contactNumber: text('contact_number'),
     age: integer('age'),
     sex: sex('sex'),
     barangayId: uuid('barangay_id').references(() => barangay.id, {
       onDelete: 'restrict',
     }),
+    /** Home address, as given. */
     locationText: text('location_text'),
     location: geometryPoint('location'),
     languagePreference: language('language_preference')
       .default('tgl')
       .notNull(),
     broadcastsOptIn: boolean('broadcasts_opt_in').default(true).notNull(),
+    /** When the privacy notice was shown (FR41). */
     privacyNoticeAt: timestamp('privacy_notice_at'),
     ...timestamps,
   },
@@ -43,6 +47,7 @@ export const resident = pgTable(
   ],
 );
 
+/** A resident's identity on one platform; a resident can have several. */
 export const residentChannel = pgTable(
   'resident_channel',
   {
@@ -51,8 +56,11 @@ export const residentChannel = pgTable(
       .notNull()
       .references(() => resident.id, { onDelete: 'restrict' }),
     channel: sourceChannel('channel').notNull(),
+    /** Messenger PSID or web session ID. */
     externalId: text('external_id').notNull(),
+    /** Checked against Meta's messaging window before a send. */
     lastInboundAt: timestamp('last_inbound_at'),
+    /** Web Push endpoint (Stretch). */
     pushSubscription: jsonb('push_subscription'),
   },
   (table) => [
