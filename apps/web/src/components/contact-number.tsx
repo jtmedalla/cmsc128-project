@@ -2,6 +2,7 @@ import { cn } from 'cn';
 import { Phone } from 'lucide-react';
 import { IconText } from '@/components/icon-text';
 import { Button } from '@/components/ui/button';
+import { toTelHref } from '@/lib/format';
 
 /** A phone number with an icon, always a tel: link so a tap dials it. */
 export function ContactNumber({
@@ -12,7 +13,7 @@ export function ContactNumber({
   className?: string;
 }) {
   return (
-    <a href={`tel:${number}`} className="group/contact">
+    <a href={toTelHref(number)} className="group/contact">
       <IconText
         icon={Phone}
         className={cn(
@@ -29,10 +30,13 @@ export function ContactNumber({
 /** A button that dials the number, for calling a reporter back. */
 export function CallButton({
   number,
+  label,
   variant = 'outline',
   className,
 }: {
   number: string;
+  /** Spoken label when "Call <number>" needs context, e.g. the agency. */
+  label?: string;
   variant?: React.ComponentProps<typeof Button>['variant'];
   className?: string;
 }) {
@@ -42,7 +46,9 @@ export function CallButton({
       size="sm"
       className={className}
       nativeButton={false}
-      render={<a href={`tel:${number}`} aria-label={`Call ${number}`} />}
+      render={
+        <a href={toTelHref(number)} aria-label={label ?? `Call ${number}`} />
+      }
     >
       <Phone data-icon="inline-start" />
       Call
