@@ -3,6 +3,7 @@ import {
   type ReportStatus,
   reportStatusSchema,
   type SeverityLevel,
+  severityLevelSchema,
 } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from 'cn';
@@ -10,6 +11,7 @@ import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import { useEffect, useRef, useState } from 'react';
+import { severityStyles } from '@/lib/report-states';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -21,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { reportQueries } from '@/features/triage';
+import { label } from '@/lib/format';
 
 /* Ship MapLibre's worker with Vite; without it the map is blank. */
 maplibregl.setWorkerUrl(workerUrl);
@@ -30,13 +33,8 @@ const STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 const MIAGAO_CENTER: [number, number] = [122.24, 10.7]; // [lng, lat]
 const START_ZOOM = 11;
 
-/* Pin color per severity. */
-const SEVERITIES: { value: SeverityLevel; label: string; color: string }[] = [
-  { value: 'critical', label: 'Critical', color: 'bg-destructive' },
-  { value: 'high', label: 'High', color: 'bg-highlight' },
-  { value: 'moderate', label: 'Moderate', color: 'bg-warning' },
-  { value: 'low', label: 'Low', color: 'bg-info' },
-];
+/* Most severe first, for the filter and legend. */
+const SEVERITIES = severityLevelSchema.options.toReversed();
 /* Pin color for reports with no severity yet. */
 const UNCLASSIFIED_COLOR = 'bg-muted-foreground';
 
@@ -90,8 +88,7 @@ function typesIn(reports: ReportFeedItem[]) {
 /* Pin element colored by severity. */
 function pinElement(severity: SeverityLevel | null) {
   const pin = document.createElement('div');
-  const color =
-    SEVERITIES.find((s) => s.value === severity)?.color ?? UNCLASSIFIED_COLOR;
+  const color = severity ? severityStyles[severity].solid : UNCLASSIFIED_COLOR;
   pin.className = cn(
     'size-[18px] rounded-full border-[3px] border-white',
     color,
@@ -166,9 +163,9 @@ export function IncidentsMap() {
           onChange={setFilter('severity')}
           options={[
             { value: 'all', label: 'Severity: All' },
-            ...SEVERITIES.map((s) => ({
-              value: s.value,
-              label: `Severity: ${s.label}`,
+            ...SEVERITIES.map((severity) => ({
+              value: severity,
+              label: `Severity: ${label(severity)}`,
             })),
           ]}
         />
@@ -181,7 +178,7 @@ export function IncidentsMap() {
             { value: 'all', label: 'Status: All' },
             ...reportStatusSchema.options.map((status) => ({
               value: status,
-              label: `Status: ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+              label: `Status: ${label(status)}`,
             })),
           ]}
         />
@@ -211,10 +208,15 @@ export function IncidentsMap() {
         <div ref={container} className="size-full" />
         <div className="absolute top-4 left-4 flex flex-col gap-1.5 rounded-lg border bg-card px-3 py-2.5 text-xs">
           <span className="font-medium text-muted-foreground">Severity</span>
-          {SEVERITIES.map((s) => (
-            <span key={s.value} className="flex items-center gap-1.5">
-              <span className={cn('size-2.5 rounded-full', s.color)} />
-              {s.label}
+          {SEVERITIES.map((severity) => (
+            <span key={severity} className="flex items-center gap-1.5">
+              <span
+                className={cn(
+                  'size-2.5 rounded-full',
+                  severityStyles[severity].solid,
+                )}
+              />
+              {label(severity)}
             </span>
           ))}
         </div>

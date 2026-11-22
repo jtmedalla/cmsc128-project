@@ -1,7 +1,7 @@
 import { formatAgeRange, type ReportDetail } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { SeverityBadge, StatusBadge } from './report-badges';
+import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { ChatMessages, PaneMessage } from './report-details';
 import { ReportMap } from './report-map';
 import {

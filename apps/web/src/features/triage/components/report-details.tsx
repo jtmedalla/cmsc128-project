@@ -2,7 +2,7 @@ import { formatAgeRange, type ReportDetail } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { cn } from 'cn';
-import { SeverityBadge, StatusBadge } from './report-badges';
+import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { Button } from '@/components/ui/button';
 import { ReportMap } from './report-map';
 import { Input } from '@/components/ui/input';
