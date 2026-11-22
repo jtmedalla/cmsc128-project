@@ -2,7 +2,7 @@
 
 MIGO (Miagao Incident Gateway for Operations): MDRRMO Miagao's incident intake system. Residents report through chat; responders triage on a web dashboard.
 
-Read the [PRD, TRD, sitemap, and data model](https://docs.google.com/document/d/1DcYYP8369BnRDyPKTOIHHp2Qaja-y59i-i9gSGF-Hfk/edit?usp=sharing) before designing a feature, adding a table, or choosing a library.
+Read the specs in [docs/specs/](docs/specs/) (PRD, TRD, data model, sitemap) before designing a feature, adding a table, or choosing a library.
 
 Tasks live in GitHub issues.
 
