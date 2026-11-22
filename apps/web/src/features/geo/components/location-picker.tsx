@@ -92,7 +92,7 @@ export function LocationPicker({
   useEffect(() => {
     latest.current = value;
   }, [value]);
-  // Only the latest pin may name its place; earlier answers are stale.
+  // Only the latest search or pin may place the location; earlier answers are stale.
   const pinId = useRef(0);
 
   const update = (change: Partial<LocationValue>) => {
@@ -106,14 +106,15 @@ export function LocationPicker({
       toast.info('Type a place to find it on the map.');
       return;
     }
+    const id = ++pinId.current;
     setSearching(true);
     try {
       const found = await queryClient.fetchQuery(geoQueries.geocode(query));
+      if (id !== pinId.current) return;
       if (!found) {
         toast.info('No place in Miagao matches. Pin it on the map instead.');
         return;
       }
-      pinId.current++;
       update({ point: found.point, barangayId: found.barangay?.id ?? null });
       setFlyTarget({ point: found.point, zoom: PLACE_ZOOM });
     } catch {

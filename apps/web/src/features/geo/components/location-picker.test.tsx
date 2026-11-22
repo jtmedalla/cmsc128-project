@@ -83,4 +83,50 @@ describe('LocationPicker', () => {
       barangayId: id,
     });
   });
+
+  it('drops a search answer once a barangay is chosen', async () => {
+    let answer!: (response: Response) => void;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise<Response>((resolve) => (answer = resolve))),
+    );
+    const queryClient = new QueryClient();
+    queryClient.setQueryData(geoQueries.barangays().queryKey, [
+      { id, name: 'Tacas', centroid: point } as Barangay,
+    ]);
+    const onChange = vi.fn();
+    renderWithProviders(
+      <LocationPicker
+        withBarangay
+        value={{ ...emptyLocation, text: 'Miagao Church' }}
+        onChange={onChange}
+      />,
+      { queryClient },
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Find on map' }));
+    const [toggle] = await screen.findAllByRole('button', { expanded: false });
+    fireEvent.click(toggle!);
+    const tacas = await screen.findByRole('option', { name: 'Tacas' });
+    fireEvent.pointerDown(tacas);
+    fireEvent.click(tacas);
+    await waitFor(() => expect(fetch).toHaveBeenCalled());
+    answer(
+      new Response(
+        JSON.stringify({ point: { lng: 122.2, lat: 10.6 }, barangay: null }),
+        { status: 200 },
+      ),
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: 'Find on map' }),
+      ).toHaveProperty('disabled', false),
+    );
+    expect(onChange).toHaveBeenLastCalledWith({
+      text: 'Tacas',
+      point,
+      barangayId: id,
+    });
+  });
 });
