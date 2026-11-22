@@ -18,14 +18,14 @@ const statusLabel: Record<HealthStatus, string> = {
   error: 'Down',
 };
 
-function StatusBadge({ status }: { status: HealthStatus | 'unreachable' }) {
+function ServiceStatus({ status }: { status: HealthStatus | 'unreachable' }) {
   return (
     <span className="inline-flex items-center gap-2 text-sm font-medium">
       <span
         aria-hidden
         className={cn(
           'size-2 rounded-full',
-          status === 'ok' ? 'bg-emerald-500' : 'bg-destructive',
+          status === 'ok' ? 'bg-success' : 'bg-destructive',
         )}
       />
       {status === 'unreachable' ? 'Unreachable' : statusLabel[status]}
@@ -70,18 +70,18 @@ export function HealthStatusCard() {
           <dl className="grid grid-cols-2 gap-2 text-sm">
             <dt className="text-muted-foreground">API</dt>
             <dd>
-              <StatusBadge status="unreachable" />
+              <ServiceStatus status="unreachable" />
             </dd>
           </dl>
         ) : (
           <dl className="grid grid-cols-2 gap-2 text-sm">
             <dt className="text-muted-foreground">API</dt>
             <dd>
-              <StatusBadge status="ok" />
+              <ServiceStatus status="ok" />
             </dd>
             <dt className="text-muted-foreground">Database</dt>
             <dd>
-              <StatusBadge status={data.checks.database} />
+              <ServiceStatus status={data.checks.database} />
             </dd>
             <dt className="text-muted-foreground">Uptime</dt>
             <dd>{formatUptime(data.uptime)}</dd>
