@@ -2,6 +2,7 @@ import type { IntakeField } from '@repo/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ChannelsService } from '../channels/channels.service.js';
 import type { BarangayService } from '../geo/barangay.service.js';
+import type { GeocodingService } from '../geo/geocoding.service.js';
 import {
   ChatIntakeService,
   DONE_REPLY,
@@ -42,10 +43,12 @@ describe('ChatIntakeService', () => {
     incidentTypes: vi.fn(),
   };
   const barangays = { findByName: vi.fn() };
+  const geocoding = { geocode: vi.fn() };
   const service = new ChatIntakeService(
     channels as unknown as ChannelsService,
     intake as unknown as IntakeService,
     barangays as unknown as BarangayService,
+    geocoding as unknown as GeocodingService,
   );
   const recorded = { residentId: 'resident-1', messageId: 'msg-1' };
   const options = { reportId: 'report-1' };
@@ -173,6 +176,32 @@ describe('ChatIntakeService', () => {
       QUESTIONS.severity.ask,
       { ...options, choices: ['Low', 'Moderate', 'High', 'Critical'] },
     );
+  });
+
+  it('geocodes a place that is not a barangay name', async () => {
+    followUp(['barangay', 'severity']);
+    barangays.findByName.mockResolvedValue(null);
+    const point = { lng: 122.23, lat: 10.64 };
+    geocoding.geocode.mockResolvedValue({ point, barangay: { id: 'brgy-1' } });
+    await service.handle('messenger', recorded, 'Miagao Church', thread);
+    expect(geocoding.geocode).toHaveBeenCalledWith('Miagao Church');
+    expect(intake.answer).toHaveBeenCalledWith('report-1', {
+      barangayId: 'brgy-1',
+      locationText: 'Miagao Church',
+      location: point,
+    });
+    expect(sent()).toEqual([QUESTIONS.severity.ask]);
+  });
+
+  it('asks again when the place is not found in Miagao', async () => {
+    followUp(['barangay', 'severity']);
+    barangays.findByName.mockResolvedValue(null);
+    geocoding.geocode.mockResolvedValue(null);
+    await service.handle('messenger', recorded, 'somewhere', thread);
+    expect(intake.answer).not.toHaveBeenCalled();
+    expect(sent()).toEqual([
+      `${QUESTIONS.barangay.retry} ${QUESTIONS.barangay.ask}`,
+    ]);
   });
 
   it('asks again when the answer does not fit', async () => {

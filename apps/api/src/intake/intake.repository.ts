@@ -33,7 +33,12 @@ export interface CreatedReport {
 export type IntakeAnswers = Partial<
   Pick<
     typeof report.$inferInsert,
-    'incidentTypeId' | 'barangayId' | 'severity' | 'anyoneHurt'
+    | 'incidentTypeId'
+    | 'barangayId'
+    | 'locationText'
+    | 'location'
+    | 'severity'
+    | 'anyoneHurt'
   >
 >;
 
