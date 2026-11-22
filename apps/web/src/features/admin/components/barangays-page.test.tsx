@@ -150,7 +150,7 @@ describe('BarangaysPage', () => {
       },
     );
 
-    expect(screen.getByText('Outlined: Tacas')).toBeDefined();
+    expect(await screen.findByText('Outlined: Tacas')).toBeDefined();
     expect(screen.getByText('Outlined: Tabuc Suba')).toBeDefined();
     expect(screen.queryByText('Outlined: Banga')).toBeNull();
   });

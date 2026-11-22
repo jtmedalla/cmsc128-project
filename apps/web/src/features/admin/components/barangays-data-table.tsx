@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useDebouncedCallback } from '@/hooks/use-debounced-callback';
 import { features, type DataTableFeatures } from '@/lib/data-table-features';
 import { COLUMN_LABELS, columns } from './barangays-columns';
 
@@ -32,6 +33,16 @@ export function BarangaysTable({
   onNameFilterChange: (name: string) => void;
 }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  // The box shows each keystroke; the filter, URL and map follow once typing stops.
+  const [search, setSearch] = React.useState(nameFilter);
+  const [synced, setSynced] = React.useState(nameFilter);
+  const commitSearch = useDebouncedCallback(onNameFilterChange, 300);
+  if (nameFilter !== synced) {
+    // Set from outside, e.g. a map click: show it and drop pending typing.
+    setSynced(nameFilter);
+    setSearch(nameFilter);
+    commitSearch.cancel();
+  }
   const columnFilters: ColumnFiltersState = nameFilter
     ? [{ id: 'name', value: nameFilter }]
     : [];
@@ -61,8 +72,11 @@ export function BarangaysTable({
         <Input
           className="max-w-md"
           placeholder="Filter barangays..."
-          value={nameFilter}
-          onChange={(event) => onNameFilterChange(event.target.value)}
+          value={search}
+          onChange={(event) => {
+            setSearch(event.target.value);
+            commitSearch(event.target.value);
+          }}
         />
         <DataTableViewOptions table={table} columnLabels={COLUMN_LABELS} />
       </div>
