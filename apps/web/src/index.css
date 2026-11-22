@@ -38,6 +38,27 @@
   --color-warning-foreground: var(--warning-foreground);
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
+  --color-severity-low: var(--severity-low);
+  --color-severity-moderate: var(--severity-moderate);
+  --color-severity-high: var(--severity-high);
+  --color-severity-critical: var(--severity-critical);
+  --color-status-pending: var(--status-pending);
+  --color-status-validated: var(--status-validated);
+  --color-status-dispatched: var(--status-dispatched);
+  --color-status-resolved: var(--status-resolved);
+  --color-status-closed: var(--status-closed);
+  --color-status-invalid: var(--status-invalid);
+  /* State text on its own tint: pulled toward the foreground so small text stays readable in both themes. */
+  --color-severity-low-foreground: color-mix(in oklab, var(--severity-low) 70%, var(--foreground));
+  --color-severity-moderate-foreground: color-mix(in oklab, var(--severity-moderate) 70%, var(--foreground));
+  --color-severity-high-foreground: color-mix(in oklab, var(--severity-high) 70%, var(--foreground));
+  --color-severity-critical-foreground: color-mix(in oklab, var(--severity-critical) 70%, var(--foreground));
+  --color-status-pending-foreground: color-mix(in oklab, var(--status-pending) 70%, var(--foreground));
+  --color-status-validated-foreground: color-mix(in oklab, var(--status-validated) 70%, var(--foreground));
+  --color-status-dispatched-foreground: color-mix(in oklab, var(--status-dispatched) 70%, var(--foreground));
+  --color-status-resolved-foreground: color-mix(in oklab, var(--status-resolved) 70%, var(--foreground));
+  --color-status-closed-foreground: color-mix(in oklab, var(--status-closed) 70%, var(--foreground));
+  --color-status-invalid-foreground: color-mix(in oklab, var(--status-invalid) 70%, var(--foreground));
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -100,6 +121,21 @@
   --sidebar-accent-foreground: #233052;
   --sidebar-border: #e3e6ed;
   --sidebar-ring: #f4511e;
+  /*
+   * Report states, aliased to the semantic colors so dark mode follows. Badges tint
+   * the background (bg-severity-low/12 text-severity-low-foreground); map pins use
+   * the color solid. Severity rises from blue to red.
+   */
+  --severity-low: var(--info);
+  --severity-moderate: var(--warning);
+  --severity-high: var(--highlight);
+  --severity-critical: var(--destructive);
+  --status-pending: var(--warning);
+  --status-validated: var(--info);
+  --status-dispatched: var(--primary);
+  --status-resolved: var(--success);
+  --status-closed: var(--muted-foreground);
+  --status-invalid: var(--destructive);
 }
 
 .dark {
