@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { cn } from 'cn';
 import { DetailItem } from '@/components/detail-item';
+import { IncidentTypeLabel } from '@/components/incident-type-label';
 import { LoadError } from '@/components/load-error';
 import { LocationLabel } from '@/components/location-label';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
@@ -74,7 +75,11 @@ function QuickViewHeader({ report }: { report: ReportDetail }) {
     <div className="flex flex-wrap items-start justify-between gap-2 border-b p-4">
       <div className="flex flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-lg font-semibold">{reportTitle(report)}</h2>
+          <h2 className="text-lg font-semibold">
+            <IncidentTypeLabel type={report.incidentType}>
+              {reportTitle(report)}
+            </IncidentTypeLabel>
+          </h2>
           {report.severity && <SeverityBadge severity={report.severity} />}
           <StatusBadge status={report.status} />
         </div>
@@ -238,7 +243,14 @@ function ReportFields({ report }: { report: ReportDetail }) {
             report.severity && <SeverityBadge severity={report.severity} />
           }
         />
-        <DetailItem label="Incident Type" value={report.incidentType?.name} />
+        <DetailItem
+          label="Incident Type"
+          value={
+            report.incidentType && (
+              <IncidentTypeLabel type={report.incidentType} />
+            )
+          }
+        />
         <DetailItem
           label="Reported By"
           value={report.resident?.name ?? 'Unknown caller'}

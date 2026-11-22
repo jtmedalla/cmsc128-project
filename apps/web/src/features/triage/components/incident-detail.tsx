@@ -2,6 +2,7 @@ import { formatAgeRange, type ReportDetail } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { DetailItem } from '@/components/detail-item';
+import { IncidentTypeLabel } from '@/components/incident-type-label';
 import { LoadError } from '@/components/load-error';
 import { LocationLabel } from '@/components/location-label';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
@@ -129,7 +130,11 @@ function PageHeader({ report }: { report: ReportDetail }) {
       </Breadcrumb>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-semibold">{reportTitle(report)}</h1>
+          <h1 className="text-2xl font-semibold">
+            <IncidentTypeLabel type={report.incidentType}>
+              {reportTitle(report)}
+            </IncidentTypeLabel>
+          </h1>
           {report.severity && <SeverityBadge severity={report.severity} />}
           <StatusBadge status={report.status} />
         </div>
@@ -173,7 +178,14 @@ function DetailsCard({ report }: { report: ReportDetail }) {
       </CardHeader>
       <CardContent className="grid gap-x-6 gap-y-3 @lg:grid-cols-2">
         <dl className="flex flex-col gap-3">
-          <DetailRow label="Incident type" value={report.incidentType?.name} />
+          <DetailRow
+            label="Incident type"
+            value={
+              report.incidentType && (
+                <IncidentTypeLabel type={report.incidentType} />
+              )
+            }
+          />
           <DetailRow
             label="Severity"
             value={

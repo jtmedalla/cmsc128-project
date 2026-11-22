@@ -2,6 +2,7 @@ import type { ReportFeedItem } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { ArrowDownUp } from 'lucide-react';
+import { IncidentTypeLabel } from '@/components/incident-type-label';
 import { LoadError } from '@/components/load-error';
 import { LocationLabel } from '@/components/location-label';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
@@ -102,7 +103,7 @@ function ReportCard({ report }: { report: ReportFeedItem }) {
     >
       <div className="flex items-start justify-between gap-2">
         <h3 className="font-semibold">
-          {report.incidentType?.name ?? 'Unclassified incident'}
+          <IncidentTypeLabel type={report.incidentType} />
         </h3>
         <div className="flex shrink-0 gap-1">
           {report.severity && <SeverityBadge severity={report.severity} />}

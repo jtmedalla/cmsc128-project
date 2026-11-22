@@ -12,6 +12,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import { useEffect, useRef, useState } from 'react';
 import { severityStyles } from '@/lib/report-states';
+import { IncidentTypeLabel } from '@/components/incident-type-label';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -78,13 +79,13 @@ function applyFilters(reports: ReportFeedItem[], filters: Filters) {
 
 /* Incident types in the loaded reports. */
 function typesIn(reports: ReportFeedItem[]) {
-  const types = new Map<string, string>();
+  const types = new Map<string, NonNullable<ReportFeedItem['incidentType']>>();
   for (const report of reports) {
     if (report.incidentType) {
-      types.set(report.incidentType.id, report.incidentType.name);
+      types.set(report.incidentType.id, report.incidentType);
     }
   }
-  return [...types].sort((a, b) => a[1].localeCompare(b[1]));
+  return [...types.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /* Pin element colored by severity; the focused report's pin is larger. */
@@ -171,9 +172,9 @@ export function IncidentsMap({ focusId }: { focusId?: string }) {
           onChange={setFilter('type')}
           options={[
             { value: 'all', label: 'Type: All' },
-            ...typesIn(data ?? []).map(([id, name]) => ({
-              value: id,
-              label: `Type: ${name}`,
+            ...typesIn(data ?? []).map((type) => ({
+              value: type.id,
+              label: <IncidentTypeLabel type={type} />,
             })),
           ]}
         />
