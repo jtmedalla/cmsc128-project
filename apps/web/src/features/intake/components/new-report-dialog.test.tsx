@@ -35,8 +35,9 @@ describe('NewReportDialog', () => {
     const fire = await screen.findByRole('option', { name: 'Fire' });
     fireEvent.pointerDown(fire);
     fireEvent.click(fire);
-    fireEvent.change(screen.getByLabelText('Severity'), {
-      target: { value: 'high' },
+    // The slider's steps run low, moderate, high, critical.
+    fireEvent.change(await screen.findByRole('slider', { hidden: true }), {
+      target: { value: 2 },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Create report' }));
 

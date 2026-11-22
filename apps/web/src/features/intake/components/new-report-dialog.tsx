@@ -3,8 +3,7 @@ import {
   anyoneHurtSchema,
   createdReportSchema,
   type DashboardReportInput,
-  SEVERITY_LABELS,
-  severityLevelSchema,
+  type SeverityLevel,
 } from '@repo/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
@@ -13,6 +12,7 @@ import { ChevronDown, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { TimePicker } from '@/components/reui/time-picker';
+import { SeveritySlider } from '@/components/severity-slider';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -42,7 +42,7 @@ import { IncidentTypeSelect } from './incident-type-select';
 
 const empty = {
   incidentTypeId: null as string | null,
-  severity: '',
+  severity: null as SeverityLevel | null,
   location: emptyLocation,
   /** `yyyy-MM-dd` from the calendar. */
   incidentDate: '',
@@ -56,7 +56,7 @@ type Values = typeof empty;
 function toInput(values: Values): DashboardReportInput {
   return {
     incidentTypeId: values.incidentTypeId,
-    severity: severityLevelSchema.safeParse(values.severity).data ?? null,
+    severity: values.severity,
     barangayId: values.location.barangayId,
     locationText: values.location.text.trim() || null,
     location: values.location.point,
@@ -76,7 +76,7 @@ function SelectField({
   onChange,
   options,
 }: {
-  id: Exclude<keyof Values, 'location' | 'incidentTypeId'>;
+  id: Exclude<keyof Values, 'location' | 'incidentTypeId' | 'severity'>;
   label: string;
   value: string;
   onChange: (value: string) => void;
@@ -175,7 +175,9 @@ export function NewReportDialog() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const set =
-    (field: Exclude<keyof Values, 'location' | 'incidentTypeId'>) =>
+    (
+      field: Exclude<keyof Values, 'location' | 'incidentTypeId' | 'severity'>,
+    ) =>
     (value: string) =>
       setValues((prev) => ({ ...prev, [field]: value }));
 
@@ -224,16 +226,16 @@ export function NewReportDialog() {
                 }
               />
             </Field>
-            <SelectField
-              id="severity"
-              label="Severity"
-              value={values.severity}
-              onChange={set('severity')}
-              options={severityLevelSchema.options.map((level) => ({
-                value: level,
-                label: SEVERITY_LABELS[level],
-              }))}
-            />
+            <Field>
+              <FieldLabel id="severity-label">Severity</FieldLabel>
+              <SeveritySlider
+                labelId="severity-label"
+                value={values.severity}
+                onValueChange={(severity) =>
+                  setValues((prev) => ({ ...prev, severity }))
+                }
+              />
+            </Field>
             <LocationPicker
               withBarangay
               value={values.location}
