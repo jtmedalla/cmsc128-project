@@ -58,7 +58,7 @@ flowchart TD
 | Field           | Asked as                                | Answer                                                   |
 | --------------- | --------------------------------------- | -------------------------------------------------------- |
 | `incidentType`  | What happened?                          | Tap or type an active incident type's name or code       |
-| `barangay`      | Which barangay is it in?                | Typed; matched by `BarangayService.findByName`           |
+| `barangay`      | Where is it?                            | A barangay name (`findByName`), else geocoded (below)    |
 | `severity`      | How serious is it?                      | Tap or type a level (`parseSeverity`)                    |
 | `anyoneHurt`    | Is anyone hurt?                         | Yes, No or Don't know (`parseAnyoneHurt`)                |
 | `victims`       | Per person, see below                   | Tap or type each detail, or "Don't know"                 |
@@ -100,6 +100,10 @@ Age is stored as a range (`parseAgeRange`). Answers can be typed in English, Tag
 Each answer goes into a `VictimDraft` in the Chat SDK thread state (`IntakeState.victim`), and the person is saved as a victim after their condition. A draft holds its `reportId`, so one left from an older report is ignored. If the draft expires mid-person, the next message starts that person over. Answers about a person run under a per-report advisory lock (`IntakeService.withVictimLock`) that rereads the draft, so a quick second message ("Bleeding", then "from his head") stays on the report instead of saving the person twice.
 
 Names are never asked for, and victims have no name field (FR9). A name typed anyway can only land in the condition.
+
+### Location
+
+The location answer is matched as a barangay name first (`BarangayService.findByName`), which sets only `barangay_id`. Otherwise it goes to `GeocodingService.geocode`; a place inside a barangay saves the text as `location_text`, the point as `location` and its barangay. Anything else gets the question again. Messenger has no location sharing, so chat takes text only.
 
 Each field's question, retry text, choices and answer parsing live in `QUESTIONS` (`apps/api/src/intake/questions.ts`); add a field there and to `INTAKE_FIELDS`. Apart from the person being asked about, no question state is stored. Each follow-up message answers the first field still missing (`IntakeService.missingFields`), so a field filled any other way is never asked. Missing fields are rechecked after each answer, since one answer can add a question. An answer that doesn't fit gets the question again. After the last answer the bot thanks the resident once, with a "New report" quick reply. Later messages stay on the report as updates (the victim's condition, say), and each gets `FOLLOW_UP_REPLY` with the same quick reply, so no message goes unanswered.
 

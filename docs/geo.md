@@ -28,7 +28,7 @@ Import `GeoModule` and inject `BarangayService`:
 
 The public instance allows 1 request per second, so requests queue one at a time. Searches and reverse lookups share the queue. Results, including misses, are cached in memory for the life of the process; failures are not. Point `NOMINATIM_URL` at another instance to lift the limit.
 
-Intake resolves a location in the order the TRD sets: `findByName`, then a shared location through `findContaining`, then `geocode`.
+Chat intake resolves a location typed by the resident with `findByName`, then `geocode` (see [intake.md](intake.md#location)).
 
 ## Location picker
 
