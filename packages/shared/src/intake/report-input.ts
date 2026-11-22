@@ -56,6 +56,7 @@ export const dashboardReportInputSchema = z.object({
   severity: severityLevelSchema.nullish(),
   barangayId: z.uuid().nullish(),
   locationText: z.string().trim().min(1).nullish(),
+  location: geoPoint.nullish(),
   /** An ISO string over the wire; a codec so the API can describe it in JSON Schema. */
   incidentAt: stringToDate.nullish(),
   anyoneHurt: anyoneHurtSchema.nullish(),

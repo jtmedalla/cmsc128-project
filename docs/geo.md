@@ -3,6 +3,7 @@
 Shared location lookup for intake and broadcast targeting.
 
 - API: `apps/api/src/geo/`
+- Web: `apps/web/src/features/geo/` (no screens; the location picker and `geoQueries`)
 - Schemas: `packages/shared/src/geo/`
 - Barangay data: `apps/api/scripts/build-barangays.py`, seeded by migration
 
@@ -28,3 +29,13 @@ Import `GeoModule` and inject `BarangayService`:
 The public instance allows 1 request per second, so requests queue one at a time. Searches and reverse lookups share the queue. Results, including misses, are cached in memory for the life of the process; failures are not. Point `NOMINATIM_URL` at another instance to lift the limit.
 
 Intake resolves a location in the order the TRD sets: `findByName`, then a shared location through `findContaining`, then `geocode`.
+
+## Location picker
+
+`LocationPicker` edits a `LocationValue` (`{ text, point, barangayId }`, each unknown until set; start from `emptyLocation`): a location field over a map, plus a barangay select with `withBarangay`. It keeps all three in sync itself:
+
+- Searching the text (Enter or the search button) pins the place and selects its barangay.
+- Clicking the map, dragging the pin or the map's "my location" button pins that point, names its place and selects its barangay.
+- Choosing a barangay in its combobox pins its centroid and names it in the text.
+
+Only the latest pin's lookup is applied, so a quick second click doesn't get the first one's answer.

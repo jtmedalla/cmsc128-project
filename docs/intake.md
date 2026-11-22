@@ -32,7 +32,7 @@ Pass `newReport: true` to start a report even when one is open. The old report s
 
 `POST /intake/reports` (responders and admins) logs a phone or radio report (FR38). The body is `dashboardReportInputSchema`. The report gets `source_channel` `dashboard`, the signed-in responder as `created_by` and no resident, and the route returns `{ id }`. `GET /intake/incident-types` lists the active incident types for the form.
 
-The dashboard header's New report button opens the form from any page and, once saved, opens the report in the feed.
+The dashboard header's New report button opens the form from any page and, once saved, opens the report in the feed. Its location comes from geo's `LocationPicker` with the barangay select (see [geo.md](geo.md#location-picker)).
 
 ## Questions
 

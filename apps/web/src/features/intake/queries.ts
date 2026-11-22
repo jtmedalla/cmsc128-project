@@ -1,8 +1,8 @@
-import { barangaySchema, incidentTypeOptionSchema } from '@repo/shared';
+import { incidentTypeOptionSchema } from '@repo/shared';
 import { queryOptions } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 
-/** Report-form data: the incident types and barangays to pick from. */
+/** Report-form data, such as the incident types to pick from. */
 export const intakeQueries = {
   all: () => ['intake'] as const,
 
@@ -14,13 +14,5 @@ export const intakeQueries = {
         api.get('/intake/incident-types', incidentTypeOptionSchema.array(), {
           signal,
         }),
-    }),
-
-  barangays: () =>
-    queryOptions({
-      queryKey: [...intakeQueries.all(), 'barangays'],
-      queryFn: ({ signal }) =>
-        api.get('/geo/barangays', barangaySchema.array(), { signal }),
-      staleTime: Infinity,
     }),
 };

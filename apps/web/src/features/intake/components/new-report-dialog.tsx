@@ -26,7 +26,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
 import {
   NativeSelect,
   NativeSelectOption,
@@ -36,6 +35,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { emptyLocation, LocationPicker } from '@/features/geo';
 import { reportQueries } from '@/features/triage';
 import { api } from '@/lib/api';
 import { intakeQueries } from '../queries';
@@ -43,8 +43,7 @@ import { intakeQueries } from '../queries';
 const empty = {
   incidentTypeId: '',
   severity: '',
-  barangayId: '',
-  locationText: '',
+  location: emptyLocation,
   /** `yyyy-MM-dd` from the calendar. */
   incidentDate: '',
   /** `HH:mm`; midnight when only the date is known. */
@@ -58,8 +57,9 @@ function toInput(values: Values): DashboardReportInput {
   return {
     incidentTypeId: values.incidentTypeId || null,
     severity: severityLevelSchema.safeParse(values.severity).data ?? null,
-    barangayId: values.barangayId || null,
-    locationText: values.locationText.trim() || null,
+    barangayId: values.location.barangayId,
+    locationText: values.location.text.trim() || null,
+    location: values.location.point,
     incidentAt: values.incidentDate
       ? new Date(
           `${values.incidentDate}T${values.incidentTime || '00:00'}`,
@@ -76,7 +76,7 @@ function SelectField({
   onChange,
   options,
 }: {
-  id: keyof Values;
+  id: Exclude<keyof Values, 'location'>;
   label: string;
   value: string;
   onChange: (value: string) => void;
@@ -178,9 +178,8 @@ export function NewReportDialog() {
     ...intakeQueries.incidentTypes(),
     enabled: open,
   });
-  const barangays = useQuery({ ...intakeQueries.barangays(), enabled: open });
 
-  const set = (field: keyof Values) => (value: string) =>
+  const set = (field: Exclude<keyof Values, 'location'>) => (value: string) =>
     setValues((prev) => ({ ...prev, [field]: value }));
 
   const create = useMutation({
@@ -238,25 +237,13 @@ export function NewReportDialog() {
                 label: SEVERITY_LABELS[level],
               }))}
             />
-            <SelectField
-              id="barangayId"
-              label="Barangay"
-              value={values.barangayId}
-              onChange={set('barangayId')}
-              options={(barangays.data ?? []).map((b) => ({
-                value: b.id,
-                label: b.name,
-              }))}
+            <LocationPicker
+              withBarangay
+              value={values.location}
+              onChange={(location) =>
+                setValues((prev) => ({ ...prev, location }))
+              }
             />
-            <Field>
-              <FieldLabel htmlFor="locationText">Location</FieldLabel>
-              <Input
-                id="locationText"
-                placeholder="Street, landmark or sitio"
-                value={values.locationText}
-                onChange={(event) => set('locationText')(event.target.value)}
-              />
-            </Field>
             <DateTimeField
               date={values.incidentDate}
               time={values.incidentTime}
