@@ -24,9 +24,9 @@ export function ageInvalid(age: string) {
   return age.trim() !== '' && !parseAgeRange(age);
 }
 
-/** Whether every person's age parses, so the report can be sent. */
-export function victimsValid({ victims }: VictimsValue) {
-  return !victims.some((v) => ageInvalid(v.age));
+/** Whether every sent person's age parses; hidden drafts don't count. */
+export function victimsValid({ anyoneHurt, victims }: VictimsValue) {
+  return anyoneHurt !== 'yes' || !victims.some((v) => ageInvalid(v.age));
 }
 
 /** The victims to send: only when someone is hurt, with blank details left unknown. */

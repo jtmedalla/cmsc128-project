@@ -112,4 +112,20 @@ describe('NewReportDialog', () => {
       screen.getByRole('button', { name: 'Create report' }),
     ).toHaveProperty('disabled', true);
   });
+
+  it('ignores a hidden unreadable age once nobody is hurt', async () => {
+    renderWithProviders(<NewReportDialog />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'New report' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Yes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add person hurt' }));
+    fireEvent.change(screen.getByLabelText('Age'), {
+      target: { value: 'banana' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'No' }));
+
+    expect(
+      screen.getByRole('button', { name: 'Create report' }),
+    ).toHaveProperty('disabled', false);
+  });
 });
