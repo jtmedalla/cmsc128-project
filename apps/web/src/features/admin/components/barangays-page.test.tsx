@@ -1,8 +1,15 @@
 import type { Barangay } from '@repo/shared';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithProviders, respondWith } from '@/testing/render';
 import { BarangaysPage } from './barangays-page';
+
+/** The page with the route's URL state stood in for by React state. */
+function Page() {
+  const [barangay, setBarangay] = useState('');
+  return <BarangaysPage barangay={barangay} onBarangayChange={setBarangay} />;
+}
 
 type Feature = { properties: { name: string } };
 
@@ -12,21 +19,30 @@ vi.mock('@/components/map', () => ({
 }));
 vi.mock('@/components/ui/map', () => ({
   MapControls: () => null,
+  useMap: () => ({ map: undefined, isLoaded: false }),
   MapGeoJSON: ({
+    id,
     data,
     onClick,
   }: {
+    id: string;
     data: { features: Feature[] };
-    onClick: (event: { feature: Feature }) => void;
+    onClick?: (event: { feature: Feature }) => void;
   }) =>
-    data.features.map((feature) => (
-      <button
-        key={feature.properties.name}
-        onClick={() => onClick({ feature })}
-      >
-        Map: {feature.properties.name}
-      </button>
-    )),
+    id === 'barangay-selected'
+      ? data.features.map((feature) => (
+          <p key={feature.properties.name}>
+            Outlined: {feature.properties.name}
+          </p>
+        ))
+      : data.features.map((feature) => (
+          <button
+            key={feature.properties.name}
+            onClick={() => onClick?.({ feature })}
+          >
+            Map: {feature.properties.name}
+          </button>
+        )),
 }));
 
 const tacas: Barangay = {
@@ -54,7 +70,7 @@ const tacas: Barangay = {
 describe('BarangaysPage', () => {
   it('shows each barangay with its flags and hazards', async () => {
     respondWith(200, [tacas]);
-    renderWithProviders(<BarangaysPage />);
+    renderWithProviders(<Page />);
     const coastal = await screen.findByLabelText('Tacas is coastal');
     expect(coastal.getAttribute('aria-checked')).toBe('true');
     expect(
@@ -74,7 +90,7 @@ describe('BarangaysPage', () => {
       .mockResolvedValueOnce(new Response(JSON.stringify([tacas])))
       .mockResolvedValueOnce(new Response(JSON.stringify(updated)));
     vi.stubGlobal('fetch', fetch);
-    renderWithProviders(<BarangaysPage />);
+    renderWithProviders(<Page />);
 
     fireEvent.click(await screen.findByRole('button', { name: 'Storm surge' }));
 
@@ -93,14 +109,14 @@ describe('BarangaysPage', () => {
     });
   });
 
-  it('filters the table to a barangay clicked on the map', async () => {
+  it('filters the table to and outlines a barangay clicked on the map', async () => {
     const banga = {
       ...tacas,
       id: '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
       name: 'Banga',
     };
     respondWith(200, [banga, tacas]);
-    renderWithProviders(<BarangaysPage />);
+    renderWithProviders(<Page />);
 
     fireEvent.click(await screen.findByRole('button', { name: 'Map: Tacas' }));
 
@@ -110,11 +126,38 @@ describe('BarangaysPage', () => {
     );
     expect(screen.queryByLabelText('Banga is coastal')).toBeNull();
     expect(screen.getByLabelText('Tacas is coastal')).toBeDefined();
+    expect(screen.getByText('Outlined: Tacas')).toBeDefined();
+  });
+
+  it('outlines every barangay matching a typed search', async () => {
+    const tabuc = {
+      ...tacas,
+      id: '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
+      name: 'Tabuc Suba',
+    };
+    const banga = {
+      ...tacas,
+      id: '1c6f2a9e-7d4b-4e1a-8f3c-2b5d6e7f8a9b',
+      name: 'Banga',
+    };
+    respondWith(200, [banga, tabuc, tacas]);
+    renderWithProviders(<Page />);
+
+    fireEvent.change(
+      await screen.findByPlaceholderText('Filter barangays...'),
+      {
+        target: { value: 'ta' },
+      },
+    );
+
+    expect(screen.getByText('Outlined: Tacas')).toBeDefined();
+    expect(screen.getByText('Outlined: Tabuc Suba')).toBeDefined();
+    expect(screen.queryByText('Outlined: Banga')).toBeNull();
   });
 
   it('offers a retry when loading fails', async () => {
     respondWith(500);
-    renderWithProviders(<BarangaysPage />);
+    renderWithProviders(<Page />);
     expect(
       await screen.findByRole('button', { name: 'Try again' }),
     ).toBeDefined();

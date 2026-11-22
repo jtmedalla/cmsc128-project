@@ -1,16 +1,21 @@
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
 import { LoadError } from '@/components/load-error';
 import { Skeleton } from '@/components/ui/skeleton';
 import { adminQueries } from '../queries';
 import { BarangaysTable } from './barangays-data-table';
 import { BarangaysMap } from './barangays-map';
 
-export function BarangaysPage() {
+/** `barangay` is the selected name, kept in the URL by the route. */
+export function BarangaysPage({
+  barangay = '',
+  onBarangayChange,
+}: {
+  barangay?: string;
+  onBarangayChange: (name: string) => void;
+}) {
   const { data, isPending, isError, refetch } = useQuery(
     adminQueries.barangays(),
   );
-  const [nameFilter, setNameFilter] = useState('');
 
   return (
     <div className="flex flex-col gap-4">
@@ -26,11 +31,15 @@ export function BarangaysPage() {
         <LoadError what="barangays" onRetry={() => void refetch()} />
       ) : (
         <>
-          <BarangaysMap barangays={data} onSelect={setNameFilter} />
+          <BarangaysMap
+            barangays={data}
+            selected={barangay}
+            onSelect={onBarangayChange}
+          />
           <BarangaysTable
             data={data}
-            nameFilter={nameFilter}
-            onNameFilterChange={setNameFilter}
+            nameFilter={barangay}
+            onNameFilterChange={onBarangayChange}
           />
         </>
       )}

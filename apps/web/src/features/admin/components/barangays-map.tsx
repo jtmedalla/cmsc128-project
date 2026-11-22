@@ -1,8 +1,8 @@
 import type { Barangay } from '@repo/shared';
 import type * as GeoJSON from 'geojson';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Map as AppMap } from '@/components/map';
-import { MapControls, MapGeoJSON } from '@/components/ui/map';
+import { MapControls, MapGeoJSON, useMap } from '@/components/ui/map';
 
 type Terrain = 'coastal' | 'upland' | 'both' | 'neither';
 type Properties = { id: string; name: string; terrain: Terrain };
@@ -21,12 +21,17 @@ function terrain({ isCoastal, isUpland }: Barangay): Terrain {
   return 'neither';
 }
 
-/** Barangay boundaries colored by coastal and upland flags; clicking one picks it. */
+/**
+ * Barangay boundaries colored by coastal and upland flags, outlining those
+ * whose name contains `selected` as the table filter does; clicking one picks it.
+ */
 export function BarangaysMap({
   barangays,
+  selected,
   onSelect,
 }: {
   barangays: Barangay[];
+  selected: string;
   onSelect: (name: string) => void;
 }) {
   const [hovered, setHovered] = useState<string | null>(null);
@@ -51,6 +56,17 @@ export function BarangaysMap({
     }),
     [barangays],
   );
+  const highlighted = useMemo(() => {
+    const query = selected.trim().toLowerCase();
+    return {
+      ...data,
+      features: query
+        ? data.features.filter((feature) =>
+            feature.properties.name.toLowerCase().includes(query),
+          )
+        : [],
+    };
+  }, [data, selected]);
 
   return (
     <div className="relative h-80 overflow-hidden rounded-md border">
@@ -81,6 +97,13 @@ export function BarangaysMap({
           }
           onClick={(event) => onSelect(event.feature.properties.name)}
         />
+        <MapGeoJSON
+          id="barangay-selected"
+          data={highlighted}
+          fillPaint={false}
+          linePaint={{ 'line-color': '#f59e0b', 'line-width': 3 }}
+        />
+        <FitBounds features={highlighted.features} />
         <MapControls showFullscreen />
       </AppMap>
       <div className="absolute top-2 left-2 flex flex-col gap-1 rounded-md bg-background/90 px-2 py-1.5 text-xs shadow-sm">
@@ -99,4 +122,29 @@ export function BarangaysMap({
       </div>
     </div>
   );
+}
+
+/** Moves the map to frame `features`; stays put when there are none. */
+function FitBounds({
+  features,
+}: {
+  features: GeoJSON.Feature<GeoJSON.MultiPolygon>[];
+}) {
+  const { map, isLoaded } = useMap();
+  let [west, south, east, north] = [Infinity, Infinity, -Infinity, -Infinity];
+  for (const feature of features) {
+    for (const [lng, lat] of feature.geometry.coordinates.flat(2)) {
+      west = Math.min(west, lng!);
+      south = Math.min(south, lat!);
+      east = Math.max(east, lng!);
+      north = Math.max(north, lat!);
+    }
+  }
+  const found = features.length > 0;
+  useEffect(() => {
+    if (map && isLoaded && found) {
+      map.fitBounds([west, south, east, north], { padding: 40, maxZoom: 14 });
+    }
+  }, [map, isLoaded, found, west, south, east, north]);
+  return null;
 }
