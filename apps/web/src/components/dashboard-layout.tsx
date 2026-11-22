@@ -163,14 +163,15 @@ export function DashboardLayout() {
             />
           </SidebarFooter>
         </Sidebar>
-        <SidebarInset>
-          <header className="flex h-14 items-center gap-2 border-b px-4">
+        {/* The shell fits the window and only main scrolls, so a page can fill it with h-full. */}
+        <SidebarInset className="h-svh overflow-hidden md:h-[calc(100svh-1rem)]">
+          <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
             <SidebarTrigger />
             <div className="ml-auto">
               <ThemeToggle />
             </div>
           </header>
-          <main className="flex-1 p-4">
+          <main className="min-h-0 flex-1 overflow-y-auto p-4">
             <Outlet />
           </main>
         </SidebarInset>

@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import type { INestApplication } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import type { RecentAdvisory } from '@repo/shared';
+import type { BroadcastSummary } from '@repo/shared';
 import { ZodSerializerInterceptor } from 'nestjs-zod';
 import request from 'supertest';
 import {
@@ -21,7 +21,7 @@ vi.mock('../config/env.js', () => ({ env: {} }));
 const id = '0b9a3f4e-8c1d-4e2a-9f6b-1c2d3e4f5a6b';
 const at = new Date('2026-10-29T08:30:00.000Z');
 
-const advisory: RecentAdvisory = {
+const advisory: BroadcastSummary = {
   id,
   kind: 'advisory',
   messageBody: 'Prepare for possible evacuation.',

@@ -1,62 +1,52 @@
-import { Badge } from '@/components/ui/badge';
+import { Link } from '@tanstack/react-router';
+import { CircleCheck, RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { formatTime } from '@/lib/format';
 
 type BroadcastCardProps = {
+  id: string;
   sender: string;
-  posted: string;
-  title: string;
+  sentAt: Date;
   message: string;
-  onViewSender: () => void;
   onResend: () => void;
 };
 
+/** One sent broadcast; the whole card opens its page, and Resend sits above the link. */
 export function BroadcastCard({
+  id,
   sender,
-  posted,
-  title,
+  sentAt,
   message,
-  onViewSender,
   onResend,
 }: BroadcastCardProps) {
   return (
-    <article className="rounded-xl border border-border bg-card px-6 py-6 shadow-sm md:px-8">
-      <div className="mb-2 flex items-start justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-2">
-          <p className="truncate text-sm text-muted-foreground">
-            {sender} posted {posted}
-          </p>
-        </div>
-
-        <Badge
-          variant="secondary"
-          className="h-8 shrink-0 rounded-full bg-primary px-3 text-sm text-primary-foreground"
-        >
+    <article className="relative flex flex-col gap-2 rounded-xl border bg-card p-4 transition-colors hover:bg-muted/50">
+      <div className="flex items-center justify-between gap-2">
+        <p className="truncate text-xs text-muted-foreground">
+          {sender} · {formatTime(sentAt)}
+        </p>
+        <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+          <CircleCheck aria-hidden className="size-3.5" />
           Sent
-        </Badge>
+        </span>
       </div>
-
-      <h2 className="mb-3 text-lg font-bold leading-tight">{title}</h2>
-
-      <p className="mb-4 text-sm leading-7">{message}</p>
-
-      <div className="flex items-center gap-2">
+      {/* The link's ::after stretches over the card, so the button stays a sibling, not nested in it. */}
+      <Link
+        to="/dashboard/broadcasts/$broadcastId"
+        params={{ broadcastId: id }}
+        className="text-sm whitespace-pre-wrap after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none focus-visible:after:ring-3 focus-visible:after:ring-ring/50"
+      >
+        {message}
+      </Link>
+      <div className="flex justify-end">
         <Button
           type="button"
-          variant="ghost"
+          variant="secondary"
           size="sm"
-          className="h-9 px-2 text-sm font-medium"
-          onClick={onViewSender}
-        >
-          View sender
-        </Button>
-
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-9 px-2 text-sm font-medium"
+          className="relative z-10"
           onClick={onResend}
         >
+          <RotateCw data-icon="inline-start" />
           Resend
         </Button>
       </div>

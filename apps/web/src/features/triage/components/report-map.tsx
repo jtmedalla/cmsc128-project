@@ -1,40 +1,50 @@
-/**
- * The details panel's map slot (220px tall, 16px corners),
- * crossed out until a real map replaces the cross.
- */
-// TODO(#66): render the report's location here. #66 adds MapLibre for /map;
-// no issue covers this panel's map yet.
-export function ReportMap() {
-  return (
-    <div
-      role="img"
-      aria-label="Map not available yet"
-      className="relative h-[220px] w-full overflow-hidden rounded-2xl border bg-muted/40"
-    >
-      {/* Two diagonals corner to corner; the lines stay 1px however the box stretches. */}
-      <svg
-        className="absolute inset-0 size-full text-border"
-        preserveAspectRatio="none"
-        viewBox="0 0 100 100"
-        aria-hidden
+import type { ReportFeedItem } from '@repo/shared';
+import { cn } from 'cn';
+import { MapPinOff } from 'lucide-react';
+import { Map as AppMap } from '@/components/map';
+import { ReportMarker } from '@/components/report-marker';
+import { MapControls } from '@/components/ui/map';
+
+const ZOOM = 15;
+
+/** The report's pin on a small map, or a note when it has no point yet. */
+export function ReportMap({
+  report,
+  className,
+}: {
+  report: Pick<ReportFeedItem, 'id' | 'location' | 'incidentType' | 'severity'>;
+  className?: string;
+}) {
+  const box = 'h-56 w-full overflow-hidden rounded-lg border';
+
+  if (!report.location) {
+    return (
+      <div
+        className={cn(
+          box,
+          'flex flex-col items-center justify-center gap-2 bg-muted/40 text-sm text-muted-foreground',
+          className,
+        )}
       >
-        <line
-          x1="0"
-          y1="0"
-          x2="100"
-          y2="100"
-          stroke="currentColor"
-          vectorEffect="non-scaling-stroke"
-        />
-        <line
-          x1="100"
-          y1="0"
-          x2="0"
-          y2="100"
-          stroke="currentColor"
-          vectorEffect="non-scaling-stroke"
-        />
-      </svg>
+        <MapPinOff className="size-5" />
+        No pinned location
+      </div>
+    );
+  }
+
+  const { lng, lat } = report.location;
+  return (
+    <div className={cn(box, className)}>
+      {/* `center` only applies on mount, so a new report gets a new map. */}
+      <AppMap
+        key={report.id}
+        className="size-full"
+        center={[lng, lat]}
+        zoom={ZOOM}
+      >
+        <ReportMarker report={report} lngLat={report.location} />
+        <MapControls />
+      </AppMap>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { formatAgeRange, type ReportDetail } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
+import { History, Pencil } from 'lucide-react';
 import { CallButton, ContactNumber } from '@/components/contact-number';
 import { DetailItem } from '@/components/detail-item';
 import { IncidentTypeLabel } from '@/components/incident-type-label';
@@ -23,11 +24,20 @@ import {
 import { Button } from '@/components/ui/button';
 import {
   Card,
+  CardAction,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -70,52 +80,44 @@ export function IncidentDetail({ reportId }: { reportId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    // On large screens the page fills main and each column scrolls on its own.
+    <div className="flex flex-col gap-6 lg:h-full">
       <PageHeader report={data} />
       {/* Wide left column for the report, narrower right column for activity; stacked on narrow screens. */}
-      <div className="grid items-start gap-4 lg:grid-cols-[3fr_2fr]">
-        <div className="flex flex-col gap-4">
+      <div className="grid gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[3fr_2fr]">
+        <div className="flex flex-col gap-4 *:shrink-0 lg:min-h-0 lg:overflow-y-auto lg:p-px">
           <DetailsCard report={data} />
           <VictimsCard victims={data.victims} />
-          <Card>
-            <CardHeader>
-              <CardTitle>Location</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ReportMap />
-            </CardContent>
-          </Card>
-        </div>
-        <div className="flex flex-col gap-4">
-          <MessagesCard messages={data.messages} />
-          <Card>
-            <CardHeader>
-              <CardTitle>Edit history</CardTitle>
-            </CardHeader>
-            {/* TODO(#39): list ReportEdit rows; the detail API doesn't return them yet. */}
-            <CardContent className="text-muted-foreground">
-              No edits yet
-            </CardContent>
-          </Card>
           <Card>
             <CardHeader>
               <CardTitle>Referrals</CardTitle>
             </CardHeader>
             {/* TODO(#63): pick a partner agency and log the referral. */}
-            <CardContent className="flex items-center justify-between gap-2 text-muted-foreground">
+            <CardContent className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
               No referrals logged
               <Button variant="outline" size="sm" disabled>
                 Log referral
               </Button>
             </CardContent>
           </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Location</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ReportMap report={data} className="h-80" />
+            </CardContent>
+          </Card>
+        </div>
+        <div className="flex flex-col gap-4 lg:min-h-0">
+          <MessagesCard messages={data.messages} />
         </div>
       </div>
     </div>
   );
 }
 
-/** Breadcrumb, title with badges, the short report ID and the status actions. */
+/** Breadcrumb, the short report ID and the actions. */
 function PageHeader({ report }: { report: ReportDetail }) {
   return (
     <div className="flex flex-col gap-4">
@@ -133,19 +135,16 @@ function PageHeader({ report }: { report: ReportDetail }) {
         </BreadcrumbList>
       </Breadcrumb>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-semibold">
-            <IncidentTypeLabel type={report.incidentType}>
-              {reportTitle(report)}
-            </IncidentTypeLabel>
-          </h1>
-          {report.severity && <SeverityBadge severity={report.severity} />}
-          <StatusBadge status={report.status} />
-        </div>
+        {/* Type, barangay, severity and status already lead the Details card. */}
+        <h1 className="sr-only">{reportTitle(report)}</h1>
+        <ReportId id={report.id} className="px-2 py-1 text-sm" />
         <div className="flex items-center gap-2">
-          <ReportId id={report.id} />
+          <EditHistorySheet />
           {report.resident?.contactNumber && (
-            <CallButton number={report.resident.contactNumber} />
+            <CallButton
+              number={report.resident.contactNumber}
+              variant="default"
+            />
           )}
           {/* TODO(#39): change the status and record it in ReportEdit. */}
           <Button variant="outline" size="sm" disabled>
@@ -157,6 +156,28 @@ function PageHeader({ report }: { report: ReportDetail }) {
         </div>
       </div>
     </div>
+  );
+}
+
+/** The report's corrections, opened from the header so they stay out of the way. */
+function EditHistorySheet() {
+  return (
+    <Sheet>
+      <SheetTrigger render={<Button variant="outline" size="sm" />}>
+        <History data-icon="inline-start" />
+        History
+      </SheetTrigger>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Edit history</SheetTitle>
+          <SheetDescription>
+            Every correction made to this report.
+          </SheetDescription>
+        </SheetHeader>
+        {/* TODO(#39): list ReportEdit rows; the detail API doesn't return them yet. */}
+        <p className="px-4 text-sm text-muted-foreground">No edits yet</p>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -179,6 +200,18 @@ function DetailsCard({ report }: { report: ReportDetail }) {
     <Card className="@container">
       <CardHeader>
         <CardTitle>Details</CardTitle>
+        <CardAction>
+          {/* TODO(#39): edit the parsed fields and record each change. */}
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Edit details"
+            title="Edit details"
+            disabled
+          >
+            <Pencil />
+          </Button>
+        </CardAction>
       </CardHeader>
       <CardContent className="grid gap-x-6 gap-y-3 @lg:grid-cols-2">
         <dl className="flex flex-col gap-3">
@@ -236,12 +269,6 @@ function DetailsCard({ report }: { report: ReportDetail }) {
           />
         </dl>
       </CardContent>
-      <CardFooter>
-        {/* TODO(#39): edit the parsed fields and record each change. */}
-        <Button variant="outline" size="sm" disabled>
-          Edit details
-        </Button>
-      </CardFooter>
     </Card>
   );
 }
@@ -255,32 +282,34 @@ function VictimsCard({ victims }: { victims: ReportDetail['victims'] }) {
       </CardHeader>
       <CardContent>
         {victims.length ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Sex</TableHead>
-                <TableHead>Age</TableHead>
-                <TableHead>Condition</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {victims.map((v) => (
-                <TableRow key={v.id}>
-                  <TableCell>
-                    {v.sex ? <SexLabel sex={v.sex} /> : 'Not given'}
-                  </TableCell>
-                  <TableCell>
-                    {formatAgeRange(v.ageMin, v.ageMax) ?? 'Not given'}
-                  </TableCell>
-                  <TableCell className="whitespace-normal">
-                    {v.medicalCondition || 'None reported'}
-                  </TableCell>
+          <div className="overflow-hidden rounded-lg border">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow>
+                  <TableHead>Sex</TableHead>
+                  <TableHead>Age</TableHead>
+                  <TableHead>Condition</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {victims.map((v) => (
+                  <TableRow key={v.id}>
+                    <TableCell className="font-medium">
+                      {v.sex ? <SexLabel sex={v.sex} /> : 'Not given'}
+                    </TableCell>
+                    <TableCell>
+                      {formatAgeRange(v.ageMin, v.ageMax) ?? 'Not given'}
+                    </TableCell>
+                    <TableCell className="whitespace-normal">
+                      {v.medicalCondition || 'None reported'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         ) : (
-          <p className="text-muted-foreground">None reported</p>
+          <p className="text-sm text-muted-foreground">None reported</p>
         )}
       </CardContent>
     </Card>
@@ -290,11 +319,11 @@ function VictimsCard({ victims }: { victims: ReportDetail['victims'] }) {
 /** The conversation, scrolling inside the card, with the reply box below. */
 function MessagesCard({ messages }: { messages: ReportDetail['messages'] }) {
   return (
-    <Card>
+    <Card className="lg:min-h-0 lg:flex-1">
       <CardHeader>
         <CardTitle>Messages</CardTitle>
       </CardHeader>
-      <CardContent className="flex h-96 flex-col px-0">
+      <CardContent className="flex h-[28rem] flex-col border-t px-0 lg:h-auto lg:min-h-0 lg:flex-1">
         <MessageThread messages={messages} />
       </CardContent>
       <CardFooter>

@@ -29,14 +29,16 @@ export function ContactNumber({
 /** A button that dials the number, for calling a reporter back. */
 export function CallButton({
   number,
+  variant = 'outline',
   className,
 }: {
   number: string;
+  variant?: React.ComponentProps<typeof Button>['variant'];
   className?: string;
 }) {
   return (
     <Button
-      variant="outline"
+      variant={variant}
       size="sm"
       className={className}
       nativeButton={false}

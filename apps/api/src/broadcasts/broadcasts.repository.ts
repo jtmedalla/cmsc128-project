@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { RecentAdvisory } from '@repo/shared';
+import type { BroadcastSummary } from '@repo/shared';
 import { and, eq, isNotNull } from 'drizzle-orm';
 import type { Database } from '../database/client.js';
 import { DB } from '../database/database.module.js';
@@ -10,7 +10,7 @@ export class BroadcastsRepository {
   constructor(@Inject(DB) private readonly db: Database) {}
 
   /** The five most recently sent advisories, newest first, with their creator. */
-  async findRecentAdvisories(): Promise<RecentAdvisory[]> {
+  async findRecentAdvisories(): Promise<BroadcastSummary[]> {
     const rows = await this.db.query.broadcast.findMany({
       where: and(eq(broadcast.kind, 'advisory'), isNotNull(broadcast.sentAt)),
       orderBy: (row, { desc }) => desc(row.sentAt),

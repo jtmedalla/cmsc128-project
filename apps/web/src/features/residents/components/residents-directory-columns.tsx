@@ -13,7 +13,7 @@ export const COLUMN_LABELS: Record<string, string> = {
   barangay: 'Barangay',
   reportCount: 'Reports',
   languagePreference: 'Language',
-  broadcastsOptIn: 'Advisories',
+  broadcastsOptIn: 'Broadcasts',
   lastMessaged: 'Last Messaged',
 };
 
@@ -61,7 +61,7 @@ export const columns = columnHelper.columns([
   }),
   columnHelper.accessor('broadcastsOptIn', {
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Advisories" />
+      <DataTableColumnHeader column={column} title="Broadcasts" />
     ),
     cell: ({ row }) =>
       row.original.broadcastsOptIn ? (

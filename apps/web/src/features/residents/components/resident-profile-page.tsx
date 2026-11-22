@@ -5,6 +5,14 @@ import { LoadError } from '@/components/load-error';
 import { SexLabel } from '@/components/sex-label';
 import { LocationLabel } from '@/components/location-label';
 import { formatLocation, LANGUAGE_LABELS } from '@/lib/format';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { residentQueries } from '../queries';
@@ -23,16 +31,26 @@ export function ResidentProfilePage() {
   }
   if (!data) return <p>Resident not found.</p>;
   const home = formatLocation(data.locationText, data.barangay);
+  const name = data.name ?? 'Unnamed resident';
 
   return (
-    <div className="flex flex-col gap-4">
-      <Link
-        to="/dashboard/residents"
-        className="text-muted-foreground text-sm hover:underline"
-      >
-        ← Residents
-      </Link>
-      <h1 className="text-2xl font-bold">{data.name ?? 'Unnamed resident'}</h1>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink render={<Link to="/dashboard/residents" />}>
+                Residents
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{name}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+        <h1 className="text-xl font-semibold">{name}</h1>
+      </div>
       <Card>
         <CardHeader>
           <CardTitle>Profile</CardTitle>
@@ -62,7 +80,7 @@ export function ResidentProfilePage() {
               value={LANGUAGE_LABELS[data.languagePreference]}
             />
             <DetailItem
-              label="Advisories"
+              label="Broadcasts"
               value={data.broadcastsOptIn ? 'Opted in' : 'Opted out'}
             />
           </dl>

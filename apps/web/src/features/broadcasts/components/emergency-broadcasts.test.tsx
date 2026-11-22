@@ -1,9 +1,12 @@
 import { QueryClient } from '@tanstack/react-query';
 import { fireEvent, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { renderWithProviders } from '@/testing/render';
 import { broadcastQueries } from '../queries';
 import { EmergencyBroadcasts } from './emergency-broadcasts';
+
+/* MapLibre can't draw in jsdom. */
+vi.mock('@/components/map', () => ({ Map: () => null }));
 
 function renderWorkspace() {
   const queryClient = new QueryClient({
@@ -36,9 +39,9 @@ describe('EmergencyBroadcasts', () => {
     renderWorkspace();
 
     expect(
-      await screen.findAllByRole('heading', { name: 'Emergency Advisory' }),
-    ).toHaveLength(2);
-    expect(screen.getByText(/Residents in high-risk zones/)).toBeDefined();
+      await screen.findByText(/Residents in high-risk zones/),
+    ).toBeDefined();
+    expect(screen.getByText(/Road monitoring in progress/)).toBeDefined();
   });
 
   it('filters recent advisories', async () => {
@@ -53,7 +56,7 @@ describe('EmergencyBroadcasts', () => {
     expect(screen.queryByText(/Residents in high-risk zones/)).toBeNull();
   });
 
-  it('applies a quick template to the title', async () => {
+  it('fills the title and message from a quick template', async () => {
     renderWorkspace();
     await screen.findByText(/Residents in high-risk zones/);
 
@@ -65,5 +68,9 @@ describe('EmergencyBroadcasts', () => {
 
     const titleInput = screen.getByLabelText('Title') as HTMLInputElement;
     expect(titleInput.value).toBe('Immediate Evacuation Order');
+    const messageInput = screen.getByLabelText(
+      'Message',
+    ) as HTMLTextAreaElement;
+    expect(messageInput.value).toMatch(/^Evacuate now/);
   });
 });

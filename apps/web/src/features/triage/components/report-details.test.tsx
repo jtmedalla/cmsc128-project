@@ -49,10 +49,10 @@ describe('ReportDetails', () => {
     expect(
       screen.getByText(
         (_, el) =>
-          el?.tagName === 'LI' &&
-          el.textContent === 'Female · 60+ years old · Asthma',
+          el?.tagName === 'SPAN' && el.textContent === 'Female · 60+ years old',
       ),
     ).toBeDefined();
+    expect(screen.getByText('Asthma')).toBeDefined();
   });
 
   it('says so when the report does not exist', async () => {
@@ -90,8 +90,8 @@ describe('ReportDetails', () => {
     });
     renderWithProviders(<ReportDetails reportId={id} />);
     expect(await screen.findByText('Shared a location')).toBeDefined();
-    expect(screen.getByText(/^MIGO ·/)).toBeDefined();
-    expect(screen.getByText(/^Responder ·/)).toBeDefined();
+    expect(screen.getByText('MIGO,')).toBeDefined();
+    expect(screen.getByText('Responder,')).toBeDefined();
   });
 
   it('shows "Not given" for an empty field', async () => {

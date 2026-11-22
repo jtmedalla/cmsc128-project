@@ -49,7 +49,6 @@ describe('IncidentsWorkspace', () => {
     expect(
       await screen.findByText('Select a report to see its details'),
     ).toBeDefined();
-    expect(screen.getByText('No messages yet')).toBeDefined();
   });
 
   it('offers a retry when the list fails', async () => {
