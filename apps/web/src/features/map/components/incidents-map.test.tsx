@@ -109,7 +109,7 @@ describe('IncidentsMap', () => {
 
     /* Base UI needs pointerdown before click to select an option. */
     fireEvent.click(screen.getByRole('combobox', { name: 'Severity' }));
-    const low = await screen.findByRole('option', { name: 'Severity: Low' });
+    const low = await screen.findByRole('option', { name: 'Low' });
     fireEvent.pointerDown(low);
     fireEvent.click(low);
     expect(await pinsAfter(1)).toEqual([122.2]);

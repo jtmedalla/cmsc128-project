@@ -176,9 +176,14 @@ function DetailsCard({ report }: { report: ReportDetail }) {
           <DetailRow label="Incident type" value={report.incidentType?.name} />
           <DetailRow
             label="Severity"
-            value={report.severity && label(report.severity)}
+            value={
+              report.severity && <SeverityBadge severity={report.severity} />
+            }
           />
-          <DetailRow label="Status" value={label(report.status)} />
+          <DetailRow
+            label="Status"
+            value={<StatusBadge status={report.status} />}
+          />
           <DetailRow
             label="Incident time"
             value={report.incidentAt && formatTime(report.incidentAt)}

@@ -228,10 +228,15 @@ function ReportFields({ report }: { report: ReportDetail }) {
         Report ID: #{report.id.slice(0, 8)}
       </p>
       <dl className="flex flex-col gap-4">
-        <DetailItem label="Status" value={label(report.status)} />
+        <DetailItem
+          label="Status"
+          value={<StatusBadge status={report.status} />}
+        />
         <DetailItem
           label="Severity"
-          value={report.severity && label(report.severity)}
+          value={
+            report.severity && <SeverityBadge severity={report.severity} />
+          }
         />
         <DetailItem label="Incident Type" value={report.incidentType?.name} />
         <DetailItem

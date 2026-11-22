@@ -12,6 +12,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import { useEffect, useRef, useState } from 'react';
 import { severityStyles } from '@/lib/report-states';
+import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -184,7 +185,7 @@ export function IncidentsMap({ focusId }: { focusId?: string }) {
             { value: 'all', label: 'Severity: All' },
             ...SEVERITIES.map((severity) => ({
               value: severity,
-              label: `Severity: ${label(severity)}`,
+              label: <SeverityBadge severity={severity} />,
             })),
           ]}
         />
@@ -197,7 +198,7 @@ export function IncidentsMap({ focusId }: { focusId?: string }) {
             { value: 'all', label: 'Status: All' },
             ...reportStatusSchema.options.map((status) => ({
               value: status,
-              label: `Status: ${label(status)}`,
+              label: <StatusBadge status={status} />,
             })),
           ]}
         />
@@ -265,7 +266,7 @@ function FilterSelect({
   label: string;
   value: string;
   onChange: (value: string) => void;
-  options: { value: string; label: string }[];
+  options: { value: string; label: React.ReactNode }[];
 }) {
   return (
     <Select
