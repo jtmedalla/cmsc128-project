@@ -25,6 +25,7 @@ import { Route as DashboardAppHelpRouteImport } from './routes/dashboard/_app/he
 import { Route as DashboardAppMapRouteImport } from './routes/dashboard/_app/map'
 import { Route as DashboardAppAdminIndexRouteImport } from './routes/dashboard/_app/admin/index'
 import { Route as DashboardAppAdminAgenciesRouteImport } from './routes/dashboard/_app/admin/agencies'
+import { Route as DashboardAppAdminBarangaysRouteImport } from './routes/dashboard/_app/admin/barangays'
 import { Route as DashboardAppAdminIncidentTypesRouteImport } from './routes/dashboard/_app/admin/incident-types'
 import { Route as DashboardAppAdminUsersRouteImport } from './routes/dashboard/_app/admin/users'
 import { Route as DashboardAppBroadcastsIndexRouteImport } from './routes/dashboard/_app/broadcasts/index'
@@ -114,6 +115,12 @@ const DashboardAppAdminAgenciesRoute =
     path: '/agencies',
     getParentRoute: () => DashboardAppAdminRouteRoute,
   } as any)
+const DashboardAppAdminBarangaysRoute =
+  DashboardAppAdminBarangaysRouteImport.update({
+    id: '/barangays',
+    path: '/barangays',
+    getParentRoute: () => DashboardAppAdminRouteRoute,
+  } as any)
 const DashboardAppAdminIncidentTypesRoute =
   DashboardAppAdminIncidentTypesRouteImport.update({
     id: '/incident-types',
@@ -177,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/info/': typeof ResidentInfoIndexRoute
   '/dashboard/': typeof DashboardAppIndexRoute
   '/dashboard/admin/agencies': typeof DashboardAppAdminAgenciesRoute
+  '/dashboard/admin/barangays': typeof DashboardAppAdminBarangaysRoute
   '/dashboard/admin/incident-types': typeof DashboardAppAdminIncidentTypesRoute
   '/dashboard/admin/users': typeof DashboardAppAdminUsersRoute
   '/dashboard/broadcasts/$broadcastId': typeof DashboardAppBroadcastsBroadcastIdRoute
@@ -200,6 +208,7 @@ export interface FileRoutesByTo {
   '/info': typeof ResidentInfoIndexRoute
   '/dashboard': typeof DashboardAppIndexRoute
   '/dashboard/admin/agencies': typeof DashboardAppAdminAgenciesRoute
+  '/dashboard/admin/barangays': typeof DashboardAppAdminBarangaysRoute
   '/dashboard/admin/incident-types': typeof DashboardAppAdminIncidentTypesRoute
   '/dashboard/admin/users': typeof DashboardAppAdminUsersRoute
   '/dashboard/broadcasts/$broadcastId': typeof DashboardAppBroadcastsBroadcastIdRoute
@@ -227,6 +236,7 @@ export interface FileRoutesById {
   '/_resident/info/': typeof ResidentInfoIndexRoute
   '/dashboard/_app/': typeof DashboardAppIndexRoute
   '/dashboard/_app/admin/agencies': typeof DashboardAppAdminAgenciesRoute
+  '/dashboard/_app/admin/barangays': typeof DashboardAppAdminBarangaysRoute
   '/dashboard/_app/admin/incident-types': typeof DashboardAppAdminIncidentTypesRoute
   '/dashboard/_app/admin/users': typeof DashboardAppAdminUsersRoute
   '/dashboard/_app/broadcasts/$broadcastId': typeof DashboardAppBroadcastsBroadcastIdRoute
@@ -254,6 +264,7 @@ export interface FileRouteTypes {
     | '/info/'
     | '/dashboard/'
     | '/dashboard/admin/agencies'
+    | '/dashboard/admin/barangays'
     | '/dashboard/admin/incident-types'
     | '/dashboard/admin/users'
     | '/dashboard/broadcasts/$broadcastId'
@@ -277,6 +288,7 @@ export interface FileRouteTypes {
     | '/info'
     | '/dashboard'
     | '/dashboard/admin/agencies'
+    | '/dashboard/admin/barangays'
     | '/dashboard/admin/incident-types'
     | '/dashboard/admin/users'
     | '/dashboard/broadcasts/$broadcastId'
@@ -303,6 +315,7 @@ export interface FileRouteTypes {
     | '/_resident/info/'
     | '/dashboard/_app/'
     | '/dashboard/_app/admin/agencies'
+    | '/dashboard/_app/admin/barangays'
     | '/dashboard/_app/admin/incident-types'
     | '/dashboard/_app/admin/users'
     | '/dashboard/_app/broadcasts/$broadcastId'
@@ -434,6 +447,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAppAdminAgenciesRouteImport
       parentRoute: typeof DashboardAppAdminRouteRoute
     }
+    '/dashboard/_app/admin/barangays': {
+      id: '/dashboard/_app/admin/barangays'
+      path: '/barangays'
+      fullPath: '/dashboard/admin/barangays'
+      preLoaderRoute: typeof DashboardAppAdminBarangaysRouteImport
+      parentRoute: typeof DashboardAppAdminRouteRoute
+    }
     '/dashboard/_app/admin/incident-types': {
       id: '/dashboard/_app/admin/incident-types'
       path: '/incident-types'
@@ -515,6 +535,7 @@ const ResidentRouteRouteWithChildren = ResidentRouteRoute._addFileChildren(
 
 interface DashboardAppAdminRouteRouteChildren {
   DashboardAppAdminAgenciesRoute: typeof DashboardAppAdminAgenciesRoute
+  DashboardAppAdminBarangaysRoute: typeof DashboardAppAdminBarangaysRoute
   DashboardAppAdminIncidentTypesRoute: typeof DashboardAppAdminIncidentTypesRoute
   DashboardAppAdminUsersRoute: typeof DashboardAppAdminUsersRoute
   DashboardAppAdminIndexRoute: typeof DashboardAppAdminIndexRoute
@@ -523,6 +544,7 @@ interface DashboardAppAdminRouteRouteChildren {
 const DashboardAppAdminRouteRouteChildren: DashboardAppAdminRouteRouteChildren =
   {
     DashboardAppAdminAgenciesRoute: DashboardAppAdminAgenciesRoute,
+    DashboardAppAdminBarangaysRoute: DashboardAppAdminBarangaysRoute,
     DashboardAppAdminIncidentTypesRoute: DashboardAppAdminIncidentTypesRoute,
     DashboardAppAdminUsersRoute: DashboardAppAdminUsersRoute,
     DashboardAppAdminIndexRoute: DashboardAppAdminIndexRoute,

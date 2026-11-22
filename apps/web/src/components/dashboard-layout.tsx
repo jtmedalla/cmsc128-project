@@ -8,6 +8,7 @@ import {
   Building2,
   Download,
   House,
+  MapPinned,
   type LucideIcon,
   MapIcon,
   Radio,
@@ -48,7 +49,8 @@ type NavItem = {
     | '/dashboard/export'
     | '/dashboard/admin/users'
     | '/dashboard/admin/incident-types'
-    | '/dashboard/admin/agencies';
+    | '/dashboard/admin/agencies'
+    | '/dashboard/admin/barangays';
   label: string;
   icon: LucideIcon;
   /** Keeps the item active on its child pages; Home must match exactly. */
@@ -97,6 +99,12 @@ const adminNavItems: NavItem[] = [
     to: '/dashboard/admin/agencies',
     label: 'Agencies',
     icon: Building2,
+    fuzzy: false,
+  },
+  {
+    to: '/dashboard/admin/barangays',
+    label: 'Barangays',
+    icon: MapPinned,
     fuzzy: false,
   },
 ];
