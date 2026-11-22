@@ -3,15 +3,8 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { DataTableColumnHeader } from '@/components/ui/data-table-column-header';
 import { Badge } from '@/components/ui/badge';
 import type { DataTableFeatures } from '@/lib/data-table-features';
+import { LANGUAGE_LABELS } from '@/lib/format';
 import { Link } from '@tanstack/react-router';
-
-const LANGUAGE_LABELS: Record<ResidentListItem['languagePreference'], string> =
-  {
-    hil: 'Hiligaynon',
-    krj: 'Kinaray-a',
-    tgl: 'Tagalog',
-    eng: 'English',
-  };
 
 export const COLUMN_LABELS: Record<string, string> = {
   name: 'Name',

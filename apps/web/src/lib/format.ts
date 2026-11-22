@@ -1,3 +1,13 @@
+import type { Language } from '@repo/shared';
+
+/** Language names; ISO codes don't title-case into them. */
+export const LANGUAGE_LABELS: Record<Language, string> = {
+  hil: 'Hiligaynon',
+  krj: 'Kinaray-a',
+  tgl: 'Tagalog',
+  eng: 'English',
+};
+
 /** "storm_surge" → "Storm surge" */
 export function label(value: string) {
   const text = value.replaceAll('_', ' ');

@@ -1,18 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { DetailItem } from '@/components/detail-item';
 import { LoadError } from '@/components/load-error';
+import { label, LANGUAGE_LABELS } from '@/lib/format';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { residentQueries } from '../queries';
 import { getRouteApi, Link } from '@tanstack/react-router';
 const route = getRouteApi('/dashboard/_app/residents/$residentId');
-
-const LANGUAGE_LABELS = {
-  hil: 'Hiligaynon',
-  krj: 'Kinaray-a',
-  tgl: 'Tagalog',
-  eng: 'English',
-} as const;
 
 export function ResidentProfilePage() {
   const { residentId } = route.useParams();
@@ -44,16 +38,7 @@ export function ResidentProfilePage() {
             <DetailItem label="Contact number" value={data.contactNumber} />
             <DetailItem label="Barangay" value={data.barangay} />
             <DetailItem label="Age" value={data.age?.toString()} />
-            <DetailItem
-              label="Sex"
-              value={
-                data.sex === 'male'
-                  ? 'Male'
-                  : data.sex === 'female'
-                    ? 'Female'
-                    : null
-              }
-            />
+            <DetailItem label="Sex" value={data.sex && label(data.sex)} />
             <DetailItem label="Home address" value={data.locationText} />
             <DetailItem
               label="Preferred language"
