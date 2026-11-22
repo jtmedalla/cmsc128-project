@@ -2,12 +2,16 @@ import type { ReportFeedItem } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { ArrowDownUp } from 'lucide-react';
-import { SeverityBadge, StatusBadge } from './report-badges';
+import { IncidentTypeLabel } from '@/components/incident-type-label';
+import { LoadError } from '@/components/load-error';
+import { ResidentLabel } from '@/components/resident-label';
+import { LocationLabel } from '@/components/location-label';
+import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { ReportDetails, SelectReportPrompt } from './report-details';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { formatTime } from '@/lib/format';
+import { formatLocation, formatTime } from '@/lib/format';
 import { reportQueries } from '../queries';
 
 /**
@@ -68,12 +72,7 @@ function ReportList() {
   }
 
   if (isError) {
-    return (
-      <div className="flex flex-col items-start gap-2">
-        <p>Couldn't load reports.</p>
-        <Button onClick={() => void refetch()}>Try again</Button>
-      </div>
-    );
+    return <LoadError what="reports" onRetry={() => void refetch()} />;
   }
 
   if (!data.length)
@@ -92,7 +91,7 @@ function ReportList() {
 
 /** One wireframe card: type, badges, the first message, reporter, time, location. */
 function ReportCard({ report }: { report: ReportFeedItem }) {
-  const location = report.locationText ?? report.barangay?.name;
+  const location = formatLocation(report.locationText, report.barangay?.name);
 
   return (
     <Link
@@ -105,7 +104,7 @@ function ReportCard({ report }: { report: ReportFeedItem }) {
     >
       <div className="flex items-start justify-between gap-2">
         <h3 className="font-semibold">
-          {report.incidentType?.name ?? 'Unclassified incident'}
+          <IncidentTypeLabel type={report.incidentType} />
         </h3>
         <div className="flex shrink-0 gap-1">
           {report.severity && <SeverityBadge severity={report.severity} />}
@@ -114,9 +113,10 @@ function ReportCard({ report }: { report: ReportFeedItem }) {
       </div>
       <p>{report.firstMessage ?? 'No message'}</p>
       <div className="text-sm text-muted-foreground">
-        <p>Reported by: {report.resident?.name ?? 'Unknown caller'}</p>
+        <ResidentLabel resident={report.resident} link={false} />
         <p>{formatTime(report.createdAt)}</p>
-        {location && <p className="text-xs">Location: {location}</p>}
+        {/* Plain, not a link: the whole card already is one. */}
+        {location && <LocationLabel text={location} />}
       </div>
     </Link>
   );

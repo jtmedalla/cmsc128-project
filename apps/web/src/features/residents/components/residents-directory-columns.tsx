@@ -3,15 +3,9 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { DataTableColumnHeader } from '@/components/ui/data-table-column-header';
 import { Badge } from '@/components/ui/badge';
 import type { DataTableFeatures } from '@/lib/data-table-features';
-import { Link } from '@tanstack/react-router';
-
-const LANGUAGE_LABELS: Record<ResidentListItem['languagePreference'], string> =
-  {
-    hil: 'Hiligaynon',
-    krj: 'Kinaray-a',
-    tgl: 'Tagalog',
-    eng: 'English',
-  };
+import { formatTime, formatTimeAgo, LANGUAGE_LABELS } from '@/lib/format';
+import { ContactNumber } from '@/components/contact-number';
+import { ResidentLabel } from '@/components/resident-label';
 
 export const COLUMN_LABELS: Record<string, string> = {
   name: 'Name',
@@ -32,13 +26,7 @@ export const columns = columnHelper.columns([
       <DataTableColumnHeader column={column} title="Name" />
     ),
     cell: ({ row }) => (
-      <Link
-        to="/dashboard/residents/$residentId"
-        params={{ residentId: row.original.id }}
-        className="text-primary font-bold underline-offset-4 hover:underline"
-      >
-        {row.original.name ?? 'Unnamed resident'}
-      </Link>
+      <ResidentLabel resident={row.original} className="font-medium" />
     ),
   }),
   columnHelper.accessor((row) => row.contactNumber ?? '', {
@@ -46,7 +34,12 @@ export const columns = columnHelper.columns([
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Contact Number" />
     ),
-    cell: ({ row }) => row.original.contactNumber ?? '—',
+    cell: ({ row }) =>
+      row.original.contactNumber ? (
+        <ContactNumber number={row.original.contactNumber} />
+      ) : (
+        '—'
+      ),
   }),
   columnHelper.accessor((row) => row.barangay ?? '', {
     id: 'barangay',
@@ -72,9 +65,7 @@ export const columns = columnHelper.columns([
     ),
     cell: ({ row }) =>
       row.original.broadcastsOptIn ? (
-        <Badge className="bg-emerald-500 text-white hover:bg-emerald-500">
-          Opted in
-        </Badge>
+        <Badge className="bg-success/12 text-success">Opted in</Badge>
       ) : (
         <Badge variant="outline">Opted out</Badge>
       ),
@@ -86,9 +77,16 @@ export const columns = columnHelper.columns([
     ),
     cell: ({ row }) => {
       const lastMessaged = row.original.lastMessaged;
-      if (!lastMessaged) return 'Never';
-      const minutes = Math.floor((Date.now() - lastMessaged.getTime()) / 60000);
-      return `${Math.floor(minutes / 60)}h ${minutes % 60}m ago`;
+      return lastMessaged ? (
+        <time
+          dateTime={lastMessaged.toISOString()}
+          title={formatTime(lastMessaged)}
+        >
+          {formatTimeAgo(lastMessaged)}
+        </time>
+      ) : (
+        'Never'
+      );
     },
   }),
 ]);

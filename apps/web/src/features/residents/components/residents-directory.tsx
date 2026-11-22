@@ -1,11 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { RefreshCw } from 'lucide-react';
 import { COLUMN_LABELS, columns } from './residents-directory-columns';
 import { ResidentTable } from './residents-directory-data-table';
-import { Button } from '@/components/ui/button';
+import { LoadError } from '@/components/load-error';
+import { RefreshButton } from '@/components/refresh-button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { residentQueries } from '../queries';
-import { cn } from '@/lib/utils';
 
 export function ResidentsDirectory() {
   const { data, isPending, isError, isFetching, refetch } = useQuery(
@@ -23,20 +22,15 @@ export function ResidentsDirectory() {
               : 'Loading…'}
           </p>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Refresh"
-          disabled={isFetching}
-          onClick={() => void refetch()}
-        >
-          <RefreshCw className={cn(isFetching && 'animate-spin')} />
-        </Button>
+        <RefreshButton
+          refreshing={isFetching}
+          onRefresh={() => void refetch()}
+        />
       </div>
       {isPending ? (
         <Skeleton className="h-64" />
       ) : isError ? (
-        <p className="text-sm text-destructive">Couldn't load residents.</p>
+        <LoadError what="residents" onRetry={() => void refetch()} />
       ) : (
         <ResidentTable
           columns={columns}

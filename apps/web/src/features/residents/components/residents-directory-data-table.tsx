@@ -1,8 +1,3 @@
-/**
- * TODO: seperate the table features and declared types into its own component
- * TODO: add column visibility toggle
- * TODO: pagination controls
- */
 import * as React from 'react';
 import { ChevronDown } from 'lucide-react';
 import {
@@ -14,9 +9,10 @@ import {
   type SortingState,
 } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
+import { DataTablePagination } from '@/components/ui/data-table-pagination';
+import { DataTableViewOptions } from '@/components/ui/data-table-view-options';
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
   DropdownMenuRadioGroup,
@@ -31,13 +27,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { features, type DataTableFeatures } from '@/lib/data-table-features';
 import type { ResidentListItem } from '@repo/shared';
 export type ResidentData = ResidentListItem;
@@ -76,8 +65,8 @@ export function ResidentTable<TData extends RowData>({
   });
 
   return (
-    <div>
-      <div className="flex flex-col gap-2 py-4 sm:flex-row sm:items-start sm:justify-between">
+    <div className="space-y-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex w-full max-w-md gap-2">
           <Input
             placeholder={`Filter ${(columnLabels?.[filterColumn] ?? filterColumn).toLowerCase()}...`}
@@ -119,35 +108,7 @@ export function ResidentTable<TData extends RowData>({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger render={<Button variant="outline" />}>
-            Show or Hide Columns <ChevronDown />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            side="bottom"
-            sideOffset={4}
-            className="min-w-56"
-          >
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {columnLabels?.[column.id] ?? column.id}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <DataTableViewOptions table={table} columnLabels={columnLabels} />
       </div>
       <div className="overflow-hidden rounded-md border">
         <Table>
@@ -191,57 +152,7 @@ export function ResidentTable<TData extends RowData>({
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.firstPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          First
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          Previous
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          Next
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.lastPage()}
-          disabled={!table.getCanLastPage()}
-        >
-          Last
-        </Button>
-        <Select
-          value={String(table.state.pagination.pageSize)}
-          onValueChange={(value) => {
-            if (value) table.setPageSize(Number(value));
-          }}
-        >
-          <SelectTrigger className="w-20">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="min-w-20 w-30">
-            {[10, 20, 30, 40, 50].map((pageSize) => (
-              <SelectItem key={pageSize} value={String(pageSize)}>
-                {pageSize}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <DataTablePagination table={table} />
     </div>
   );
 }

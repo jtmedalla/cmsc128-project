@@ -51,9 +51,14 @@ describe('IncidentDetail', () => {
     expect(
       await screen.findByRole('heading', { name: 'Flood · Mat-y' }),
     ).toBeDefined();
-    expect(screen.getByText('Report 0b9a3f4e')).toBeDefined();
-    expect(screen.getByText('Santillan Street, near the bridge')).toBeDefined();
-    expect(screen.getByText('Juan Dela Cruz (for someone else)')).toBeDefined();
+    expect(screen.getByText('#0b9a3f4e')).toBeDefined();
+    expect(
+      screen
+        .getByRole('link', { name: 'Santillan Street, near the bridge, Mat-y' })
+        .getAttribute('href'),
+    ).toBe(`/dashboard/map?report=${id}`);
+    expect(screen.getByRole('link', { name: 'Juan Dela Cruz' })).toBeDefined();
+    expect(screen.getByText('(for someone else)')).toBeDefined();
     expect(
       screen.getByRole('link', { name: '09171234567' }).getAttribute('href'),
     ).toBe('tel:09171234567');

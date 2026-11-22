@@ -55,7 +55,7 @@ type NavItem = {
   fuzzy: boolean;
 };
 
-// Order and labels follow the Figma "App Sidebar"; Help & Docs sits in the user menu.
+// Help & Docs sits in the user menu, not here.
 const navItems: NavItem[] = [
   { to: '/dashboard', label: 'Home', icon: House, fuzzy: false },
   {

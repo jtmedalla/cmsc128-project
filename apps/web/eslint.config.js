@@ -10,6 +10,14 @@ export default [
   },
   { ignores: ['src/routeTree.gen.ts'] },
   {
+    // mapcn keeps the latest props in refs on purpose; vendored, so leave it as shipped.
+    files: ['src/components/ui/map.tsx'],
+    rules: {
+      'react-hooks/refs': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+    },
+  },
+  {
     // shadcn components export variants alongside components.
     files: ['src/components/ui/**'],
     rules: { 'react-refresh/only-export-components': 'off' },

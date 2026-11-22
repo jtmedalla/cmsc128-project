@@ -46,7 +46,13 @@ describe('ReportDetails', () => {
       screen.getByRole('link', { name: '09171234567' }).getAttribute('href'),
     ).toBe('tel:09171234567');
     expect(screen.getByText('Baha diri')).toBeDefined();
-    expect(screen.getByText('Female · 60+ years old · Asthma')).toBeDefined();
+    expect(
+      screen.getByText(
+        (_, el) =>
+          el?.tagName === 'LI' &&
+          el.textContent === 'Female · 60+ years old · Asthma',
+      ),
+    ).toBeDefined();
   });
 
   it('says so when the report does not exist', async () => {
@@ -91,11 +97,11 @@ describe('ReportDetails', () => {
   it('shows "Not given" for an empty field', async () => {
     respondWith(200, {
       ...wire,
-      resident: { id, name: '', contactNumber: '09171234567' },
+      resident: { id, name: 'Juan Dela Cruz', contactNumber: '' },
     });
     renderWithProviders(<ReportDetails reportId={id} />);
     await screen.findByText('Flood');
-    expect(screen.getByText('Reported By').nextSibling?.textContent).toBe(
+    expect(screen.getByText('Contact number').nextSibling?.textContent).toBe(
       'Not given',
     );
   });

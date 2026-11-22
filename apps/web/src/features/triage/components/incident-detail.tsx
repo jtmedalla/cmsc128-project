@@ -1,8 +1,16 @@
 import { formatAgeRange, type ReportDetail } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { SeverityBadge, StatusBadge } from './report-badges';
-import { ChatMessages, PaneMessage } from './report-details';
+import { CallButton, ContactNumber } from '@/components/contact-number';
+import { DetailItem } from '@/components/detail-item';
+import { IncidentTypeLabel } from '@/components/incident-type-label';
+import { LoadError } from '@/components/load-error';
+import { ReportId } from '@/components/report-id';
+import { ResidentLabel } from '@/components/resident-label';
+import { SexLabel } from '@/components/sex-label';
+import { LocationLabel } from '@/components/location-label';
+import { SeverityBadge, StatusBadge } from '@/components/report-badges';
+import { ReportNotFound } from './report-not-found';
 import { ReportMap } from './report-map';
 import {
   Breadcrumb,
@@ -20,7 +28,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -30,7 +37,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatTime, label } from '@/lib/format';
+import { formatLocation, formatTime, label } from '@/lib/format';
+import { MessageComposer, MessageThread } from '@/features/messaging';
 import { reportQueries } from '../queries';
 import { reportTitle } from '../lib/report-title';
 
@@ -54,26 +62,11 @@ export function IncidentDetail({ reportId }: { reportId: string }) {
   }
 
   if (isError) {
-    return (
-      <PaneMessage>
-        <p>Couldn't load this report. Check your connection and try again.</p>
-        <Button onClick={() => void refetch()}>Try again</Button>
-      </PaneMessage>
-    );
+    return <LoadError what="this report" onRetry={() => void refetch()} />;
   }
 
   if (!data) {
-    return (
-      <PaneMessage>
-        <p>This report doesn't exist.</p>
-        <Button
-          nativeButton={false}
-          render={<Link to="/dashboard/incidents" />}
-        >
-          Back to incidents
-        </Button>
-      </PaneMessage>
-    );
+    return <ReportNotFound />;
   }
 
   return (
@@ -141,14 +134,19 @@ function PageHeader({ report }: { report: ReportDetail }) {
       </Breadcrumb>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-semibold">{reportTitle(report)}</h1>
+          <h1 className="text-2xl font-semibold">
+            <IncidentTypeLabel type={report.incidentType}>
+              {reportTitle(report)}
+            </IncidentTypeLabel>
+          </h1>
           {report.severity && <SeverityBadge severity={report.severity} />}
           <StatusBadge status={report.status} />
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            Report {report.id.slice(0, 8)}
-          </span>
+          <ReportId id={report.id} />
+          {report.resident?.contactNumber && (
+            <CallButton number={report.resident.contactNumber} />
+          )}
           {/* TODO(#39): change the status and record it in ReportEdit. */}
           <Button variant="outline" size="sm" disabled>
             Mark invalid
@@ -162,24 +160,19 @@ function PageHeader({ report }: { report: ReportDetail }) {
   );
 }
 
-/** One label and value; empty values read "Not given". */
-function DetailRow({ name, value }: { name: string; value: React.ReactNode }) {
+/** A label column beside the value; minmax(0, 1fr) lets long values wrap instead of overflowing. */
+function DetailRow(props: { label: string; value: React.ReactNode }) {
   return (
-    // minmax(0, 1fr) lets the value column shrink, so long values wrap instead of overflowing.
-    <div className="grid grid-cols-[8rem_minmax(0,1fr)] gap-2">
-      <dt className="text-muted-foreground">{name}</dt>
-      <dd className="wrap-break-word">
-        {value === null || value === undefined || value === ''
-          ? 'Not given'
-          : value}
-      </dd>
-    </div>
+    <DetailItem
+      className="grid grid-cols-[8rem_minmax(0,1fr)] items-baseline gap-2"
+      {...props}
+    />
   );
 }
 
 /** The report's fields in two columns: what happened, then where and who reported it. */
 function DetailsCard({ report }: { report: ReportDetail }) {
-  const reporter = report.resident?.name ?? 'Unknown caller';
+  const place = formatLocation(report.locationText, report.barangay?.name);
 
   return (
     // A container, so the columns follow the card's width rather than the window's.
@@ -189,36 +182,55 @@ function DetailsCard({ report }: { report: ReportDetail }) {
       </CardHeader>
       <CardContent className="grid gap-x-6 gap-y-3 @lg:grid-cols-2">
         <dl className="flex flex-col gap-3">
-          <DetailRow name="Incident type" value={report.incidentType?.name} />
           <DetailRow
-            name="Severity"
-            value={report.severity && label(report.severity)}
+            label="Incident type"
+            value={
+              report.incidentType && (
+                <IncidentTypeLabel type={report.incidentType} />
+              )
+            }
           />
-          <DetailRow name="Status" value={label(report.status)} />
           <DetailRow
-            name="Incident time"
+            label="Severity"
+            value={
+              report.severity && <SeverityBadge severity={report.severity} />
+            }
+          />
+          <DetailRow
+            label="Status"
+            value={<StatusBadge status={report.status} />}
+          />
+          <DetailRow
+            label="Incident time"
             value={report.incidentAt && formatTime(report.incidentAt)}
           />
         </dl>
         <dl className="flex flex-col gap-3">
-          <DetailRow name="Barangay" value={report.barangay?.name} />
-          <DetailRow name="Location" value={report.locationText} />
-          <DetailRow name="Source" value={label(report.sourceChannel)} />
           <DetailRow
-            name="Reporter"
-            value={report.isProxy ? `${reporter} (for someone else)` : reporter}
+            label="Location"
+            value={place && <LocationLabel text={place} reportId={report.id} />}
+          />
+          <DetailRow label="Source" value={label(report.sourceChannel)} />
+          <DetailRow
+            label="Reporter"
+            value={
+              <>
+                <ResidentLabel resident={report.resident} />
+                {report.isProxy && (
+                  <span className="text-muted-foreground">
+                    {' '}
+                    (for someone else)
+                  </span>
+                )}
+              </>
+            }
           />
           {/* Responders call back on this number (#103). */}
           <DetailRow
-            name="Contact number"
+            label="Contact number"
             value={
               report.resident?.contactNumber && (
-                <a
-                  className="underline"
-                  href={`tel:${report.resident.contactNumber}`}
-                >
-                  {report.resident.contactNumber}
-                </a>
+                <ContactNumber number={report.resident.contactNumber} />
               )
             }
           />
@@ -254,7 +266,9 @@ function VictimsCard({ victims }: { victims: ReportDetail['victims'] }) {
             <TableBody>
               {victims.map((v) => (
                 <TableRow key={v.id}>
-                  <TableCell>{v.sex ? label(v.sex) : 'Not given'}</TableCell>
+                  <TableCell>
+                    {v.sex ? <SexLabel sex={v.sex} /> : 'Not given'}
+                  </TableCell>
                   <TableCell>
                     {formatAgeRange(v.ageMin, v.ageMax) ?? 'Not given'}
                   </TableCell>
@@ -280,15 +294,11 @@ function MessagesCard({ messages }: { messages: ReportDetail['messages'] }) {
       <CardHeader>
         <CardTitle>Messages</CardTitle>
       </CardHeader>
-      <CardContent className="max-h-96 overflow-y-auto">
-        <ChatMessages messages={messages} />
+      <CardContent className="flex h-96 flex-col px-0">
+        <MessageThread messages={messages} />
       </CardContent>
-      {/* TODO(#12): send replies to the resident. */}
-      <CardFooter className="gap-2">
-        <Input placeholder="Reply to resident" aria-label="Reply" disabled />
-        <Button size="sm" disabled>
-          Send
-        </Button>
+      <CardFooter>
+        <MessageComposer placeholder="Reply to resident" />
       </CardFooter>
     </Card>
   );

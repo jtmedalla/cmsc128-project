@@ -3,24 +3,19 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderWithProviders, respondWith } from '@/testing/render';
 import { IncidentsMap } from './incidents-map';
 
-/* Fake MapLibre that records each pin's coordinates. */
-const { setLngLat } = vi.hoisted(() => ({ setLngLat: vi.fn() }));
-vi.mock('maplibre-gl', () => {
-  class Map {
-    remove() {}
-  }
-  class Marker {
-    setLngLat(lngLat: [number, number]) {
-      setLngLat(lngLat);
-      return this;
-    }
-    addTo() {
-      return this;
-    }
-    remove() {}
-  }
-  return { Map, Marker, setWorkerUrl: () => {} };
-});
+/* A fake map: each marker renders its longitude, and the camera records flights. */
+const { flyTo } = vi.hoisted(() => ({ flyTo: vi.fn() }));
+vi.mock('@/components/map', () => ({
+  Map: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+vi.mock('@/components/ui/map', () => ({
+  MapMarker: ({ longitude }: { longitude: number }) => (
+    <span data-testid="pin" data-lng={longitude} />
+  ),
+  MarkerContent: () => null,
+  MapControls: () => null,
+  useMap: () => ({ map: { flyTo }, isLoaded: true }),
+}));
 
 const DAY = 24 * 60 * 60 * 1000;
 let nextId = 0;
@@ -61,14 +56,19 @@ function item(overrides: {
   };
 }
 
-/* Waits for the pins, then returns their longitudes. */
+/* Waits until the map holds `expected` pins, then returns their sorted longitudes. */
 async function pinsAfter(expected: number) {
-  await waitFor(() => expect(setLngLat).toHaveBeenCalledTimes(expected));
-  return setLngLat.mock.calls.map(([lngLat]) => lngLat[0]);
+  await waitFor(() =>
+    expect(screen.queryAllByTestId('pin')).toHaveLength(expected),
+  );
+  return screen
+    .getAllByTestId('pin')
+    .map((pin) => Number(pin.dataset.lng))
+    .sort();
 }
 
 afterEach(() => {
-  setLngLat.mockClear();
+  flyTo.mockClear();
 });
 
 describe('IncidentsMap', () => {
@@ -100,14 +100,25 @@ describe('IncidentsMap', () => {
     ]);
     renderWithProviders(<IncidentsMap />);
     await pinsAfter(2);
-    setLngLat.mockClear();
 
     /* Base UI needs pointerdown before click to select an option. */
     fireEvent.click(screen.getByRole('combobox', { name: 'Severity' }));
-    const low = await screen.findByRole('option', { name: 'Severity: Low' });
+    const low = await screen.findByRole('option', { name: 'Low' });
     fireEvent.pointerDown(low);
     fireEvent.click(low);
     expect(await pinsAfter(1)).toEqual([122.2]);
+  });
+
+  /* A location link opens the map on its report, even one the default filters hide. */
+  it('centers on the linked report and keeps its pin', async () => {
+    const old = item({ lng: 122.3, status: 'resolved', daysAgo: 30 });
+    respondWith(200, [item({ lng: 122.1 }), old]);
+    renderWithProviders(<IncidentsMap focusId={old.id} />);
+
+    expect(await pinsAfter(2)).toEqual([122.1, 122.3]);
+    expect(flyTo).toHaveBeenCalledWith(
+      expect.objectContaining({ center: [122.3, 10.6] }),
+    );
   });
 
   /* A failed load shows the error and no pins. */
@@ -118,6 +129,6 @@ describe('IncidentsMap', () => {
     expect((await screen.findByRole('alert')).textContent).toContain(
       "Couldn't load reports",
     );
-    expect(setLngLat).not.toHaveBeenCalled();
+    expect(screen.queryAllByTestId('pin')).toHaveLength(0);
   });
 });
