@@ -2,6 +2,7 @@ import {
   type ReportFeedItem,
   type ReportStatus,
   reportStatusSchema,
+  type SeverityLevel,
   severityLevelSchema,
 } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
@@ -11,8 +12,15 @@ import { severityStyles } from '@/lib/report-states';
 import { IncidentTypeLabel } from '@/components/incident-type-label';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxTrigger,
+} from '@/components/ui/combobox';
 import {
   Select,
   SelectContent,
@@ -25,6 +33,7 @@ import { label } from '@/lib/format';
 // Aliased: `Map` would shadow the built-in Map that typesIn uses.
 import { Map as AppMap } from '@/components/map';
 import { ReportMarker } from '@/components/report-marker';
+import { ReportPopup } from './report-popup';
 import { MapControls, useMap } from '@/components/ui/map';
 
 const FOCUS_ZOOM = 16;
@@ -43,14 +52,25 @@ const DATE_RANGES = [
   { value: 'all', label: 'All time', days: null },
 ];
 
-type Filters = { type: string; severity: string; status: string; date: string };
-/* Default filters. */
+/* Each list keeps the values shown; an empty list shows every value. */
+type Filters = {
+  types: string[];
+  severities: SeverityLevel[];
+  statuses: ReportStatus[];
+  date: string;
+};
+/* Default filters: open reports from the last 7 days. */
 const DEFAULT_FILTERS: Filters = {
-  type: 'all',
-  severity: 'all',
-  status: 'open',
+  types: [],
+  severities: [],
+  statuses: OPEN_STATUSES,
   date: '7',
 };
+
+/* True when `value` is picked, or nothing is. */
+function allows<T>(picked: T[], value: T | null | undefined) {
+  return !picked.length || (value != null && picked.includes(value));
+}
 
 /* Keeps the reports that pass every filter. */
 function applyFilters(reports: ReportFeedItem[], filters: Filters) {
@@ -58,12 +78,9 @@ function applyFilters(reports: ReportFeedItem[], filters: Filters) {
   const since = days ? Date.now() - days * 24 * 60 * 60 * 1000 : null;
   return reports.filter(
     (report) =>
-      (filters.type === 'all' || report.incidentType?.id === filters.type) &&
-      (filters.severity === 'all' || report.severity === filters.severity) &&
-      (filters.status === 'all' ||
-        (filters.status === 'open'
-          ? OPEN_STATUSES.includes(report.status)
-          : report.status === filters.status)) &&
+      allows(filters.types, report.incidentType?.id) &&
+      allows(filters.severities, report.severity) &&
+      allows(filters.statuses, report.status) &&
       (since === null || report.createdAt.getTime() >= since),
   );
 }
@@ -85,9 +102,16 @@ export function IncidentsMap({ focusId }: { focusId?: string }) {
   const { data, isError, refetch } = useQuery(reportQueries.feed());
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
 
-  /* Updates one filter from its select. */
-  const setFilter = (key: keyof Filters) => (value: string) =>
-    setFilters((current) => ({ ...current, [key]: value }));
+  /* Updates one filter. */
+  const setFilter =
+    <K extends keyof Filters>(key: K) =>
+    (value: Filters[K]) =>
+      setFilters((current) => ({ ...current, [key]: value }));
+
+  const types = useMemo(
+    () => new Map(typesIn(data ?? []).map((type) => [type.id, type])),
+    [data],
+  );
 
   /* Reports that pass the filters; the linked report stays even when they'd hide it. */
   // TODO(#38): pins follow live updates once the feed query refetches on report events.
@@ -101,106 +125,79 @@ export function IncidentsMap({ focusId }: { focusId?: string }) {
 
   const focusPoint = data?.find((report) => report.id === focusId)?.location;
 
-  /* -m-4 cancels the layout's padding. */
+  /* -m-4 cancels the layout's padding so the map fills the page. */
   return (
-    <div className="-m-4 flex h-[calc(100svh-4.5rem)] flex-col gap-4 p-6">
-      <h1 className="text-lg font-semibold">Map</h1>
+    <div className="relative -m-4 h-[calc(100%+2rem)] overflow-hidden md:rounded-b-xl">
+      <AppMap className="size-full">
+        {pinned.map(
+          (report) =>
+            report.location && (
+              <ReportMarker
+                key={report.id}
+                report={report}
+                lngLat={report.location}
+                focused={report.id === focusId}
+              >
+                <ReportPopup report={report} />
+              </ReportMarker>
+            ),
+        )}
+        {focusPoint && <FlyTo lngLat={focusPoint} />}
+        <MapControls showCompass showLocate showFullscreen />
+      </AppMap>
 
-      {/* Filters */}
-      <div className="flex items-center gap-2">
-        <FilterSelect
+      <div className="absolute inset-x-3 top-3 flex flex-wrap items-start gap-2">
+        <MultiFilter
           label="Type"
-          value={filters.type}
-          onChange={setFilter('type')}
-          options={[
-            { value: 'all', label: 'Type: All' },
-            ...typesIn(data ?? []).map((type) => ({
-              value: type.id,
-              label: <IncidentTypeLabel type={type} />,
-            })),
-          ]}
+          options={[...types.keys()]}
+          optionLabel={(id) => types.get(id)?.name ?? id}
+          renderOption={(id) => <IncidentTypeLabel type={types.get(id)!} />}
+          value={filters.types}
+          onChange={setFilter('types')}
         />
-        <FilterSelect
+        <MultiFilter
           label="Severity"
-          value={filters.severity}
-          onChange={setFilter('severity')}
-          options={[
-            { value: 'all', label: 'Severity: All' },
-            ...SEVERITIES.map((severity) => ({
-              value: severity,
-              label: <SeverityBadge severity={severity} />,
-            })),
-          ]}
+          options={SEVERITIES}
+          optionLabel={label}
+          renderOption={(severity) => <SeverityBadge severity={severity} />}
+          value={filters.severities}
+          onChange={setFilter('severities')}
         />
-        <FilterSelect
+        <MultiFilter
           label="Status"
-          value={filters.status}
-          onChange={setFilter('status')}
-          options={[
-            { value: 'open', label: 'Status: Open' },
-            { value: 'all', label: 'Status: All' },
-            ...reportStatusSchema.options.map((status) => ({
-              value: status,
-              label: <StatusBadge status={status} />,
-            })),
-          ]}
+          options={reportStatusSchema.options}
+          optionLabel={label}
+          renderOption={(status) => <StatusBadge status={status} />}
+          value={filters.statuses}
+          onChange={setFilter('statuses')}
         />
-        <FilterSelect
-          label="Date"
-          value={filters.date}
-          onChange={setFilter('date')}
-          options={DATE_RANGES.map((range) => ({
+        <Select
+          items={DATE_RANGES.map((range) => ({
             value: range.value,
             label: `Date: ${range.label}`,
           }))}
-        />
-        {/* TODO: barangay name labels. */}
-        <div className="flex w-42.5 items-center gap-2">
-          <Checkbox id="barangay-names" disabled />
-          <Label htmlFor="barangay-names">Barangay names</Label>
-        </div>
-        {/* TODO(#67): heatmap. */}
-        <div className="flex w-42.5 items-center gap-2">
-          <Checkbox id="heatmap" disabled />
-          <Label htmlFor="heatmap">Heatmap</Label>
-        </div>
-      </div>
-
-      {/* Map with legend and load error */}
-      <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg border bg-card">
-        <AppMap className="size-full">
-          {pinned.map(
-            (report) =>
-              report.location && (
-                <ReportMarker
-                  key={report.id}
-                  report={report}
-                  lngLat={report.location}
-                  focused={report.id === focusId}
-                />
-              ),
-          )}
-          {focusPoint && <FlyTo lngLat={focusPoint} />}
-          <MapControls showCompass showLocate showFullscreen />
-        </AppMap>
-        <div className="absolute top-4 left-4 flex flex-col gap-1.5 rounded-lg border bg-card px-3 py-2.5 text-xs">
-          <span className="font-medium text-muted-foreground">Severity</span>
-          {SEVERITIES.map((severity) => (
-            <span key={severity} className="flex items-center gap-1.5">
-              <span
-                className={cn(
-                  'size-2.5 rounded-full',
-                  severityStyles[severity].solid,
-                )}
-              />
-              {label(severity)}
-            </span>
-          ))}
-        </div>
+          value={filters.date}
+          onValueChange={(next) => next !== null && setFilter('date')(next)}
+        >
+          <SelectTrigger
+            aria-label="Date"
+            size="sm"
+            className="bg-background shadow-sm"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {DATE_RANGES.map((range) => (
+              <SelectItem key={range.value} value={range.value}>
+                {range.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {isError && (
           <div
             role="alert"
-            className="absolute top-4 right-4 flex items-center gap-2 rounded-md border bg-background p-2 text-sm"
+            className="ml-auto flex items-center gap-2 rounded-md border bg-background py-1 pr-1 pl-3 text-sm shadow-sm"
           >
             Couldn't load reports.
             <Button size="sm" variant="outline" onClick={() => refetch()}>
@@ -209,10 +206,24 @@ export function IncidentsMap({ focusId }: { focusId?: string }) {
           </div>
         )}
       </div>
+
+      <div className="absolute bottom-3 left-3 flex flex-col gap-1.5 rounded-lg border bg-background px-3 py-2.5 text-xs shadow-sm">
+        <span className="font-medium text-muted-foreground">Severity</span>
+        {SEVERITIES.map((severity) => (
+          <span key={severity} className="flex items-center gap-1.5">
+            <span
+              className={cn(
+                'size-2.5 rounded-full',
+                severityStyles[severity].solid,
+              )}
+            />
+            {label(severity)}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
-
 /* Centers the map on a point once the map is ready. */
 function FlyTo({
   lngLat: { lng, lat },
@@ -226,37 +237,63 @@ function FlyTo({
   return null;
 }
 
-/* One filter dropdown; `items` makes the trigger show the label. */
-function FilterSelect({
+/* "Severity: All", "Severity: High", "Severity: 2 selected". */
+function summary<T>(label: string, value: T[], optionLabel: (v: T) => string) {
+  if (!value.length) return `${label}: All`;
+  if (value.length === 1) return `${label}: ${optionLabel(value[0]!)}`;
+  return `${label}: ${value.length} selected`;
+}
+
+/* A multi-select filter: a button that opens a searchable, checkable list. */
+function MultiFilter<T extends string>({
   label,
+  options,
+  optionLabel,
+  renderOption,
   value,
   onChange,
-  options,
 }: {
   label: string;
-  value: string;
-  onChange: (value: string) => void;
-  options: { value: string; label: React.ReactNode }[];
+  options: readonly T[];
+  optionLabel: (value: T) => string;
+  renderOption: (value: T) => React.ReactNode;
+  value: T[];
+  onChange: (value: T[]) => void;
 }) {
   return (
-    <Select
+    <Combobox
+      multiple
       items={options}
+      itemToStringLabel={optionLabel}
       value={value}
-      onValueChange={(next) => next !== null && onChange(next)}
+      onValueChange={onChange}
     >
-      <SelectTrigger
+      <ComboboxTrigger
         aria-label={label}
-        className="min-w-0 flex-1 bg-background shadow-xs data-[size=default]:h-9"
+        render={
+          <Button
+            variant="outline"
+            size="sm"
+            className="bg-background font-normal shadow-sm"
+          />
+        }
       >
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {options.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
-            {option.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+        {summary(label, value, optionLabel)}
+      </ComboboxTrigger>
+      <ComboboxContent className="min-w-48">
+        <ComboboxInput
+          showTrigger={false}
+          placeholder={`Search ${label.toLowerCase()}`}
+        />
+        <ComboboxEmpty>No matches</ComboboxEmpty>
+        <ComboboxList>
+          {(option: T) => (
+            <ComboboxItem key={option} value={option}>
+              {renderOption(option)}
+            </ComboboxItem>
+          )}
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
   );
 }
