@@ -1,7 +1,8 @@
 import type { ReportFeedItem } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { ArrowDownUp } from 'lucide-react';
+import { ArrowDownUp, SearchIcon } from 'lucide-react';
+import { useState } from 'react';
 import { IncidentTypeLabel } from '@/components/incident-type-label';
 import { LoadError } from '@/components/load-error';
 import { ResidentLabel } from '@/components/resident-label';
@@ -9,96 +10,169 @@ import { LocationLabel } from '@/components/location-label';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { ReportDetails, SelectReportPrompt } from './report-details';
 import { Button } from '@/components/ui/button';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from '@/components/ui/input-group';
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from '@/components/ui/resizable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { formatLocation, formatTime } from '@/lib/format';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { formatLocation, formatTimeAgo, label } from '@/lib/format';
 import { reportQueries } from '../queries';
 
 /**
- * `/dashboard/incidents`: the wireframe's Incident Feed. The report list stays
- * on the left; the quick view of `selectedId` (from `?report=`) sits beside it.
+ * `/dashboard/incidents`: the incident feed. The report list stays on the
+ * left; the quick view of `selectedId` (from `?report=`) sits beside it.
  */
 export function IncidentsWorkspace({ selectedId }: { selectedId?: string }) {
+  const [search, setSearch] = useState('');
+  const isMobile = useIsMobile();
+  const list = (
+    <section aria-label="Reports" className="h-full overflow-y-auto">
+      <ReportList search={search} />
+    </section>
+  );
+  const quickView = selectedId ? (
+    <ReportDetails reportId={selectedId} />
+  ) : (
+    <SelectReportPrompt />
+  );
+
   return (
-    // Exactly fills the window on large screens so only the panes scroll, never the page:
-    // 100svh minus the header (h-14, 3.5rem), main's padding (p-4, 2rem) and the
-    // inset panel's margin (m-2 top and bottom, 1rem).
-    <div className="flex flex-col overflow-hidden lg:h-[calc(100svh-6.5rem)]">
-      {/* Only Reports exists for now; Table and Kanban are shown disabled, as agreed. */}
-      <Tabs value="reports">
-        <TabsList variant="line" className="w-full border-b">
-          <TabsTrigger value="reports">Reports</TabsTrigger>
-          <TabsTrigger value="table" disabled>
-            Table
-          </TabsTrigger>
-          <TabsTrigger value="kanban" disabled>
-            Kanban
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
-      {/* Three panes side by side on large screens, stacked on narrow ones. */}
-      <div className="grid min-h-0 flex-1 lg:grid-cols-3 lg:divide-x">
-        <section
-          aria-label="Reports"
-          className="flex min-h-0 flex-col gap-3 p-4 lg:overflow-y-auto"
-        >
-          {/* TODO(#38): sorting. Shown disabled so the layout matches the wireframe. */}
-          <Button variant="ghost" size="sm" className="self-start" disabled>
-            <ArrowDownUp /> Sort
-          </Button>
-          <ReportList />
-        </section>
-        {selectedId ? (
-          <ReportDetails reportId={selectedId} />
+    // Fills main on wide screens so only the panes scroll, never the page.
+    <div className="flex flex-col gap-4 md:h-full">
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Only the feed exists for now; Table and Board are shown disabled, as agreed. */}
+        <Tabs value="feed">
+          <TabsList>
+            <TabsTrigger value="feed">Feed</TabsTrigger>
+            <TabsTrigger value="table" disabled>
+              Table
+            </TabsTrigger>
+            <TabsTrigger value="board" disabled>
+              Board
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <InputGroup className="w-full sm:w-72">
+          <InputGroupAddon>
+            <SearchIcon />
+          </InputGroupAddon>
+          <InputGroupInput
+            aria-label="Search incidents"
+            placeholder="Search incidents"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </InputGroup>
+        {/* TODO(#38): sorting. */}
+        <Button variant="outline" disabled>
+          <ArrowDownUp /> Sort
+        </Button>
+      </div>
+      <div className="min-h-0 flex-1 overflow-hidden rounded-xl border bg-card">
+        {isMobile ? (
+          <div className="flex flex-col divide-y">
+            {list}
+            {quickView}
+          </div>
         ) : (
-          <SelectReportPrompt />
+          <ResizablePanelGroup orientation="horizontal">
+            <ResizablePanel defaultSize="30" minSize="20">
+              {list}
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize="70" minSize="40">
+              {quickView}
+            </ResizablePanel>
+          </ResizablePanelGroup>
         )}
       </div>
     </div>
   );
 }
 
-/** The feed as cards; each opens its report's quick view beside the list. */
-function ReportList() {
+/** True when the report's type, message, place or reporter contains `search`. */
+function matches(report: ReportFeedItem, search: string) {
+  const needle = search.trim().toLowerCase();
+  if (!needle) return true;
+  return [
+    report.incidentType?.name,
+    report.firstMessage,
+    report.barangay?.name,
+    report.locationText,
+    report.resident?.name,
+  ].some((field) => field?.toLowerCase().includes(needle));
+}
+
+/** The feed; each item opens its report's quick view beside the list. */
+function ReportList({ search }: { search: string }) {
   const { data, isPending, isError, refetch } = useQuery(reportQueries.feed());
 
   if (isPending) {
     return (
-      <div aria-busy="true" aria-label="Loading reports" className="contents">
-        <Skeleton className="h-36 w-full" />
-        <Skeleton className="h-36 w-full" />
+      <div
+        aria-busy="true"
+        aria-label="Loading reports"
+        className="flex flex-col gap-3 p-4"
+      >
+        <Skeleton className="h-28 w-full" />
+        <Skeleton className="h-28 w-full" />
       </div>
     );
   }
 
   if (isError) {
-    return <LoadError what="reports" onRetry={() => void refetch()} />;
+    return (
+      <div className="p-4">
+        <LoadError what="reports" onRetry={() => void refetch()} />
+      </div>
+    );
   }
 
-  if (!data.length)
-    return <p className="text-muted-foreground">No reports yet</p>;
+  const shown = data.filter((report) => matches(report, search));
+
+  if (!shown.length) {
+    return (
+      <p className="p-4 text-sm text-muted-foreground">
+        {data.length ? 'No reports match your search' : 'No reports yet'}
+      </p>
+    );
+  }
 
   return (
-    <ul className="flex flex-col gap-3">
-      {data.map((report) => (
+    <ul className="divide-y">
+      {shown.map((report) => (
         <li key={report.id}>
-          <ReportCard report={report} />
+          <ReportItem report={report} />
         </li>
       ))}
     </ul>
   );
 }
 
-/** One wireframe card: type, badges, the first message, reporter, time, location. */
-function ReportCard({ report }: { report: ReportFeedItem }) {
+/** "No victims reported", "1 victim", "3 victims". */
+function victimsText(count: number) {
+  if (!count) return 'No victims reported';
+  return `${count} ${count === 1 ? 'victim' : 'victims'}`;
+}
+
+/** One feed item: type and badges, the first message, then place, reporter and time. */
+function ReportItem({ report }: { report: ReportFeedItem }) {
   const location = formatLocation(report.locationText, report.barangay?.name);
 
   return (
     <Link
       to="/dashboard/incidents"
       search={{ report: report.id }}
-      className="flex flex-col gap-2 rounded-xl border p-4 hover:bg-muted/50"
-      // Every card shares the path, so only the matching ?report= marks it active.
+      className="flex flex-col gap-2 p-4 transition-colors hover:bg-muted/50"
+      // Every item shares the path, so only the matching ?report= marks it active.
       activeOptions={{ exact: true, includeSearch: true }}
       activeProps={{ className: 'bg-muted', 'aria-current': 'page' }}
     >
@@ -111,12 +185,18 @@ function ReportCard({ report }: { report: ReportFeedItem }) {
           <StatusBadge status={report.status} />
         </div>
       </div>
-      <p>{report.firstMessage ?? 'No message'}</p>
-      <div className="text-sm text-muted-foreground">
-        <ResidentLabel resident={report.resident} link={false} />
-        <p>{formatTime(report.createdAt)}</p>
-        {/* Plain, not a link: the whole card already is one. */}
+      <p className="line-clamp-2 text-sm">
+        {report.firstMessage ?? 'No message'}
+      </p>
+      <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+        {/* Plain, not links: the whole item already is one. */}
         {location && <LocationLabel text={location} />}
+        <ResidentLabel resident={report.resident} link={false} />
+        <p>
+          {label(report.sourceChannel)} · {formatTimeAgo(report.createdAt)} ·{' '}
+          {victimsText(report.victimCount)}
+          {report.isProxy && ' · for someone else'}
+        </p>
       </div>
     </Link>
   );

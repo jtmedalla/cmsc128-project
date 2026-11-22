@@ -89,8 +89,10 @@ export function MessageThread({ messages }: { messages: ThreadMessage[] }) {
                 <MessageScrollerItem key={m.id} messageId={m.id}>
                   <Message align={sender.align}>
                     <MessageContent>
+                      {/* Side and color already tell senders apart; screen readers hear the name. */}
                       <MessageHeader>
-                        {sender.name} · {formatTime(m.createdAt)}
+                        <span className="sr-only">{sender.name}, </span>
+                        {formatTime(m.createdAt)}
                       </MessageHeader>
                       <Bubble variant={sender.variant} align={sender.align}>
                         <BubbleContent className="whitespace-pre-wrap">
