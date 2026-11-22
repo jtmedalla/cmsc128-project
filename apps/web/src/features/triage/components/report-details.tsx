@@ -2,6 +2,7 @@ import { formatAgeRange, type ReportDetail } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { cn } from 'cn';
+import { CallButton, ContactNumber } from '@/components/contact-number';
 import { DetailItem } from '@/components/detail-item';
 import { IncidentTypeLabel } from '@/components/incident-type-label';
 import { LoadError } from '@/components/load-error';
@@ -89,19 +90,24 @@ function QuickViewHeader({ report }: { report: ReportDetail }) {
           {label(report.sourceChannel)}
         </p>
       </div>
-      <Button
-        variant="ghost"
-        size="sm"
-        nativeButton={false}
-        render={
-          <Link
-            to="/dashboard/incidents/$reportId"
-            params={{ reportId: report.id }}
-          />
-        }
-      >
-        Open full report
-      </Button>
+      <div className="flex items-center gap-2">
+        {report.resident?.contactNumber && (
+          <CallButton number={report.resident.contactNumber} />
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          nativeButton={false}
+          render={
+            <Link
+              to="/dashboard/incidents/$reportId"
+              params={{ reportId: report.id }}
+            />
+          }
+        >
+          Open full report
+        </Button>
+      </div>
     </div>
   );
 }
@@ -269,12 +275,7 @@ function ReportFields({ report }: { report: ReportDetail }) {
           label="Contact number"
           value={
             report.resident?.contactNumber && (
-              <a
-                className="underline"
-                href={`tel:${report.resident.contactNumber}`}
-              >
-                {report.resident.contactNumber}
-              </a>
+              <ContactNumber number={report.resident.contactNumber} />
             )
           }
         />

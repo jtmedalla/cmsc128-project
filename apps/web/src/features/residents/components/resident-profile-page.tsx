@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { ContactNumber } from '@/components/contact-number';
 import { DetailItem } from '@/components/detail-item';
 import { LoadError } from '@/components/load-error';
 import { LocationLabel } from '@/components/location-label';
@@ -37,7 +38,14 @@ export function ResidentProfilePage() {
         </CardHeader>
         <CardContent>
           <dl className="grid gap-4 sm:grid-cols-2">
-            <DetailItem label="Contact number" value={data.contactNumber} />
+            <DetailItem
+              label="Contact number"
+              value={
+                data.contactNumber && (
+                  <ContactNumber number={data.contactNumber} />
+                )
+              }
+            />
             <DetailItem label="Age" value={data.age?.toString()} />
             <DetailItem label="Sex" value={data.sex && label(data.sex)} />
             {/* No link: a resident's address has no point on the map. */}

@@ -1,6 +1,7 @@
 import { formatAgeRange, type ReportDetail } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
+import { CallButton, ContactNumber } from '@/components/contact-number';
 import { DetailItem } from '@/components/detail-item';
 import { IncidentTypeLabel } from '@/components/incident-type-label';
 import { LoadError } from '@/components/load-error';
@@ -143,6 +144,9 @@ function PageHeader({ report }: { report: ReportDetail }) {
           <span className="text-sm text-muted-foreground">
             Report {report.id.slice(0, 8)}
           </span>
+          {report.resident?.contactNumber && (
+            <CallButton number={report.resident.contactNumber} />
+          )}
           {/* TODO(#39): change the status and record it in ReportEdit. */}
           <Button variant="outline" size="sm" disabled>
             Mark invalid
@@ -226,12 +230,7 @@ function DetailsCard({ report }: { report: ReportDetail }) {
             label="Contact number"
             value={
               report.resident?.contactNumber && (
-                <a
-                  className="underline"
-                  href={`tel:${report.resident.contactNumber}`}
-                >
-                  {report.resident.contactNumber}
-                </a>
+                <ContactNumber number={report.resident.contactNumber} />
               )
             }
           />

@@ -4,6 +4,7 @@ import { DataTableColumnHeader } from '@/components/ui/data-table-column-header'
 import { Badge } from '@/components/ui/badge';
 import type { DataTableFeatures } from '@/lib/data-table-features';
 import { LANGUAGE_LABELS } from '@/lib/format';
+import { ContactNumber } from '@/components/contact-number';
 import { ResidentLabel } from '@/components/resident-label';
 
 export const COLUMN_LABELS: Record<string, string> = {
@@ -33,7 +34,12 @@ export const columns = columnHelper.columns([
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Contact Number" />
     ),
-    cell: ({ row }) => row.original.contactNumber ?? '—',
+    cell: ({ row }) =>
+      row.original.contactNumber ? (
+        <ContactNumber number={row.original.contactNumber} />
+      ) : (
+        '—'
+      ),
   }),
   columnHelper.accessor((row) => row.barangay ?? '', {
     id: 'barangay',
