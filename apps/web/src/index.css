@@ -59,6 +59,16 @@
   --color-status-resolved-foreground: color-mix(in oklab, var(--status-resolved) 70%, var(--foreground));
   --color-status-closed-foreground: color-mix(in oklab, var(--status-closed) 70%, var(--foreground));
   --color-status-invalid-foreground: color-mix(in oklab, var(--status-invalid) 70%, var(--foreground));
+  --color-on-severity-low: var(--on-severity-low);
+  --color-on-severity-moderate: var(--on-severity-moderate);
+  --color-on-severity-high: var(--on-severity-high);
+  --color-on-severity-critical: var(--on-severity-critical);
+  --color-on-status-pending: var(--on-status-pending);
+  --color-on-status-validated: var(--on-status-validated);
+  --color-on-status-dispatched: var(--on-status-dispatched);
+  --color-on-status-resolved: var(--on-status-resolved);
+  --color-on-status-closed: var(--on-status-closed);
+  --color-on-status-invalid: var(--on-status-invalid);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -136,6 +146,17 @@
   --status-resolved: var(--success);
   --status-closed: var(--muted-foreground);
   --status-invalid: var(--destructive);
+  /* Content (icons, text) on the solid state color, e.g. a map pin's icon. */
+  --on-severity-low: var(--info-foreground);
+  --on-severity-moderate: var(--warning-foreground);
+  --on-severity-high: var(--highlight-foreground);
+  --on-severity-critical: var(--destructive-foreground);
+  --on-status-pending: var(--warning-foreground);
+  --on-status-validated: var(--info-foreground);
+  --on-status-dispatched: var(--primary-foreground);
+  --on-status-resolved: var(--success-foreground);
+  --on-status-closed: var(--background);
+  --on-status-invalid: var(--destructive-foreground);
 }
 
 .dark {
