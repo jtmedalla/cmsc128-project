@@ -1,6 +1,6 @@
 # Architecture
 
-MIGO is split into vertical modules named after the TRD module list. A module has the same name everywhere:
+MIGO is split into vertical modules named after the [TRD](specs/trd.md#modules) module list. A module has the same name everywhere:
 
 - API: `apps/api/src/<module>/`, with routes under `/<module>/...`
 - Web: `apps/web/src/features/<module>/`

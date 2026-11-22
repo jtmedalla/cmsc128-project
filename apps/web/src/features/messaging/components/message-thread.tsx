@@ -36,7 +36,7 @@ export type ThreadMessage = {
 
 type Sender = 'resident' | 'bot' | 'responder';
 
-/** Outbound with a sender_id is a responder; without one, the bot (docs/database.md). */
+/** Outbound with a sender_id is a responder; without one, the bot (see `message.senderId` in the API schema). */
 function senderOf(m: ThreadMessage): Sender {
   if (m.direction === 'inbound') return 'resident';
   return m.senderId ? 'responder' : 'bot';

@@ -13,6 +13,10 @@ import { direction, sourceChannel } from './enums.js';
 import { report } from './report.js';
 import { resident } from './resident.js';
 
+/**
+ * Every inbound and outbound chat message. Saved before processing, so it is
+ * the fallback record when parsing fails.
+ */
 export const message = pgTable(
   'message',
   {
@@ -25,11 +29,15 @@ export const message = pgTable(
     }),
     channel: sourceChannel('channel').notNull(),
     direction: direction('direction').notNull(),
+    /** The responder who sent it; null for the bot or the resident. */
     senderId: text('sender_id').references(() => user.id, {
       onDelete: 'restrict',
     }),
+    /** Raw text; null for location-only messages. */
     body: text('body'),
+    /** Location payloads, and storage keys if files are added. */
     attachments: jsonb('attachments'),
+    /** Platform message ID; unique per channel, so platform retries are dropped. */
     externalId: text('external_id'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },

@@ -61,7 +61,7 @@ describe('ReportDetails', () => {
     expect(await screen.findByText("This report doesn't exist.")).toBeDefined();
   });
 
-  // Labels follow message.sender_id and message.attachments (docs/database.md).
+  // Labels follow message.sender_id and message.attachments (see the API's message schema).
   it('labels senders and location shares', async () => {
     const outbound = {
       direction: 'outbound',
