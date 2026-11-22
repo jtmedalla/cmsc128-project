@@ -39,6 +39,11 @@ pnpm + Turborepo. Run scripts from the root (`pnpm <script>`), or one package wi
 - Add UI primitives with `pnpm dlx shadcn@latest add <component>` (lands in `src/components/ui/`).
 - Import from `src/` with the `@/` alias.
 
+## Docs
+
+- Follow [docs/README.md](docs/README.md). Specs (`docs/specs/`) describe the intended product; reference docs (`docs/*.md`) describe only what's on `main`.
+- Update the reference doc in the same PR as the code it describes. Change a spec only when a decision changes, and say why in the PR.
+
 ## Verifying
 
 - Write and prune tests by [docs/testing.md](docs/testing.md): what to test, what not to, and how.
