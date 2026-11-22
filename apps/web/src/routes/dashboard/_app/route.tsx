@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { DashboardLayout } from '@/components/dashboard-layout';
+import { NotFound } from '@/components/not-found';
 import { RouteError } from '@/components/route-error';
 import { authQueries } from '@/features/auth';
 
@@ -16,4 +17,5 @@ export const Route = createFileRoute('/dashboard/_app')({
   },
   component: DashboardLayout,
   errorComponent: RouteError,
+  notFoundComponent: () => <NotFound home="/dashboard" />,
 });
