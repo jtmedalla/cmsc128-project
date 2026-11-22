@@ -153,6 +153,7 @@ function DateTimeField({
           Time
         </FieldLabel>
         <TimePicker
+          hourCycle={12}
           id="incidentTime"
           aria-labelledby="incidentTime-label"
           placeholder="Unknown"
