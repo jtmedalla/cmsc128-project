@@ -10,6 +10,8 @@ Shared location lookup for intake and broadcast targeting.
 
 `GET /geo/barangays` returns all 119 with centroid, boundary and targeting flags, for any signed-in user.
 
+`PATCH /geo/barangays/:id` sets `isCoastal`, `isUpland` and `hazards` (all three required); admin only. Names and boundaries change only through migrations. Lookups read the new values right away.
+
 Import `GeoModule` and inject `BarangayService`:
 
 - `findByName(name)`: matches names as residents write them, ignoring case, accents, punctuation, "Brgy." and "(Pob.)"

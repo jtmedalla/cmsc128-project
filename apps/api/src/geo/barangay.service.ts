@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import type { Barangay, GeoPoint } from '@repo/shared';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import type { Barangay, BarangayUpdate, GeoPoint } from '@repo/shared';
 import { GeoRepository } from './geo.repository.js';
 
 /**
@@ -17,14 +17,22 @@ export function barangayKey(name: string) {
 
 @Injectable()
 export class BarangayService {
-  // Barangays change only through migrations, so the name index lives as
-  // long as the process.
+  // Names change only through migrations, but the index also carries flags
+  // and hazards, so `update` drops it.
   private byKey?: Promise<Map<string, Barangay>>;
 
   constructor(private readonly repository: GeoRepository) {}
 
   list(): Promise<Barangay[]> {
     return this.repository.findBarangays();
+  }
+
+  /** Changes a barangay's flags or hazards. */
+  async update(id: string, changes: BarangayUpdate): Promise<Barangay> {
+    const row = await this.repository.updateBarangay(id, changes);
+    if (!row) throw new NotFoundException('Barangay not found');
+    this.byKey = undefined;
+    return row;
   }
 
   /** Matches a name as residents or the classifier write it. */

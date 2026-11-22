@@ -12,3 +12,13 @@ export const barangaySchema = z.object({
   hazards: z.array(hazardTypeSchema),
 });
 export type Barangay = z.infer<typeof barangaySchema>;
+
+export const barangayIdParamsSchema = z.object({ id: z.uuid() });
+
+/** What admins can change; names and boundaries stay as seeded. */
+export const barangayUpdateSchema = barangaySchema.pick({
+  isCoastal: true,
+  isUpland: true,
+  hazards: true,
+});
+export type BarangayUpdate = z.infer<typeof barangayUpdateSchema>;
