@@ -8,7 +8,7 @@ Turns resident messages and form answers into reports.
 
 ## Creating a report
 
-`IntakeService` is the only way to create a report: `receiveMessage` for chat messages and `createReport` for everything else.
+`IntakeService` is the only way to create a report: `receiveMessage` for chat messages, `createDashboardReport` for responders and `createReport` for everything else.
 
 ### From a chat message
 
@@ -27,6 +27,12 @@ Pass `newReport: true` to start a report even when one is open. The old report s
 `report:created` is emitted only when `created` is true.
 
 `ChatIntakeService` registers this as a `ChannelsService.onMessage` handler, so every resident message goes through it.
+
+### From the dashboard
+
+`POST /intake/reports` (responders and admins) logs a phone or radio report (FR38). The body is `dashboardReportInputSchema`. The report gets `source_channel` `dashboard`, the signed-in responder as `created_by` and no resident, and the route returns `{ id }`. `GET /intake/incident-types` lists the active incident types for the form.
+
+The dashboard header's New report button opens the form from any page and, once saved, opens the report in the feed. Its location comes from geo's `LocationPicker` with the barangay select (see [geo.md](geo.md#location-picker)).
 
 ## Questions
 
@@ -147,7 +153,8 @@ if (!parsed) {
 | ------------------------------------------------------ | ----------------------------------------------------------------------------- |
 | `parsedReportSchema`                                   | Classifier output: each field as `{ value, confidence }`, 0–1                 |
 | `parseConfidenceSchema`                                | `report.parse_confidence`: field → confidence                                 |
-| `reportInputSchema`                                    | `createReport` input                                                          |
+| `reportInputSchema`                                    | `createReport` input; needs a resident or a `createdBy` responder             |
+| `dashboardReportInputSchema`                           | `POST /intake/reports` body                                                   |
 | `reportFeedItemSchema`                                 | A report as the triage feed shows it                                          |
 | `reportDetailSchema`                                   | One report as a responder reviews it, with the contact number; see triage.md  |
 | `reportCreatedEventSchema`, `reportUpdatedEventSchema` | Feed item payloads of `report:created` and `report:updated` (`REPORT_EVENTS`) |

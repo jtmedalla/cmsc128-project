@@ -35,6 +35,7 @@ const detail: ReportDetail = {
   parsedAutomatically: false,
   parseConfidence: null,
   resident: { id, name: 'Pedro Cruz', contactNumber: '09171234567' },
+  creator: null,
   victims: [],
   messages: [
     {

@@ -83,7 +83,8 @@ export class IntakeRepository {
 
       await this.insertVictims(id, victims, inner);
 
-      if (messageIds.length) {
+      // The schema only allows messages on a resident's report.
+      if (messageIds.length && fields.residentId) {
         const linked = await inner
           .update(message)
           .set({ reportId: id })

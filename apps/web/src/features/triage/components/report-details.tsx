@@ -137,6 +137,7 @@ function ReporterBar({ report }: { report: ReportDetail }) {
         <span className="truncate text-xs text-muted-foreground">
           {label(report.sourceChannel)}
           {report.isProxy && ' · for someone else'}
+          {report.creator && ` · logged by ${report.creator.name}`}
         </span>
       </div>
       {resident?.contactNumber && (

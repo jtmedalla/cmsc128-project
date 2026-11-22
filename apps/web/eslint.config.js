@@ -22,4 +22,13 @@ export default [
     files: ['src/components/ui/**'],
     rules: { 'react-refresh/only-export-components': 'off' },
   },
+  {
+    // reui components are vendored; leave them as shipped.
+    files: ['src/components/reui/**'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+      'no-irregular-whitespace': 'off',
+      '@typescript-eslint/ban-ts-comment': 'off',
+    },
+  },
 ];

@@ -20,8 +20,22 @@ const searchResponse = z.array(
   z.object({ lat: z.coerce.number(), lon: z.coerce.number() }),
 );
 
+// Nominatim answers 200 with `error` when no place is near the point.
+const reverseResponse = z.object({
+  display_name: z.string().optional(),
+});
+
+/** Places a reverse lookup can name: ~1 m apart at 5 decimals. */
+const roundCoord = (value: number) => value.toFixed(5);
+
 export interface GeocodeResult {
   point: GeoPoint;
+  barangay: Barangay | null;
+}
+
+export interface ReverseGeocodeResult {
+  /** The nearest place's first two address parts, e.g. "Santillan Street, Tacas"; null if none. */
+  label: string | null;
   barangay: Barangay | null;
 }
 
@@ -29,7 +43,7 @@ export interface GeocodeResult {
 @Injectable()
 export class GeocodingService {
   private readonly logger = new Logger(GeocodingService.name);
-  private readonly cache = new Map<string, Promise<GeoPoint | null>>();
+  private readonly cache = new Map<string, Promise<unknown>>();
   private queue: Promise<unknown> = Promise.resolve();
 
   constructor(private readonly barangays: BarangayService) {}
@@ -41,25 +55,49 @@ export class GeocodingService {
     return { point, barangay: await this.barangays.findContaining(point) };
   }
 
+  /**
+   * Names the place at `point` through Nominatim; the barangay comes from our
+   * boundaries. The label is null when Nominatim finds nothing or fails.
+   */
+  async reverse(point: GeoPoint): Promise<ReverseGeocodeResult> {
+    const [label, barangay] = await Promise.all([
+      this.lookup(point),
+      this.barangays.findContaining(point),
+    ]);
+    return { label, barangay };
+  }
+
   private search(text: string) {
     const query = text.trim().toLowerCase().replace(/\s+/g, ' ');
-    const cached = this.cache.get(query);
+    return this.cached(`search:${query}`, 'search', () => this.request(query));
+  }
+
+  private lookup({ lng, lat }: GeoPoint) {
+    const key = `reverse:${roundCoord(lat)},${roundCoord(lng)}`;
+    return this.cached(key, 'reverse', () => this.requestReverse(lng, lat));
+  }
+
+  /** Runs `fn` once per key through the throttle; null when it fails. */
+  private cached<T>(
+    key: string,
+    kind: string,
+    fn: () => Promise<T | null>,
+  ): Promise<T | null> {
+    const cached = this.cache.get(key) as Promise<T | null> | undefined;
     if (cached) {
       // Re-insert so eviction drops the least recently used query.
-      this.cache.delete(query);
-      this.cache.set(query, cached);
+      this.cache.delete(key);
+      this.cache.set(key, cached);
       return cached;
     }
 
-    const result = this.throttle(() => this.request(query)).catch(
-      (error: unknown) => {
-        // Failures aren't cached, so the next ask retries.
-        this.cache.delete(query);
-        this.logger.warn(`Nominatim search failed: ${String(error)}`);
-        return null;
-      },
-    );
-    this.cache.set(query, result);
+    const result = this.throttle(fn).catch((error: unknown) => {
+      // Failures aren't cached, so the next ask retries.
+      this.cache.delete(key);
+      this.logger.warn(`Nominatim ${kind} failed: ${String(error)}`);
+      return null;
+    });
+    this.cache.set(key, result);
     if (this.cache.size > CACHE_SIZE) {
       this.cache.delete(this.cache.keys().next().value!);
     }
@@ -90,5 +128,22 @@ export class GeocodingService {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const [hit] = searchResponse.parse(await res.json());
     return hit ? { lng: hit.lon, lat: hit.lat } : null;
+  }
+
+  private async requestReverse(lng: number, lat: number) {
+    const url = new URL('/reverse', env.NOMINATIM_URL);
+    url.search = new URLSearchParams({
+      lat: String(lat),
+      lon: String(lng),
+      format: 'jsonv2',
+      zoom: '17',
+    }).toString();
+    const res = await fetch(url, {
+      headers: { 'User-Agent': USER_AGENT },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { display_name } = reverseResponse.parse(await res.json());
+    return display_name?.split(', ').slice(0, 2).join(', ') || null;
   }
 }

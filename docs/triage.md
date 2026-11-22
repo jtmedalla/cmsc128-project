@@ -10,7 +10,7 @@ Lets responders review reports. Read-only for now; editing arrives with #39.
 
 Both need a signed-in responder or admin (`@Roles` on the controller, #41); any other role gets 403.
 
-- `GET /triage/reports`: every report as a `reportFeedItemSchema`, newest first. Each item carries `firstMessage`, the text of the message the report came from, for the feed card.
+- `GET /triage/reports`: every report as a `reportFeedItemSchema`, newest first. Each item carries `firstMessage`, the text of the message the report came from, for the feed card, and `creator`, the responder who logged it from the dashboard (null for resident reports).
 - `GET /triage/reports/:id`: one report as `reportDetailSchema`; 400 for a malformed ID, 404 when no report has it. Unlike a feed item, it carries the resident's contact number, the victims and the conversation, oldest first. Keep it off public pages.
 
 ## Feed queries

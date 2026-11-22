@@ -105,4 +105,47 @@ describe('GeocodingService', () => {
     expect(sentAt[1]! - sentAt[0]!).toBeGreaterThanOrEqual(1000);
     expect(sentAt[2]! - sentAt[1]!).toBeGreaterThanOrEqual(1000);
   });
+
+  describe('reverse', () => {
+    const point = { lng: 122.2353, lat: 10.6415 };
+
+    it('names the place and finds its barangay from our boundaries', async () => {
+      fetch.mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            display_name:
+              'Santillan Street, Tacas, Miagao, Iloilo, Philippines',
+          }),
+        ),
+      );
+
+      await expect(service.reverse(point)).resolves.toEqual({
+        label: 'Santillan Street, Tacas',
+        barangay: TACAS,
+      });
+      const params = (fetch.mock.calls[0]![0] as URL).searchParams;
+      expect(params.get('lat')).toBe('10.6415');
+      expect(params.get('lon')).toBe('122.2353');
+    });
+
+    it('keeps the barangay when Nominatim finds no place', async () => {
+      fetch.mockResolvedValue(
+        new Response(JSON.stringify({ error: 'Unable to geocode' })),
+      );
+
+      await expect(service.reverse(point)).resolves.toEqual({
+        label: null,
+        barangay: TACAS,
+      });
+    });
+
+    it('keeps the barangay when Nominatim fails', async () => {
+      fetch.mockResolvedValue(new Response('', { status: 503 }));
+
+      await expect(service.reverse(point)).resolves.toEqual({
+        label: null,
+        barangay: TACAS,
+      });
+    });
+  });
 });
