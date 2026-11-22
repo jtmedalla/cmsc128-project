@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { broadcastKindSchema } from '../enums.js';
 import { stringToDate } from '../codecs.js';
 
-/** A sent broadcast as it appears in the responder recent-advisories list. */
-export const recentAdvisorySchema = z.object({
+/** A sent broadcast of any kind, as responder lists show it. */
+export const broadcastSummarySchema = z.object({
   id: z.uuid(),
   kind: broadcastKindSchema,
   messageBody: z.string(),
@@ -13,4 +13,4 @@ export const recentAdvisorySchema = z.object({
     name: z.string(),
   }),
 });
-export type RecentAdvisory = z.output<typeof recentAdvisorySchema>;
+export type BroadcastSummary = z.output<typeof broadcastSummarySchema>;

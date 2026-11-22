@@ -1,4 +1,4 @@
-import { recentAdvisorySchema } from '@repo/shared';
+import { broadcastSummarySchema } from '@repo/shared';
 import { queryOptions } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 
@@ -10,8 +10,12 @@ export const broadcastQueries = {
     queryOptions({
       queryKey: [...broadcastQueries.all(), 'advisories', 'recent'],
       queryFn: ({ signal }) =>
-        api.get('/broadcasts/advisories/recent', recentAdvisorySchema.array(), {
-          signal,
-        }),
+        api.get(
+          '/broadcasts/advisories/recent',
+          broadcastSummarySchema.array(),
+          {
+            signal,
+          },
+        ),
     }),
 };
