@@ -59,7 +59,7 @@ pnpm db:seed
 
 Public sign-up is disabled; add another account with `pnpm --filter api db:seed-user <email> <password> <name> [role]`.
 
-Schema and ERDs: [docs/database.md](docs/database.md).
+Data model and ERD: [docs/specs/data-model.md](docs/specs/data-model.md); working with the database: [docs/database.md](docs/database.md).
 
 ### Run
 
