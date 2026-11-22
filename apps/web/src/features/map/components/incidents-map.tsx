@@ -25,7 +25,7 @@ import { label } from '@/lib/format';
 // Aliased: `Map` would shadow the built-in Map that typesIn uses.
 import { Map as AppMap } from '@/components/map';
 import { ReportMarker } from '@/components/report-marker';
-import { useMap } from '@/components/ui/map';
+import { MapControls, useMap } from '@/components/ui/map';
 
 const FOCUS_ZOOM = 16;
 
@@ -181,6 +181,7 @@ export function IncidentsMap({ focusId }: { focusId?: string }) {
               ),
           )}
           {focusPoint && <FlyTo lngLat={focusPoint} />}
+          <MapControls showCompass showLocate showFullscreen />
         </AppMap>
         <div className="absolute top-4 left-4 flex flex-col gap-1.5 rounded-lg border bg-card px-3 py-2.5 text-xs">
           <span className="font-medium text-muted-foreground">Severity</span>

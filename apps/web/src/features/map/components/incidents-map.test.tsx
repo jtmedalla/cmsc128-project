@@ -13,6 +13,7 @@ vi.mock('@/components/ui/map', () => ({
     <span data-testid="pin" data-lng={longitude} />
   ),
   MarkerContent: () => null,
+  MapControls: () => null,
   useMap: () => ({ map: { flyTo }, isLoaded: true }),
 }));
 
