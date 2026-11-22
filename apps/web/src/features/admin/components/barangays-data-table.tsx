@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useDebouncedCallback } from '@/hooks/use-debounced-callback';
+import { useDebouncedCallback } from 'use-debounce';
 import { features, type DataTableFeatures } from '@/lib/data-table-features';
 import { COLUMN_LABELS, columns } from './barangays-columns';
 
