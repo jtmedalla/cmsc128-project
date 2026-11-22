@@ -30,9 +30,11 @@ describe('NewReportDialog', () => {
     renderWithProviders(<NewReportDialog />, { queryClient });
 
     fireEvent.click(await screen.findByRole('button', { name: 'New report' }));
-    fireEvent.change(await screen.findByLabelText('Incident type'), {
-      target: { value: id },
-    });
+    /* Base UI needs pointerdown before click to select an option. */
+    fireEvent.click(await screen.findByLabelText('Incident type'));
+    const fire = await screen.findByRole('option', { name: 'Fire' });
+    fireEvent.pointerDown(fire);
+    fireEvent.click(fire);
     fireEvent.change(screen.getByLabelText('Severity'), {
       target: { value: 'high' },
     });

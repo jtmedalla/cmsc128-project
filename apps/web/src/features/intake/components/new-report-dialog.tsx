@@ -6,7 +6,7 @@ import {
   SEVERITY_LABELS,
   severityLevelSchema,
 } from '@repo/shared';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { format, parseISO } from 'date-fns';
 import { ChevronDown, Plus } from 'lucide-react';
@@ -38,10 +38,10 @@ import {
 import { emptyLocation, LocationPicker } from '@/features/geo';
 import { reportQueries } from '@/features/triage';
 import { api } from '@/lib/api';
-import { intakeQueries } from '../queries';
+import { IncidentTypeSelect } from './incident-type-select';
 
 const empty = {
-  incidentTypeId: '',
+  incidentTypeId: null as string | null,
   severity: '',
   location: emptyLocation,
   /** `yyyy-MM-dd` from the calendar. */
@@ -55,7 +55,7 @@ type Values = typeof empty;
 /** Blank fields stay unknown; triage fills them in later. */
 function toInput(values: Values): DashboardReportInput {
   return {
-    incidentTypeId: values.incidentTypeId || null,
+    incidentTypeId: values.incidentTypeId,
     severity: severityLevelSchema.safeParse(values.severity).data ?? null,
     barangayId: values.location.barangayId,
     locationText: values.location.text.trim() || null,
@@ -76,7 +76,7 @@ function SelectField({
   onChange,
   options,
 }: {
-  id: Exclude<keyof Values, 'location'>;
+  id: Exclude<keyof Values, 'location' | 'incidentTypeId'>;
   label: string;
   value: string;
   onChange: (value: string) => void;
@@ -174,13 +174,10 @@ export function NewReportDialog() {
   const [values, setValues] = useState(empty);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const incidentTypes = useQuery({
-    ...intakeQueries.incidentTypes(),
-    enabled: open,
-  });
-
-  const set = (field: Exclude<keyof Values, 'location'>) => (value: string) =>
-    setValues((prev) => ({ ...prev, [field]: value }));
+  const set =
+    (field: Exclude<keyof Values, 'location' | 'incidentTypeId'>) =>
+    (value: string) =>
+      setValues((prev) => ({ ...prev, [field]: value }));
 
   const create = useMutation({
     mutationFn: (input: DashboardReportInput) =>
@@ -217,16 +214,16 @@ export function NewReportDialog() {
           }}
         >
           <FieldGroup>
-            <SelectField
-              id="incidentTypeId"
-              label="Incident type"
-              value={values.incidentTypeId}
-              onChange={set('incidentTypeId')}
-              options={(incidentTypes.data ?? []).map((t) => ({
-                value: t.id,
-                label: t.name,
-              }))}
-            />
+            <Field>
+              <FieldLabel htmlFor="incidentTypeId">Incident type</FieldLabel>
+              <IncidentTypeSelect
+                id="incidentTypeId"
+                value={values.incidentTypeId}
+                onValueChange={(incidentTypeId) =>
+                  setValues((prev) => ({ ...prev, incidentTypeId }))
+                }
+              />
+            </Field>
             <SelectField
               id="severity"
               label="Severity"
