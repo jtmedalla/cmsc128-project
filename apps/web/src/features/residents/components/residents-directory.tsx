@@ -14,14 +14,11 @@ export function ResidentsDirectory() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold">Residents Directory</h1>
-          <p className="text-sm text-muted-foreground">
-            {data
-              ? `${data.length} ${data.length === 1 ? 'resident' : 'residents'} in your community`
-              : 'Loading…'}
-          </p>
-        </div>
+        <p className="text-sm text-muted-foreground">
+          {data
+            ? `${data.length} ${data.length === 1 ? 'resident' : 'residents'} in your community`
+            : 'Loading…'}
+        </p>
         <RefreshButton
           refreshing={isFetching}
           onRefresh={() => void refetch()}
