@@ -201,7 +201,7 @@ export function NewReportDialog() {
         <Plus />
         New report
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[calc(100svh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] sm:max-w-md lg:max-w-3xl">
         <DialogHeader>
           <DialogTitle>New report</DialogTitle>
           <DialogDescription>
@@ -209,58 +209,65 @@ export function NewReportDialog() {
             blank.
           </DialogDescription>
         </DialogHeader>
+        {/* Only the fields scroll, so the header and actions stay in view on short screens. */}
         <form
+          className="-mx-4 overflow-y-auto px-4"
           id="new-report"
           onSubmit={(event) => {
             event.preventDefault();
             create.mutate(toInput(values));
           }}
         >
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="incidentTypeId">Incident type</FieldLabel>
-              <IncidentTypeSelect
-                id="incidentTypeId"
-                value={values.incidentTypeId}
-                onValueChange={(incidentTypeId) =>
-                  setValues((prev) => ({ ...prev, incidentTypeId }))
+          {/* Two columns once the dialog is wide: the incident on the left, where and who on the right. */}
+          <div className="grid gap-7 lg:grid-cols-2">
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="incidentTypeId">Incident type</FieldLabel>
+                <IncidentTypeSelect
+                  id="incidentTypeId"
+                  value={values.incidentTypeId}
+                  onValueChange={(incidentTypeId) =>
+                    setValues((prev) => ({ ...prev, incidentTypeId }))
+                  }
+                />
+              </Field>
+              <Field>
+                <FieldLabel id="severity-label">Severity</FieldLabel>
+                <SeveritySlider
+                  labelId="severity-label"
+                  value={values.severity}
+                  onValueChange={(severity) =>
+                    setValues((prev) => ({ ...prev, severity }))
+                  }
+                />
+              </Field>
+              <DateTimeField
+                date={values.incidentDate}
+                time={values.incidentTime}
+                onDateChange={set('incidentDate')}
+                onTimeChange={set('incidentTime')}
+              />
+            </FieldGroup>
+            <FieldGroup>
+              <LocationPicker
+                withBarangay
+                value={values.location}
+                onChange={(location) =>
+                  setValues((prev) => ({ ...prev, location }))
                 }
               />
-            </Field>
-            <Field>
-              <FieldLabel id="severity-label">Severity</FieldLabel>
-              <SeveritySlider
-                labelId="severity-label"
-                value={values.severity}
-                onValueChange={(severity) =>
-                  setValues((prev) => ({ ...prev, severity }))
-                }
+              <SelectField
+                id="anyoneHurt"
+                label="Anyone hurt?"
+                value={values.anyoneHurt}
+                onChange={set('anyoneHurt')}
+                options={(['yes', 'no'] as const).map((answer) => ({
+                  value: answer,
+                  label: ANYONE_HURT_LABELS[answer],
+                }))}
               />
-            </Field>
-            <LocationPicker
-              withBarangay
-              value={values.location}
-              onChange={(location) =>
-                setValues((prev) => ({ ...prev, location }))
-              }
-            />
-            <DateTimeField
-              date={values.incidentDate}
-              time={values.incidentTime}
-              onDateChange={set('incidentDate')}
-              onTimeChange={set('incidentTime')}
-            />
-            <SelectField
-              id="anyoneHurt"
-              label="Anyone hurt?"
-              value={values.anyoneHurt}
-              onChange={set('anyoneHurt')}
-              options={(['yes', 'no'] as const).map((answer) => ({
-                value: answer,
-                label: ANYONE_HURT_LABELS[answer],
-              }))}
-            />
-          </FieldGroup>
+            </FieldGroup>
+          </div>
         </form>
         <DialogFooter>
           <DialogClose render={<Button variant="outline" />}>
