@@ -65,9 +65,7 @@ export const columns = columnHelper.columns([
     ),
     cell: ({ row }) =>
       row.original.broadcastsOptIn ? (
-        <Badge className="bg-emerald-500 text-white hover:bg-emerald-500">
-          Opted in
-        </Badge>
+        <Badge className="bg-success/12 text-success">Opted in</Badge>
       ) : (
         <Badge variant="outline">Opted out</Badge>
       ),
