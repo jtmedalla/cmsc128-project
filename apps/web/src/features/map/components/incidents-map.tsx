@@ -32,6 +32,7 @@ maplibregl.setWorkerUrl(workerUrl);
 const STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 const MIAGAO_CENTER: [number, number] = [122.24, 10.7]; // [lng, lat]
 const START_ZOOM = 11;
+const FOCUS_ZOOM = 16;
 
 /* Most severe first, for the filter and legend. */
 const SEVERITIES = severityLevelSchema.options.toReversed();
@@ -85,20 +86,21 @@ function typesIn(reports: ReportFeedItem[]) {
   return [...types].sort((a, b) => a[1].localeCompare(b[1]));
 }
 
-/* Pin element colored by severity. */
-function pinElement(severity: SeverityLevel | null) {
+/* Pin element colored by severity; the focused report's pin is larger. */
+function pinElement(severity: SeverityLevel | null, focused: boolean) {
   const pin = document.createElement('div');
   const color = severity ? severityStyles[severity].solid : UNCLASSIFIED_COLOR;
   pin.className = cn(
-    'size-[18px] rounded-full border-[3px] border-white',
+    'rounded-full border-[3px] border-white',
+    focused ? 'size-6 shadow-md' : 'size-[18px]',
     color,
   );
   return pin;
 }
 
-/* /dashboard/map: filters and a pin per located report. */
+/* /dashboard/map: filters and a pin per located report, centered on `focusId` if given. */
 // TODO(#66): place reports without a point at their barangay's centroid.
-export function IncidentsMap() {
+export function IncidentsMap({ focusId }: { focusId?: string }) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const { data, isError, refetch } = useQuery(reportQueries.feed());
@@ -127,16 +129,33 @@ export function IncidentsMap() {
   // TODO(#38): pins follow live updates once the feed query refetches on report events.
   useEffect(() => {
     if (!map.current || !data) return;
-    const markers = applyFilters(data, filters)
+    const shown = applyFilters(data, filters);
+    /* The linked report stays pinned even when the filters would hide it. */
+    const focused = data.find((report) => report.id === focusId);
+    if (focused && !shown.includes(focused)) shown.push(focused);
+    const markers = shown
       .filter((report) => report.location)
       .map((report) =>
         // TODO(#66): show the report's popup on click.
-        new maplibregl.Marker({ element: pinElement(report.severity) })
+        new maplibregl.Marker({
+          element: pinElement(report.severity, report === focused),
+        })
           .setLngLat([report.location!.lng, report.location!.lat])
           .addTo(map.current!),
       );
     return () => markers.forEach((marker) => marker.remove());
-  }, [data, filters]);
+  }, [data, filters, focusId]);
+
+  /* Center on the linked report once it loads. */
+  const focusPoint = data?.find((report) => report.id === focusId)?.location;
+  const focusLng = focusPoint?.lng;
+  const focusLat = focusPoint?.lat;
+  useEffect(() => {
+    if (!map.current || focusLng === undefined || focusLat === undefined) {
+      return;
+    }
+    map.current.flyTo({ center: [focusLng, focusLat], zoom: FOCUS_ZOOM });
+  }, [focusLng, focusLat]);
 
   /* -m-4 cancels the layout's padding. */
   return (

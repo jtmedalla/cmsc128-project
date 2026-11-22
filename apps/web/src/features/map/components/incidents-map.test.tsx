@@ -3,10 +3,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderWithProviders, respondWith } from '@/testing/render';
 import { IncidentsMap } from './incidents-map';
 
-/* Fake MapLibre that records each pin's coordinates. */
-const { setLngLat } = vi.hoisted(() => ({ setLngLat: vi.fn() }));
+/* Fake MapLibre that records each pin's coordinates and where the camera flies. */
+const { setLngLat, flyTo } = vi.hoisted(() => ({
+  setLngLat: vi.fn(),
+  flyTo: vi.fn(),
+}));
 vi.mock('maplibre-gl', () => {
   class Map {
+    flyTo = flyTo;
     remove() {}
   }
   class Marker {
@@ -69,6 +73,7 @@ async function pinsAfter(expected: number) {
 
 afterEach(() => {
   setLngLat.mockClear();
+  flyTo.mockClear();
 });
 
 describe('IncidentsMap', () => {
@@ -108,6 +113,18 @@ describe('IncidentsMap', () => {
     fireEvent.pointerDown(low);
     fireEvent.click(low);
     expect(await pinsAfter(1)).toEqual([122.2]);
+  });
+
+  /* A location link opens the map on its report, even one the default filters hide. */
+  it('centers on the linked report and keeps its pin', async () => {
+    const old = item({ lng: 122.3, status: 'resolved', daysAgo: 30 });
+    respondWith(200, [item({ lng: 122.1 }), old]);
+    renderWithProviders(<IncidentsMap focusId={old.id} />);
+
+    expect(await pinsAfter(2)).toEqual([122.1, 122.3]);
+    expect(flyTo).toHaveBeenCalledWith(
+      expect.objectContaining({ center: [122.3, 10.6] }),
+    );
   });
 
   /* A failed load shows the error and no pins. */
