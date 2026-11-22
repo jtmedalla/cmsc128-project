@@ -21,6 +21,10 @@ Import `GeoModule` and inject `BarangayService`:
 
 `GeocodingService.geocode(text)` resolves free text to a point and its barangay through Nominatim, searching only within Miagao. It returns null when nothing matches or Nominatim fails.
 
-The public instance allows 1 request per second, so requests queue one at a time. Results, including misses, are cached in memory for the life of the process; failures are not. Point `NOMINATIM_URL` at another instance to lift the limit.
+`GeocodingService.reverse(point)` names the place at a point: `label` is the first two parts of Nominatim's address ("Santillan Street, Tacas"), or null when it finds nothing or fails, and `barangay` comes from `findContaining`.
+
+`GET /geo/geocode?q=` (404 when nothing matches) and `GET /geo/reverse?lat=&lng=` expose both to responders and admins, with the barangay trimmed to `{ id, name }`; the dashboard's location picker uses them.
+
+The public instance allows 1 request per second, so requests queue one at a time. Searches and reverse lookups share the queue. Results, including misses, are cached in memory for the life of the process; failures are not. Point `NOMINATIM_URL` at another instance to lift the limit.
 
 Intake resolves a location in the order the TRD sets: `findByName`, then a shared location through `findContaining`, then `geocode`.
