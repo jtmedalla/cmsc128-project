@@ -19,6 +19,9 @@ import { NewReportDialog } from './new-report-dialog';
 
 const id = '0b9a3f4e-8c1d-4e2a-9f6b-1c2d3e4f5a6b';
 
+const post = () =>
+  vi.mocked(fetch).mock.calls.find(([, init]) => init?.method === 'POST');
+
 describe('NewReportDialog', () => {
   it('sends the filled-in fields and leaves the rest unknown', async () => {
     const queryClient = new QueryClient();
@@ -41,8 +44,6 @@ describe('NewReportDialog', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Create report' }));
 
-    const post = () =>
-      vi.mocked(fetch).mock.calls.find(([, init]) => init?.method === 'POST');
     await waitFor(() => expect(post()).toBeDefined());
     const [url, init] = post()!;
     expect(String(url)).toMatch(/\/intake\/reports$/);
@@ -54,6 +55,47 @@ describe('NewReportDialog', () => {
       location: null,
       incidentAt: null,
       anyoneHurt: null,
+      victims: [],
     });
+  });
+
+  it('sends the people hurt after Yes', async () => {
+    respondWith(201, { id });
+    renderWithProviders(<NewReportDialog />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'New report' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Yes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add person hurt' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Female' }));
+    fireEvent.change(screen.getByLabelText('Age'), {
+      target: { value: '60s' },
+    });
+    fireEvent.change(screen.getByLabelText('Condition'), {
+      target: { value: 'Bleeding' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Create report' }));
+
+    await waitFor(() => expect(post()).toBeDefined());
+    expect(JSON.parse(post()![1]!.body as string)).toMatchObject({
+      anyoneHurt: 'yes',
+      victims: [
+        { sex: 'female', ageMin: 60, ageMax: 69, medicalCondition: 'Bleeding' },
+      ],
+    });
+  });
+
+  it("won't send an age it can't read", async () => {
+    renderWithProviders(<NewReportDialog />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'New report' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Yes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add person hurt' }));
+    fireEvent.change(screen.getByLabelText('Age'), {
+      target: { value: 'banana' },
+    });
+
+    expect(
+      screen.getByRole('button', { name: 'Create report' }),
+    ).toHaveProperty('disabled', true);
   });
 });

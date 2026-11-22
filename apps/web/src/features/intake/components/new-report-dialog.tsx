@@ -1,6 +1,4 @@
 import {
-  ANYONE_HURT_LABELS,
-  anyoneHurtSchema,
   createdReportSchema,
   type DashboardReportInput,
   type SeverityLevel,
@@ -25,11 +23,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from '@/components/ui/native-select';
+  Field,
+  FieldGroup,
+  FieldLabel,
+  FieldSeparator,
+} from '@/components/ui/field';
 import {
   Popover,
   PopoverContent,
@@ -38,7 +37,9 @@ import {
 import { emptyLocation, LocationPicker } from '@/features/geo';
 import { reportQueries } from '@/features/triage';
 import { api } from '@/lib/api';
+import { toVictimInputs, type VictimsValue, victimsValid } from '../victims';
 import { IncidentTypeSelect } from './incident-type-select';
+import { VictimsField } from './victims-field';
 
 const empty = {
   incidentTypeId: null as string | null,
@@ -48,7 +49,7 @@ const empty = {
   incidentDate: '',
   /** `HH:mm`; midnight when only the date is known. */
   incidentTime: '',
-  anyoneHurt: '',
+  victims: { anyoneHurt: null, victims: [] } as VictimsValue,
 };
 type Values = typeof empty;
 
@@ -65,41 +66,9 @@ function toInput(values: Values): DashboardReportInput {
           `${values.incidentDate}T${values.incidentTime || '00:00'}`,
         ).toISOString()
       : null,
-    anyoneHurt: anyoneHurtSchema.safeParse(values.anyoneHurt).data ?? null,
+    anyoneHurt: values.victims.anyoneHurt,
+    victims: toVictimInputs(values.victims),
   };
-}
-
-function SelectField({
-  id,
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  id: Exclude<keyof Values, 'location' | 'incidentTypeId' | 'severity'>;
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  options: { value: string; label: string }[];
-}) {
-  return (
-    <Field>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
-      <NativeSelect
-        id={id}
-        className="w-full"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-      >
-        <NativeSelectOption value="">Unknown</NativeSelectOption>
-        {options.map((option) => (
-          <NativeSelectOption key={option.value} value={option.value}>
-            {option.label}
-          </NativeSelectOption>
-        ))}
-      </NativeSelect>
-    </Field>
-  );
 }
 
 /** A calendar date picker beside reui's time picker. */
@@ -177,7 +146,10 @@ export function NewReportDialog() {
   const navigate = useNavigate();
   const set =
     (
-      field: Exclude<keyof Values, 'location' | 'incidentTypeId' | 'severity'>,
+      field: Exclude<
+        keyof Values,
+        'location' | 'incidentTypeId' | 'severity' | 'victims'
+      >,
     ) =>
     (value: string) =>
       setValues((prev) => ({ ...prev, [field]: value }));
@@ -218,7 +190,7 @@ export function NewReportDialog() {
             create.mutate(toInput(values));
           }}
         >
-          {/* Two columns once the dialog is wide: the incident on the left, where and who on the right. */}
+          {/* Two columns once the dialog is wide: the incident and who's hurt on the left, where on the right. */}
           <div className="grid gap-7 lg:grid-cols-2">
             <FieldGroup>
               <Field>
@@ -247,6 +219,13 @@ export function NewReportDialog() {
                 onDateChange={set('incidentDate')}
                 onTimeChange={set('incidentTime')}
               />
+              <FieldSeparator />
+              <VictimsField
+                value={values.victims}
+                onChange={(victims) =>
+                  setValues((prev) => ({ ...prev, victims }))
+                }
+              />
             </FieldGroup>
             <FieldGroup>
               <LocationPicker
@@ -256,16 +235,6 @@ export function NewReportDialog() {
                   setValues((prev) => ({ ...prev, location }))
                 }
               />
-              <SelectField
-                id="anyoneHurt"
-                label="Anyone hurt?"
-                value={values.anyoneHurt}
-                onChange={set('anyoneHurt')}
-                options={(['yes', 'no'] as const).map((answer) => ({
-                  value: answer,
-                  label: ANYONE_HURT_LABELS[answer],
-                }))}
-              />
             </FieldGroup>
           </div>
         </form>
@@ -273,7 +242,11 @@ export function NewReportDialog() {
           <DialogClose render={<Button variant="outline" />}>
             Cancel
           </DialogClose>
-          <Button type="submit" form="new-report" disabled={create.isPending}>
+          <Button
+            type="submit"
+            form="new-report"
+            disabled={create.isPending || !victimsValid(values.victims)}
+          >
             {create.isPending ? 'Creating…' : 'Create report'}
           </Button>
         </DialogFooter>
