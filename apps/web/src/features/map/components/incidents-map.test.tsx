@@ -5,9 +5,10 @@ import { IncidentsMap } from './incidents-map';
 
 /* A fake map: each marker renders its longitude, and the camera records flights. */
 const { flyTo } = vi.hoisted(() => ({ flyTo: vi.fn() }));
-vi.mock('maplibre-gl', () => ({ setWorkerUrl: () => {} }));
-vi.mock('@/components/ui/map', () => ({
+vi.mock('@/components/map', () => ({
   Map: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+vi.mock('@/components/ui/map', () => ({
   MapMarker: ({ longitude }: { longitude: number }) => (
     <span data-testid="pin" data-lng={longitude} />
   ),
