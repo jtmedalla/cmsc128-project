@@ -84,6 +84,20 @@ describe('NewReportDialog', () => {
     });
   });
 
+  it('sets the incident time to now', async () => {
+    respondWith(201, { id });
+    renderWithProviders(<NewReportDialog />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'New report' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Now' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create report' }));
+
+    await waitFor(() => expect(post()).toBeDefined());
+    const { incidentAt } = JSON.parse(post()![1]!.body as string);
+    // Minute precision, so within two minutes of the click.
+    expect(Math.abs(Date.parse(incidentAt) - Date.now())).toBeLessThan(120_000);
+  });
+
   it("won't send an age it can't read", async () => {
     renderWithProviders(<NewReportDialog />);
 

@@ -85,52 +85,79 @@ function DateTimeField({
 }) {
   const [open, setOpen] = useState(false);
   const selected = date ? parseISO(date) : undefined;
+  const setNow = () => {
+    const now = new Date();
+    onDateChange(format(now, 'yyyy-MM-dd'));
+    onTimeChange(format(now, 'HH:mm'));
+  };
+  const clear = () => {
+    onDateChange('');
+    onTimeChange('');
+  };
   return (
-    <div className="flex gap-3">
-      <Field className="flex-1">
-        <FieldLabel htmlFor="incidentDate">Incident date</FieldLabel>
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger
-            render={
-              <Button
-                id="incidentDate"
-                variant="outline"
-                className="justify-between font-normal"
+    <div className="flex flex-col gap-2">
+      <div className="flex gap-3">
+        <Field className="flex-1">
+          <FieldLabel htmlFor="incidentDate">Incident date</FieldLabel>
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger
+              render={
+                <Button
+                  id="incidentDate"
+                  variant="outline"
+                  className="justify-between font-normal"
+                />
+              }
+            >
+              {selected ? format(selected, 'PPP') : 'Unknown'}
+              <ChevronDown data-icon="inline-end" />
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-auto overflow-hidden p-0"
+              align="start"
+            >
+              <Calendar
+                mode="single"
+                selected={selected}
+                defaultMonth={selected}
+                captionLayout="dropdown"
+                disabled={{ after: new Date() }}
+                onSelect={(day) => {
+                  onDateChange(day ? format(day, 'yyyy-MM-dd') : '');
+                  setOpen(false);
+                }}
               />
-            }
-          >
-            {selected ? format(selected, 'PPP') : 'Unknown'}
-            <ChevronDown data-icon="inline-end" />
-          </PopoverTrigger>
-          <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={selected}
-              defaultMonth={selected}
-              captionLayout="dropdown"
-              disabled={{ after: new Date() }}
-              onSelect={(day) => {
-                onDateChange(day ? format(day, 'yyyy-MM-dd') : '');
-                setOpen(false);
-              }}
-            />
-          </PopoverContent>
-        </Popover>
-      </Field>
-      <Field className="w-36">
-        <FieldLabel id="incidentTime-label" htmlFor="incidentTime">
-          Time
-        </FieldLabel>
-        <TimePicker
-          hourCycle={12}
-          id="incidentTime"
-          aria-labelledby="incidentTime-label"
-          placeholder="Unknown"
-          disabled={!date}
-          value={time || null}
-          onValueChange={(value) => onTimeChange(value ?? '')}
-        />
-      </Field>
+            </PopoverContent>
+          </Popover>
+        </Field>
+        <Field className="w-36">
+          <FieldLabel id="incidentTime-label" htmlFor="incidentTime">
+            Time
+          </FieldLabel>
+          <TimePicker
+            hourCycle={12}
+            id="incidentTime"
+            aria-labelledby="incidentTime-label"
+            placeholder="Unknown"
+            disabled={!date}
+            value={time || null}
+            onValueChange={(value) => onTimeChange(value ?? '')}
+          />
+        </Field>
+      </div>
+      <div className="flex gap-1">
+        <Button variant="outline" size="xs" onClick={setNow}>
+          Now
+        </Button>
+        <Button
+          variant="ghost"
+          size="xs"
+          disabled={!date && !time}
+          onClick={clear}
+        >
+          Unknown
+        </Button>
+      </div>
     </div>
   );
 }
