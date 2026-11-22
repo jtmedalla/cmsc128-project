@@ -1,7 +1,6 @@
 import type { HealthStatus } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
-import { RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { RefreshButton } from '@/components/refresh-button';
 import {
   Card,
   CardAction,
@@ -58,15 +57,10 @@ export function HealthStatusCard() {
             : 'Checking…'}
         </CardDescription>
         <CardAction>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Refresh"
-            disabled={isFetching}
-            onClick={() => void refetch()}
-          >
-            <RefreshCw className={cn(isFetching && 'animate-spin')} />
-          </Button>
+          <RefreshButton
+            refreshing={isFetching}
+            onRefresh={() => void refetch()}
+          />
         </CardAction>
       </CardHeader>
       <CardContent>
