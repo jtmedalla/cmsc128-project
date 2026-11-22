@@ -1,5 +1,5 @@
 /**
- * The details panel's map slot (Figma "map-section": 220px tall, 16px corners),
+ * The details panel's map slot (220px tall, 16px corners),
  * crossed out until a real map replaces the cross.
  */
 // TODO(#66): render the report's location here. #66 adds MapLibre for /map;
