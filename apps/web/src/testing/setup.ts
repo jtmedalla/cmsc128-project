@@ -22,7 +22,11 @@ window.matchMedia ??= (query: string) =>
   }) as MediaQueryList;
 
 // Nor layout: resizable panels observe sizes that never change here.
+// Takes the callback like the real one, so `new ResizeObserver(cb)` matches its signature.
 globalThis.ResizeObserver ??= class {
+  constructor(callback: ResizeObserverCallback) {
+    void callback;
+  }
   observe() {}
   unobserve() {}
   disconnect() {}
