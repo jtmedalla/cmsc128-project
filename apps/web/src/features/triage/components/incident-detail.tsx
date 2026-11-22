@@ -7,6 +7,7 @@ import { IncidentTypeLabel } from '@/components/incident-type-label';
 import { LoadError } from '@/components/load-error';
 import { ReportId } from '@/components/report-id';
 import { ResidentLabel } from '@/components/resident-label';
+import { SexLabel } from '@/components/sex-label';
 import { LocationLabel } from '@/components/location-label';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { ChatMessages, ReportNotFound } from './report-details';
@@ -265,7 +266,9 @@ function VictimsCard({ victims }: { victims: ReportDetail['victims'] }) {
             <TableBody>
               {victims.map((v) => (
                 <TableRow key={v.id}>
-                  <TableCell>{v.sex ? label(v.sex) : 'Not given'}</TableCell>
+                  <TableCell>
+                    {v.sex ? <SexLabel sex={v.sex} /> : 'Not given'}
+                  </TableCell>
                   <TableCell>
                     {formatAgeRange(v.ageMin, v.ageMax) ?? 'Not given'}
                   </TableCell>

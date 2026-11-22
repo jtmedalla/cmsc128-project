@@ -2,12 +2,14 @@ import { formatAgeRange, type ReportDetail } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { cn } from 'cn';
+import { Fragment } from 'react';
 import { CallButton, ContactNumber } from '@/components/contact-number';
 import { DetailItem } from '@/components/detail-item';
 import { IncidentTypeLabel } from '@/components/incident-type-label';
 import { LoadError } from '@/components/load-error';
 import { ReportId } from '@/components/report-id';
 import { ResidentLabel } from '@/components/resident-label';
+import { SexLabel } from '@/components/sex-label';
 import { LocationLabel } from '@/components/location-label';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { Button } from '@/components/ui/button';
@@ -231,6 +233,26 @@ export function ChatMessages({ messages }: { messages: Message[] }) {
   );
 }
 
+/** "Female · 60+ years old · Asthma", or "No details given". */
+function VictimSummary({
+  victim,
+}: {
+  victim: ReportDetail['victims'][number];
+}) {
+  const parts = [
+    victim.sex && <SexLabel sex={victim.sex} />,
+    formatAgeRange(victim.ageMin, victim.ageMax),
+    victim.medicalCondition,
+  ].filter(Boolean);
+  if (!parts.length) return 'No details given';
+  return parts.map((part, i) => (
+    <Fragment key={i}>
+      {i > 0 && ' · '}
+      {part}
+    </Fragment>
+  ));
+}
+
 /** The wireframe's details fields, read-only, plus the contact number and victims (#103). */
 function ReportFields({ report }: { report: ReportDetail }) {
   const place = formatLocation(report.locationText, report.barangay?.name);
@@ -284,13 +306,7 @@ function ReportFields({ report }: { report: ReportDetail }) {
               <ul>
                 {report.victims.map((v) => (
                   <li key={v.id}>
-                    {[
-                      v.sex && label(v.sex),
-                      formatAgeRange(v.ageMin, v.ageMax),
-                      v.medicalCondition,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ') || 'No details given'}
+                    <VictimSummary victim={v} />
                   </li>
                 ))}
               </ul>

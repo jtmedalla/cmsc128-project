@@ -2,8 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { ContactNumber } from '@/components/contact-number';
 import { DetailItem } from '@/components/detail-item';
 import { LoadError } from '@/components/load-error';
+import { SexLabel } from '@/components/sex-label';
 import { LocationLabel } from '@/components/location-label';
-import { formatLocation, label, LANGUAGE_LABELS } from '@/lib/format';
+import { formatLocation, LANGUAGE_LABELS } from '@/lib/format';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { residentQueries } from '../queries';
@@ -47,7 +48,10 @@ export function ResidentProfilePage() {
               }
             />
             <DetailItem label="Age" value={data.age?.toString()} />
-            <DetailItem label="Sex" value={data.sex && label(data.sex)} />
+            <DetailItem
+              label="Sex"
+              value={data.sex && <SexLabel sex={data.sex} />}
+            />
             {/* No link: a resident's address has no point on the map. */}
             <DetailItem
               label="Home address"

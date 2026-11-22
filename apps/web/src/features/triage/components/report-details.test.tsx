@@ -46,7 +46,13 @@ describe('ReportDetails', () => {
       screen.getByRole('link', { name: '09171234567' }).getAttribute('href'),
     ).toBe('tel:09171234567');
     expect(screen.getByText('Baha diri')).toBeDefined();
-    expect(screen.getByText('Female · 60+ years old · Asthma')).toBeDefined();
+    expect(
+      screen.getByText(
+        (_, el) =>
+          el?.tagName === 'LI' &&
+          el.textContent === 'Female · 60+ years old · Asthma',
+      ),
+    ).toBeDefined();
   });
 
   it('says so when the report does not exist', async () => {
