@@ -196,6 +196,7 @@ function ReportItem({ report }: { report: ReportFeedItem }) {
           {label(report.sourceChannel)} · {formatTimeAgo(report.createdAt)} ·{' '}
           {victimsText(report.victimCount)}
           {report.isProxy && ' · for someone else'}
+          {report.creator && ` · logged by ${report.creator.name}`}
         </p>
       </div>
     </Link>

@@ -20,6 +20,7 @@ const wire = {
   parsedAutomatically: true,
   parseConfidence: { incidentType: 0.9 },
   resident: { id, name: 'Pedro Cruz', contactNumber: '09171234567' },
+  creator: null,
   victims: [
     { id, sex: 'female', ageMin: 60, ageMax: null, medicalCondition: 'Asthma' },
   ],

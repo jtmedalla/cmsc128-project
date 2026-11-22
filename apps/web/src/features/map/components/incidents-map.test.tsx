@@ -50,6 +50,7 @@ function item(overrides: {
     parsedAutomatically: false,
     parseConfidence: null,
     resident: { id, name: 'Andrian' },
+    creator: null,
     victimCount: 0,
     firstMessage: null,
     createdAt: at,

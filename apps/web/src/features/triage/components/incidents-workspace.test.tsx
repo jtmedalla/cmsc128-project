@@ -21,6 +21,7 @@ const item = {
   parsedAutomatically: false,
   parseConfidence: null,
   resident: { id, name: 'Andrian' },
+  creator: null,
   victimCount: 0,
   firstMessage: 'Gataas na baha diri',
   createdAt: at,

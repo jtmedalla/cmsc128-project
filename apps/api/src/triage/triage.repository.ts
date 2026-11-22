@@ -28,6 +28,7 @@ const reportColumns = {
 const reportRelations = {
   incidentType: { columns: { id: true, code: true, name: true } },
   barangay: { columns: { id: true, name: true } },
+  creator: { columns: { id: true, name: true } },
 } as const;
 
 /** jsonb is unchecked; a value of the wrong shape becomes null instead of a 500. */

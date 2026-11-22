@@ -28,6 +28,8 @@ export const reportFeedItemSchema = z.object({
   parseConfidence: parseConfidenceSchema.nullable(),
   /** Null when a responder logged the report for an unknown caller. */
   resident: z.object({ id: z.uuid(), name: z.string().nullable() }).nullable(),
+  /** The responder who logged it from the dashboard; null for resident reports. */
+  creator: z.object({ id: z.string(), name: z.string() }).nullable(),
   victimCount: z.int().min(0),
   /** The message the report came from, for the feed card; null if none or attachment-only. */
   firstMessage: z.string().nullable(),

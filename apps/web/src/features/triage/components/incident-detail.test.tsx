@@ -21,6 +21,7 @@ const wire = {
   parsedAutomatically: true,
   parseConfidence: null,
   resident: { id, name: 'Juan Dela Cruz', contactNumber: '09171234567' },
+  creator: null,
   victims: [
     {
       id,
