@@ -1,92 +1,86 @@
-# MIGO
+<p align="center">
+  <img src="apps/web/public/logo.svg" alt="MIGO logo" width="96">
+</p>
 
-Miagao Incident Gateway for Operations.
+<h1 align="center">MIGO</h1>
 
-## Wireframe
+<p align="center">
+  Miagao Incident Gateway for Operations: incident intake for MDRRMO Miagao.
+  <br>
+  <a href="docs/README.md">Docs</a> ·
+  <a href="https://github.com/orgs/sleeping-angels/projects/1">Project board</a> ·
+  <a href="https://www.figma.com/design/hW0DADlcpwQ231WD1uCaZX/CMSC128_Final-Project">Wireframes</a>
+</p>
 
-[Figma](https://www.figma.com/design/hW0DADlcpwQ231WD1uCaZX/CMSC128_Final-Project)
+Residents report incidents through Messenger or a web form, and get a status link back. Responders see reports live on a dashboard, correct them, and send advisories to the barangays that need them.
 
-## Structure
+## Stack
 
-```
-apps/
-  api/   NestJS, Drizzle, Better Auth
-  web/   React, Vite, TanStack Router/Query, Tailwind, shadcn
-packages/
-  shared/             Zod schemas and types shared by api and web
-  typescript-config/  shared tsconfigs
-  eslint-config/      shared ESLint configs
-```
+| Path              | What                                                     |
+| ----------------- | -------------------------------------------------------- |
+| `apps/api`        | NestJS, Drizzle, Better Auth, PostgreSQL + PostGIS       |
+| `apps/web`        | React, Vite, TanStack Router and Query, Tailwind, shadcn |
+| `packages/shared` | Zod schemas and types used by both apps                  |
 
-## Setup
+pnpm workspaces and Turborepo tie them together. Architecture and the reasons behind it are in the [TRD](docs/specs/trd.md).
 
-Requires Node 22+ and pnpm 10.
+## Getting started
 
-```sh
-pnpm install
-cp apps/api/.env.example apps/api/.env
-cp apps/web/.env.example apps/web/.env
-```
+You need Node 22+, pnpm 10, and Docker (or a [Neon](https://neon.tech) database).
 
-Set `BETTER_AUTH_SECRET` in `apps/api/.env` (`openssl rand -base64 32`).
+1. Install and copy the env files:
 
-Agent skills live in `.agents/skills`. To link them for your agent (e.g. Claude Code's `.claude/skills`), run `npx skills experimental_install`.
+   ```sh
+   pnpm install
+   cp apps/api/.env.example apps/api/.env
+   cp apps/web/.env.example apps/web/.env
+   ```
 
-### Database
+2. Set `BETTER_AUTH_SECRET` in `apps/api/.env` to the output of `openssl rand -base64 32`.
 
-PostgreSQL with PostGIS. Either:
+3. Start the database, then migrate and seed it:
 
-- Docker: `docker compose up -d` (matches the default `DATABASE_URL`), or
-- Neon: create a branch and put its connection string in `DATABASE_URL`.
+   ```sh
+   docker compose up -d
+   pnpm db:migrate
+   pnpm db:seed
+   ```
 
-Then apply migrations:
+   On Neon, skip Docker and put your branch's connection string in `DATABASE_URL`.
 
-```sh
-pnpm db:migrate
-```
+4. Run everything:
 
-Then load the development dataset: dashboard accounts, residents, reports with their conversations, broadcasts and more ([what's in it](docs/database.md#seed-data)):
+   ```sh
+   pnpm dev
+   ```
 
-```sh
-pnpm db:seed
-```
+   The web app is at http://localhost:5173 and the API at http://localhost:3000 (API docs at `/docs`).
 
-| Role      | Email                  | Password   |
-| --------- | ---------------------- | ---------- |
-| Admin     | `admin@migo.local`     | `12345678` |
-| Responder | `responder@migo.local` | `12345678` |
-| Responder | `golez@migo.local`     | `12345678` |
+Sign in with a seeded account (password `12345678`): `admin@migo.local`, or `responder@migo.local` for a responder. The seed also adds residents, reports and broadcasts; see [what's in it](docs/database.md#seed-data).
 
-Public sign-up is disabled; add another account with `pnpm --filter api db:seed-user <email> <password> <name> [role]`.
-
-Data model and ERD: [docs/specs/data-model.md](docs/specs/data-model.md); working with the database: [docs/database.md](docs/database.md). Product and design specs, and how docs are written: [docs/](docs/README.md).
-
-### Run
-
-```sh
-pnpm dev
-```
-
-- Web: http://localhost:5173
-- API: http://localhost:3000 (docs at `/docs`, health at `/health`)
+Messenger stays off until its three `FACEBOOK_*` variables are set; see [docs/channels.md](docs/channels.md).
 
 ## Scripts
 
-| Script                            | Description                                        |
-| --------------------------------- | -------------------------------------------------- |
-| `pnpm dev`                        | Run all apps in watch mode                         |
-| `pnpm build`                      | Build all packages and apps                        |
-| `pnpm lint`                       | Lint                                               |
-| `pnpm typecheck`                  | Typecheck                                          |
-| `pnpm test`                       | Run tests (Vitest)                                 |
-| `pnpm db:generate`                | Generate a migration from the Drizzle schema       |
-| `pnpm db:migrate`                 | Apply migrations                                   |
-| `pnpm db:seed`                    | Load the development dataset (see Database)        |
-| `pnpm db:reset`                   | Wipe, migrate and reseed a local database          |
-| `pnpm --filter api db:seed-user`  | Create a dashboard account (see Database)          |
-| `pnpm --filter api auth:generate` | Regenerate Better Auth tables after config changes |
-| `pnpm format`                     | Format with Prettier                               |
+| Script                            | Does                                                    |
+| --------------------------------- | ------------------------------------------------------- |
+| `pnpm dev`                        | Run every app in watch mode                             |
+| `pnpm build`                      | Build every package and app                             |
+| `pnpm lint`, `typecheck`, `test`  | Check the code (CI runs all three plus `build`)         |
+| `pnpm format`                     | Format with Prettier                                    |
+| `pnpm db:generate`                | Generate a migration from the schema                    |
+| `pnpm db:migrate`                 | Apply migrations                                        |
+| `pnpm db:seed`                    | Load the development dataset                            |
+| `pnpm db:reset`                   | Wipe, migrate and reseed a local database               |
+| `pnpm --filter api db:seed-user`  | Add a dashboard account (public sign-up is off)         |
+| `pnpm --filter api auth:generate` | Regenerate Better Auth tables after auth config changes |
+
+## Docs
+
+- [Specs](docs/specs/): [PRD](docs/specs/prd.md), [TRD](docs/specs/trd.md), [data model](docs/specs/data-model.md), [sitemap](docs/specs/sitemap.md), [user flows](docs/specs/user-flows.md), [brand](docs/specs/brand.md)
+- [Architecture](docs/architecture.md), [database](docs/database.md), [testing](docs/testing.md), and one doc per module
+- [How docs are written](docs/README.md)
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md). Agent skills live in `.agents/skills`; link them for your agent with `npx skills experimental_install`.
