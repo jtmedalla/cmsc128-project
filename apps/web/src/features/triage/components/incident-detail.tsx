@@ -82,7 +82,7 @@ export function IncidentDetail({ reportId }: { reportId: string }) {
               <CardTitle>Location</CardTitle>
             </CardHeader>
             <CardContent>
-              <ReportMap />
+              <ReportMap report={data} className="h-80" />
             </CardContent>
           </Card>
         </div>

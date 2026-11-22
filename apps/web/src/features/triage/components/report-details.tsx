@@ -221,7 +221,7 @@ function ReportFields({ report }: { report: ReportDetail }) {
         />
       </dl>
       {/* Below the reporter, where the wireframe puts the map. */}
-      <ReportMap />
+      <ReportMap report={report} />
       {/* Not in the wireframe: #103 requires the contact number; victims kept by decision. */}
       <dl className="flex flex-col gap-4">
         <DetailItem
