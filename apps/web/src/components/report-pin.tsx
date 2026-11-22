@@ -5,7 +5,7 @@ import { label } from '@/lib/format';
 import { incidentTypeIcon } from '@/lib/incident-types';
 import { severityStyles } from '@/lib/report-states';
 
-/** A report on the map: its type's icon on its severity's color; grey until classified. */
+/** A report as a map pin: its type's icon on its severity's color; grey until classified. */
 export function ReportPin({
   report,
   focused = false,

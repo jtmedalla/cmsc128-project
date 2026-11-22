@@ -6,10 +6,7 @@ import {
 } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from 'cn';
-import * as maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
-import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { severityStyles } from '@/lib/report-states';
 import { IncidentTypeLabel } from '@/components/incident-type-label';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
@@ -25,15 +22,11 @@ import {
 } from '@/components/ui/select';
 import { reportQueries } from '@/features/triage';
 import { label } from '@/lib/format';
-import { ReportMarker } from './report-marker';
+// Aliased: `Map` would shadow the built-in Map that typesIn uses.
+import { Map as AppMap } from '@/components/map';
+import { ReportMarker } from '@/components/report-marker';
+import { useMap } from '@/components/ui/map';
 
-/* Ship MapLibre's worker with Vite; without it the map is blank. */
-maplibregl.setWorkerUrl(workerUrl);
-
-/* OpenFreeMap base map, centered on Miagao. */
-const STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
-const MIAGAO_CENTER: [number, number] = [122.24, 10.7]; // [lng, lat]
-const START_ZOOM = 11;
 const FOCUS_ZOOM = 16;
 
 /* Most severe first, for the filter and legend. */
@@ -89,28 +82,12 @@ function typesIn(reports: ReportFeedItem[]) {
 /* /dashboard/map: filters and a pin per located report, centered on `focusId` if given. */
 // TODO(#66): place reports without a point at their barangay's centroid.
 export function IncidentsMap({ focusId }: { focusId?: string }) {
-  const [map, setMap] = useState<maplibregl.Map | null>(null);
   const { data, isError, refetch } = useQuery(reportQueries.feed());
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
 
   /* Updates one filter from its select. */
   const setFilter = (key: keyof Filters) => (value: string) =>
     setFilters((current) => ({ ...current, [key]: value }));
-
-  /* Create the map when its container mounts; remove it when it unmounts. */
-  const mountMap = useCallback((container: HTMLDivElement) => {
-    const instance = new maplibregl.Map({
-      container,
-      style: STYLE_URL,
-      center: MIAGAO_CENTER,
-      zoom: START_ZOOM,
-    });
-    setMap(instance);
-    return () => {
-      instance.remove();
-      setMap(null);
-    };
-  }, []);
 
   /* Reports that pass the filters; the linked report stays even when they'd hide it. */
   // TODO(#38): pins follow live updates once the feed query refetches on report events.
@@ -122,14 +99,7 @@ export function IncidentsMap({ focusId }: { focusId?: string }) {
     return shown;
   }, [data, filters, focusId]);
 
-  /* Center on the linked report once it loads. */
   const focusPoint = data?.find((report) => report.id === focusId)?.location;
-  const focusLng = focusPoint?.lng;
-  const focusLat = focusPoint?.lat;
-  useEffect(() => {
-    if (!map || focusLng === undefined || focusLat === undefined) return;
-    map.flyTo({ center: [focusLng, focusLat], zoom: FOCUS_ZOOM });
-  }, [map, focusLng, focusLat]);
 
   /* -m-4 cancels the layout's padding. */
   return (
@@ -198,20 +168,20 @@ export function IncidentsMap({ focusId }: { focusId?: string }) {
 
       {/* Map with legend and load error */}
       <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg border bg-card">
-        <div ref={mountMap} className="size-full" />
-        {map &&
-          pinned.map(
+        <AppMap className="size-full">
+          {pinned.map(
             (report) =>
               report.location && (
                 <ReportMarker
                   key={report.id}
-                  map={map}
                   report={report}
                   lngLat={report.location}
                   focused={report.id === focusId}
                 />
               ),
           )}
+          {focusPoint && <FlyTo lngLat={focusPoint} />}
+        </AppMap>
         <div className="absolute top-4 left-4 flex flex-col gap-1.5 rounded-lg border bg-card px-3 py-2.5 text-xs">
           <span className="font-medium text-muted-foreground">Severity</span>
           {SEVERITIES.map((severity) => (
@@ -240,6 +210,19 @@ export function IncidentsMap({ focusId }: { focusId?: string }) {
       </div>
     </div>
   );
+}
+
+/* Centers the map on a point once the map is ready. */
+function FlyTo({
+  lngLat: { lng, lat },
+}: {
+  lngLat: { lng: number; lat: number };
+}) {
+  const { map, isLoaded } = useMap();
+  useEffect(() => {
+    if (map && isLoaded) map.flyTo({ center: [lng, lat], zoom: FOCUS_ZOOM });
+  }, [map, isLoaded, lng, lat]);
+  return null;
 }
 
 /* One filter dropdown; `items` makes the trigger show the label. */

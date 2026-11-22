@@ -3,32 +3,17 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderWithProviders, respondWith } from '@/testing/render';
 import { IncidentsMap } from './incidents-map';
 
-/* Fake MapLibre that tracks the pins on the map and where the camera flies. */
-const { placed, flyTo } = vi.hoisted(() => ({
-  placed: new Set<{ lngLat: [number, number] }>(),
-  flyTo: vi.fn(),
+/* A fake map: each marker renders its longitude, and the camera records flights. */
+const { flyTo } = vi.hoisted(() => ({ flyTo: vi.fn() }));
+vi.mock('maplibre-gl', () => ({ setWorkerUrl: () => {} }));
+vi.mock('@/components/ui/map', () => ({
+  Map: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  MapMarker: ({ longitude }: { longitude: number }) => (
+    <span data-testid="pin" data-lng={longitude} />
+  ),
+  MarkerContent: () => null,
+  useMap: () => ({ map: { flyTo }, isLoaded: true }),
 }));
-vi.mock('maplibre-gl', () => {
-  class Map {
-    flyTo = flyTo;
-    remove() {}
-  }
-  class Marker {
-    lngLat: [number, number] = [0, 0];
-    setLngLat(lngLat: [number, number]) {
-      this.lngLat = lngLat;
-      return this;
-    }
-    addTo() {
-      placed.add(this);
-      return this;
-    }
-    remove() {
-      placed.delete(this);
-    }
-  }
-  return { Map, Marker, setWorkerUrl: () => {} };
-});
 
 const DAY = 24 * 60 * 60 * 1000;
 let nextId = 0;
@@ -71,12 +56,16 @@ function item(overrides: {
 
 /* Waits until the map holds `expected` pins, then returns their sorted longitudes. */
 async function pinsAfter(expected: number) {
-  await waitFor(() => expect(placed.size).toBe(expected));
-  return [...placed].map((marker) => marker.lngLat[0]).sort();
+  await waitFor(() =>
+    expect(screen.queryAllByTestId('pin')).toHaveLength(expected),
+  );
+  return screen
+    .getAllByTestId('pin')
+    .map((pin) => Number(pin.dataset.lng))
+    .sort();
 }
 
 afterEach(() => {
-  placed.clear();
   flyTo.mockClear();
 });
 
@@ -138,6 +127,6 @@ describe('IncidentsMap', () => {
     expect((await screen.findByRole('alert')).textContent).toContain(
       "Couldn't load reports",
     );
-    expect(placed.size).toBe(0);
+    expect(screen.queryAllByTestId('pin')).toHaveLength(0);
   });
 });
