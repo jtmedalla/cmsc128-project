@@ -181,9 +181,9 @@ export function NewReportDialog() {
             blank.
           </DialogDescription>
         </DialogHeader>
-        {/* Only the fields scroll, so the header and actions stay in view on short screens. */}
+        {/* Only the fields scroll, so the header and actions stay in view: the whole form when stacked, each column on its own side by side. */}
         <form
-          className="-mx-4 overflow-y-auto px-4"
+          className="-mx-4 flex min-h-0 flex-col gap-7 overflow-y-auto px-4 lg:grid lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)] lg:gap-0 lg:overflow-hidden lg:px-0"
           id="new-report"
           onSubmit={(event) => {
             event.preventDefault();
@@ -191,52 +191,50 @@ export function NewReportDialog() {
           }}
         >
           {/* Two columns once the dialog is wide: the incident and who's hurt on the left, where on the right. */}
-          <div className="grid gap-7 lg:grid-cols-2">
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="incidentTypeId">Incident type</FieldLabel>
-                <IncidentTypeSelect
-                  id="incidentTypeId"
-                  value={values.incidentTypeId}
-                  onValueChange={(incidentTypeId) =>
-                    setValues((prev) => ({ ...prev, incidentTypeId }))
-                  }
-                />
-              </Field>
-              <Field>
-                <FieldLabel id="severity-label">Severity</FieldLabel>
-                <SeveritySlider
-                  labelId="severity-label"
-                  value={values.severity}
-                  onValueChange={(severity) =>
-                    setValues((prev) => ({ ...prev, severity }))
-                  }
-                />
-              </Field>
-              <DateTimeField
-                date={values.incidentDate}
-                time={values.incidentTime}
-                onDateChange={set('incidentDate')}
-                onTimeChange={set('incidentTime')}
-              />
-              <FieldSeparator />
-              <VictimsField
-                value={values.victims}
-                onChange={(victims) =>
-                  setValues((prev) => ({ ...prev, victims }))
+          <FieldGroup className="lg:overflow-y-auto lg:px-4">
+            <Field>
+              <FieldLabel htmlFor="incidentTypeId">Incident type</FieldLabel>
+              <IncidentTypeSelect
+                id="incidentTypeId"
+                value={values.incidentTypeId}
+                onValueChange={(incidentTypeId) =>
+                  setValues((prev) => ({ ...prev, incidentTypeId }))
                 }
               />
-            </FieldGroup>
-            <FieldGroup>
-              <LocationPicker
-                withBarangay
-                value={values.location}
-                onChange={(location) =>
-                  setValues((prev) => ({ ...prev, location }))
+            </Field>
+            <Field>
+              <FieldLabel id="severity-label">Severity</FieldLabel>
+              <SeveritySlider
+                labelId="severity-label"
+                value={values.severity}
+                onValueChange={(severity) =>
+                  setValues((prev) => ({ ...prev, severity }))
                 }
               />
-            </FieldGroup>
-          </div>
+            </Field>
+            <DateTimeField
+              date={values.incidentDate}
+              time={values.incidentTime}
+              onDateChange={set('incidentDate')}
+              onTimeChange={set('incidentTime')}
+            />
+            <FieldSeparator />
+            <VictimsField
+              value={values.victims}
+              onChange={(victims) =>
+                setValues((prev) => ({ ...prev, victims }))
+              }
+            />
+          </FieldGroup>
+          <FieldGroup className="lg:overflow-y-auto lg:px-4">
+            <LocationPicker
+              withBarangay
+              value={values.location}
+              onChange={(location) =>
+                setValues((prev) => ({ ...prev, location }))
+              }
+            />
+          </FieldGroup>
         </form>
         <DialogFooter>
           <DialogClose render={<Button variant="outline" />}>
