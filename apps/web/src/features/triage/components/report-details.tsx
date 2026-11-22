@@ -1,7 +1,6 @@
 import { formatAgeRange, type ReportDetail } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { cn } from 'cn';
 import { Fragment } from 'react';
 import { CallButton, ContactNumber } from '@/components/contact-number';
 import { DetailItem } from '@/components/detail-item';
@@ -14,27 +13,11 @@ import { LocationLabel } from '@/components/location-label';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { Button } from '@/components/ui/button';
 import { ReportMap } from './report-map';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatLocation, formatTime, label } from '@/lib/format';
+import { MessageComposer, MessageThread } from '@/features/messaging';
 import { reportQueries } from '../queries';
 import { reportTitle } from '../lib/report-title';
-
-type Message = ReportDetail['messages'][number];
-
-/** Outbound with a sender_id is a responder; without one, the bot (docs/database.md). */
-function senderOf(m: Message) {
-  if (m.direction === 'inbound') return 'Resident';
-  return m.senderId ? 'Responder' : 'MIGO';
-}
-
-/** The text, or what an attachment-only message holds. */
-function contentOf(m: Message) {
-  if (m.body !== null) return m.body;
-  return m.attachments?.some((a) => a.type === 'location')
-    ? 'Shared a location'
-    : '(attachment)';
-}
 
 /** The quick view's chat and details panes, side by side in the workspace's last two columns. */
 function ReportPanes({
@@ -52,15 +35,12 @@ function ReportPanes({
       <div className="grid min-h-0 flex-1 lg:grid-cols-2 lg:divide-x">
         <section aria-label="Chat" className="flex min-h-0 flex-col">
           <h2 className="p-4 text-lg font-semibold">Chat</h2>
-          <div className="min-h-48 flex-1 px-4 lg:overflow-y-auto">{chat}</div>
-          {/* TODO(#12): enable replies. #12 is the messaging epic; no task issue
-              covers replies yet. Disabled so the layout matches the wireframe. */}
+          {/* The thread scrolls itself, so it needs a height: fixed when stacked, the pane's rest on large screens. */}
+          <div className="flex h-96 min-h-0 flex-col lg:h-auto lg:flex-1">
+            {chat}
+          </div>
           <div className="border-t p-3">
-            <Input
-              placeholder="Type your message"
-              aria-label="Message"
-              disabled
-            />
+            <MessageComposer />
           </div>
         </section>
         <section
@@ -144,12 +124,7 @@ export function ReportNotFound() {
 export function SelectReportPrompt() {
   return (
     <ReportPanes
-      chat={
-        <PaneMessage>
-          <p className="text-lg text-foreground/70">No messages yet</p>
-          <p className="text-sm">Start a conversation by typing below</p>
-        </PaneMessage>
-      }
+      chat={<MessageThread messages={[]} />}
       details={<PaneMessage>Select a report to see its details</PaneMessage>}
     />
   );
@@ -193,43 +168,9 @@ export function ReportDetails({ reportId }: { reportId: string }) {
   return (
     <ReportPanes
       header={<QuickViewHeader report={data} />}
-      chat={<ChatMessages messages={data.messages} />}
+      chat={<MessageThread messages={data.messages} />}
       details={<ReportFields report={data} />}
     />
-  );
-}
-
-/** The report's conversation as wireframe bubbles: resident left, MIGO and responders right. */
-export function ChatMessages({ messages }: { messages: Message[] }) {
-  if (!messages.length) return <PaneMessage>No messages yet</PaneMessage>;
-
-  return (
-    <ul className="flex flex-col gap-4 pb-4">
-      {messages.map((m) => {
-        const inbound = m.direction === 'inbound';
-        return (
-          <li
-            key={m.id}
-            className={cn(
-              'flex flex-col gap-1',
-              inbound ? 'items-start' : 'items-end',
-            )}
-          >
-            <p className="text-xs text-muted-foreground">
-              {senderOf(m)} · {formatTime(m.createdAt)}
-            </p>
-            <p
-              className={cn(
-                'max-w-[85%] rounded-2xl px-3 py-2 whitespace-pre-wrap',
-                inbound ? 'bg-muted' : 'bg-primary text-primary-foreground',
-              )}
-            >
-              {contentOf(m)}
-            </p>
-          </li>
-        );
-      })}
-    </ul>
   );
 }
 

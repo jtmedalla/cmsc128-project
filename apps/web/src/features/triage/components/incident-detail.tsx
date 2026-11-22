@@ -10,7 +10,7 @@ import { ResidentLabel } from '@/components/resident-label';
 import { SexLabel } from '@/components/sex-label';
 import { LocationLabel } from '@/components/location-label';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
-import { ChatMessages, ReportNotFound } from './report-details';
+import { ReportNotFound } from './report-details';
 import { ReportMap } from './report-map';
 import {
   Breadcrumb,
@@ -28,7 +28,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -39,6 +38,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatLocation, formatTime, label } from '@/lib/format';
+import { MessageComposer, MessageThread } from '@/features/messaging';
 import { reportQueries } from '../queries';
 import { reportTitle } from '../lib/report-title';
 
@@ -294,15 +294,11 @@ function MessagesCard({ messages }: { messages: ReportDetail['messages'] }) {
       <CardHeader>
         <CardTitle>Messages</CardTitle>
       </CardHeader>
-      <CardContent className="max-h-96 overflow-y-auto">
-        <ChatMessages messages={messages} />
+      <CardContent className="flex h-96 flex-col px-0">
+        <MessageThread messages={messages} />
       </CardContent>
-      {/* TODO(#12): send replies to the resident. */}
-      <CardFooter className="gap-2">
-        <Input placeholder="Reply to resident" aria-label="Reply" disabled />
-        <Button size="sm" disabled>
-          Send
-        </Button>
+      <CardFooter>
+        <MessageComposer placeholder="Reply to resident" />
       </CardFooter>
     </Card>
   );

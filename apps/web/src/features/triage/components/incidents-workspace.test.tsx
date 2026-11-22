@@ -49,11 +49,7 @@ describe('IncidentsWorkspace', () => {
     expect(
       await screen.findByText('Select a report to see its details'),
     ).toBeDefined();
-    // Wireframe's empty chat text before a report is clicked.
     expect(screen.getByText('No messages yet')).toBeDefined();
-    expect(
-      screen.getByText('Start a conversation by typing below'),
-    ).toBeDefined();
   });
 
   it('offers a retry when the list fails', async () => {
