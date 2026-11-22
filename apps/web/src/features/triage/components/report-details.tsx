@@ -6,6 +6,7 @@ import { CallButton, ContactNumber } from '@/components/contact-number';
 import { DetailItem } from '@/components/detail-item';
 import { IncidentTypeLabel } from '@/components/incident-type-label';
 import { LoadError } from '@/components/load-error';
+import { ReportId } from '@/components/report-id';
 import { ResidentLabel } from '@/components/resident-label';
 import { LocationLabel } from '@/components/location-label';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
@@ -235,10 +236,7 @@ function ReportFields({ report }: { report: ReportDetail }) {
   const place = formatLocation(report.locationText, report.barangay?.name);
   return (
     <>
-      {/* Short ID like the wireframe's "#a1b2c3". */}
-      <p className="text-sm text-muted-foreground">
-        Report ID: #{report.id.slice(0, 8)}
-      </p>
+      <ReportId id={report.id} className="self-start" />
       <dl className="flex flex-col gap-4">
         <DetailItem
           label="Status"

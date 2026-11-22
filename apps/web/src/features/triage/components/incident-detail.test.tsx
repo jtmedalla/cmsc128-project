@@ -51,7 +51,7 @@ describe('IncidentDetail', () => {
     expect(
       await screen.findByRole('heading', { name: 'Flood · Mat-y' }),
     ).toBeDefined();
-    expect(screen.getByText('Report 0b9a3f4e')).toBeDefined();
+    expect(screen.getByText('#0b9a3f4e')).toBeDefined();
     expect(
       screen
         .getByRole('link', { name: 'Santillan Street, near the bridge, Mat-y' })

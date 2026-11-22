@@ -5,6 +5,7 @@ import { CallButton, ContactNumber } from '@/components/contact-number';
 import { DetailItem } from '@/components/detail-item';
 import { IncidentTypeLabel } from '@/components/incident-type-label';
 import { LoadError } from '@/components/load-error';
+import { ReportId } from '@/components/report-id';
 import { ResidentLabel } from '@/components/resident-label';
 import { LocationLabel } from '@/components/location-label';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
@@ -141,9 +142,7 @@ function PageHeader({ report }: { report: ReportDetail }) {
           <StatusBadge status={report.status} />
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            Report {report.id.slice(0, 8)}
-          </span>
+          <ReportId id={report.id} />
           {report.resident?.contactNumber && (
             <CallButton number={report.resident.contactNumber} />
           )}
