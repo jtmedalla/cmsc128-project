@@ -85,4 +85,22 @@ describe('reportInputSchema', () => {
       }).success,
     ).toBe(false);
   });
+
+  it('needs a resident or a responder', () => {
+    const report = { sourceChannel: 'dashboard' } as const;
+    expect(reportInputSchema.safeParse(report).success).toBe(false);
+    expect(
+      reportInputSchema.safeParse({ ...report, createdBy: 'responder-1' })
+        .success,
+    ).toBe(true);
+  });
+
+  it('rejects messages on a report with no resident', () => {
+    const result = reportInputSchema.safeParse({
+      sourceChannel: 'dashboard',
+      createdBy: 'responder-1',
+      messageIds: [residentId],
+    });
+    expect(result.success).toBe(false);
+  });
 });

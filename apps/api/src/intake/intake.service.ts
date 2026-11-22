@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  type DashboardReport,
   INTAKE_FIELDS,
   type IntakeField,
   REPORT_EVENTS,
@@ -37,13 +38,22 @@ export class IntakeService {
   ) {}
 
   /**
-   * The only way reports are created: Messenger, web chat, the classifier
-   * and the guided form all call this. Pushes the report to the feed.
+   * The only way reports are created: Messenger, web chat, the classifier,
+   * the guided form and the dashboard all call this. Pushes the report to the feed.
    */
   async createReport(input: ReportInput) {
     const created = await this.repository.insertReport(input);
     await this.publish('created', created.id);
     return created;
+  }
+
+  /** A report a responder logs from the dashboard, e.g. from a phone call (FR38). */
+  createDashboardReport(input: DashboardReport, responderId: string) {
+    return this.createReport({
+      ...input,
+      sourceChannel: 'dashboard',
+      createdBy: responderId,
+    });
   }
 
   /**
