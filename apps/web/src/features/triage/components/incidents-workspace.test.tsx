@@ -35,7 +35,7 @@ describe('IncidentsWorkspace', () => {
     });
     expect(await screen.findByText('Gataas na baha diri')).toBeDefined();
     expect(screen.getByText('Reported by: Andrian')).toBeDefined();
-    expect(screen.getByText('Location: Tacas')).toBeDefined();
+    expect(screen.getByText('Tacas')).toBeDefined();
     expect(
       screen.getByRole('link', { name: /Flood/ }).getAttribute('href'),
     ).toBe(`/dashboard/incidents?report=${id}`);

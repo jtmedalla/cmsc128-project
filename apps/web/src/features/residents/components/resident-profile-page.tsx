@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { DetailItem } from '@/components/detail-item';
 import { LoadError } from '@/components/load-error';
-import { label, LANGUAGE_LABELS } from '@/lib/format';
+import { LocationLabel } from '@/components/location-label';
+import { formatLocation, label, LANGUAGE_LABELS } from '@/lib/format';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { residentQueries } from '../queries';
@@ -19,6 +20,7 @@ export function ResidentProfilePage() {
     return <LoadError what="this resident" onRetry={() => void refetch()} />;
   }
   if (!data) return <p>Resident not found.</p>;
+  const home = formatLocation(data.locationText, data.barangay);
 
   return (
     <div className="flex flex-col gap-4">
@@ -36,10 +38,13 @@ export function ResidentProfilePage() {
         <CardContent>
           <dl className="grid gap-4 sm:grid-cols-2">
             <DetailItem label="Contact number" value={data.contactNumber} />
-            <DetailItem label="Barangay" value={data.barangay} />
             <DetailItem label="Age" value={data.age?.toString()} />
             <DetailItem label="Sex" value={data.sex && label(data.sex)} />
-            <DetailItem label="Home address" value={data.locationText} />
+            {/* No link: a resident's address has no point on the map. */}
+            <DetailItem
+              label="Home address"
+              value={home && <LocationLabel text={home} />}
+            />
             <DetailItem
               label="Preferred language"
               value={LANGUAGE_LABELS[data.languagePreference]}

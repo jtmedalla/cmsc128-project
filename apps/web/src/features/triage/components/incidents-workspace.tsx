@@ -3,12 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { ArrowDownUp } from 'lucide-react';
 import { LoadError } from '@/components/load-error';
+import { LocationLabel } from '@/components/location-label';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { ReportDetails, SelectReportPrompt } from './report-details';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { formatTime } from '@/lib/format';
+import { formatLocation, formatTime } from '@/lib/format';
 import { reportQueries } from '../queries';
 
 /**
@@ -88,7 +89,7 @@ function ReportList() {
 
 /** One wireframe card: type, badges, the first message, reporter, time, location. */
 function ReportCard({ report }: { report: ReportFeedItem }) {
-  const location = report.locationText ?? report.barangay?.name;
+  const location = formatLocation(report.locationText, report.barangay?.name);
 
   return (
     <Link
@@ -112,7 +113,8 @@ function ReportCard({ report }: { report: ReportFeedItem }) {
       <div className="text-sm text-muted-foreground">
         <p>Reported by: {report.resident?.name ?? 'Unknown caller'}</p>
         <p>{formatTime(report.createdAt)}</p>
-        {location && <p className="text-xs">Location: {location}</p>}
+        {/* Plain, not a link: the whole card already is one. */}
+        {location && <LocationLabel text={location} />}
       </div>
     </Link>
   );

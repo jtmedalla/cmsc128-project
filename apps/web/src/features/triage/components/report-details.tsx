@@ -4,12 +4,13 @@ import { Link } from '@tanstack/react-router';
 import { cn } from 'cn';
 import { DetailItem } from '@/components/detail-item';
 import { LoadError } from '@/components/load-error';
+import { LocationLabel } from '@/components/location-label';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
 import { Button } from '@/components/ui/button';
 import { ReportMap } from './report-map';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatTime, label } from '@/lib/format';
+import { formatLocation, formatTime, label } from '@/lib/format';
 import { reportQueries } from '../queries';
 import { reportTitle } from '../lib/report-title';
 
@@ -219,6 +220,7 @@ export function ChatMessages({ messages }: { messages: Message[] }) {
 
 /** The wireframe's details fields, read-only, plus the contact number and victims (#103). */
 function ReportFields({ report }: { report: ReportDetail }) {
+  const place = formatLocation(report.locationText, report.barangay?.name);
   return (
     <>
       {/* Short ID like the wireframe's "#a1b2c3". */}
@@ -235,6 +237,10 @@ function ReportFields({ report }: { report: ReportDetail }) {
         <DetailItem
           label="Reported By"
           value={report.resident?.name ?? 'Unknown caller'}
+        />
+        <DetailItem
+          label="Location"
+          value={place && <LocationLabel text={place} reportId={report.id} />}
         />
       </dl>
       {/* Below Reported By, where the wireframe puts the map. */}
