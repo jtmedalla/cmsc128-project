@@ -3,9 +3,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderWithProviders, respondWith } from '@/testing/render';
 import { IncidentsMap } from './incidents-map';
 
-/* Fake MapLibre that records each pin's coordinates and where the camera flies. */
-const { setLngLat, flyTo } = vi.hoisted(() => ({
-  setLngLat: vi.fn(),
+/* Fake MapLibre that tracks the pins on the map and where the camera flies. */
+const { placed, flyTo } = vi.hoisted(() => ({
+  placed: new Set<{ lngLat: [number, number] }>(),
   flyTo: vi.fn(),
 }));
 vi.mock('maplibre-gl', () => {
@@ -14,14 +14,18 @@ vi.mock('maplibre-gl', () => {
     remove() {}
   }
   class Marker {
+    lngLat: [number, number] = [0, 0];
     setLngLat(lngLat: [number, number]) {
-      setLngLat(lngLat);
+      this.lngLat = lngLat;
       return this;
     }
     addTo() {
+      placed.add(this);
       return this;
     }
-    remove() {}
+    remove() {
+      placed.delete(this);
+    }
   }
   return { Map, Marker, setWorkerUrl: () => {} };
 });
@@ -65,14 +69,14 @@ function item(overrides: {
   };
 }
 
-/* Waits for the pins, then returns their longitudes. */
+/* Waits until the map holds `expected` pins, then returns their sorted longitudes. */
 async function pinsAfter(expected: number) {
-  await waitFor(() => expect(setLngLat).toHaveBeenCalledTimes(expected));
-  return setLngLat.mock.calls.map(([lngLat]) => lngLat[0]);
+  await waitFor(() => expect(placed.size).toBe(expected));
+  return [...placed].map((marker) => marker.lngLat[0]).sort();
 }
 
 afterEach(() => {
-  setLngLat.mockClear();
+  placed.clear();
   flyTo.mockClear();
 });
 
@@ -105,7 +109,6 @@ describe('IncidentsMap', () => {
     ]);
     renderWithProviders(<IncidentsMap />);
     await pinsAfter(2);
-    setLngLat.mockClear();
 
     /* Base UI needs pointerdown before click to select an option. */
     fireEvent.click(screen.getByRole('combobox', { name: 'Severity' }));
@@ -135,6 +138,6 @@ describe('IncidentsMap', () => {
     expect((await screen.findByRole('alert')).textContent).toContain(
       "Couldn't load reports",
     );
-    expect(setLngLat).not.toHaveBeenCalled();
+    expect(placed.size).toBe(0);
   });
 });

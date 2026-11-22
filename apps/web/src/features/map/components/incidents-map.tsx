@@ -2,7 +2,6 @@ import {
   type ReportFeedItem,
   type ReportStatus,
   reportStatusSchema,
-  type SeverityLevel,
   severityLevelSchema,
 } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
@@ -10,7 +9,7 @@ import { cn } from 'cn';
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { severityStyles } from '@/lib/report-states';
 import { IncidentTypeLabel } from '@/components/incident-type-label';
 import { SeverityBadge, StatusBadge } from '@/components/report-badges';
@@ -26,6 +25,7 @@ import {
 } from '@/components/ui/select';
 import { reportQueries } from '@/features/triage';
 import { label } from '@/lib/format';
+import { ReportMarker } from './report-marker';
 
 /* Ship MapLibre's worker with Vite; without it the map is blank. */
 maplibregl.setWorkerUrl(workerUrl);
@@ -38,8 +38,6 @@ const FOCUS_ZOOM = 16;
 
 /* Most severe first, for the filter and legend. */
 const SEVERITIES = severityLevelSchema.options.toReversed();
-/* Pin color for reports with no severity yet. */
-const UNCLASSIFIED_COLOR = 'bg-muted-foreground';
 
 /* Statuses counted as open. */
 const OPEN_STATUSES: ReportStatus[] = ['pending', 'validated', 'dispatched'];
@@ -88,23 +86,10 @@ function typesIn(reports: ReportFeedItem[]) {
   return [...types.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
-/* Pin element colored by severity; the focused report's pin is larger. */
-function pinElement(severity: SeverityLevel | null, focused: boolean) {
-  const pin = document.createElement('div');
-  const color = severity ? severityStyles[severity].solid : UNCLASSIFIED_COLOR;
-  pin.className = cn(
-    'rounded-full border-[3px] border-white',
-    focused ? 'size-6 shadow-md' : 'size-[18px]',
-    color,
-  );
-  return pin;
-}
-
 /* /dashboard/map: filters and a pin per located report, centered on `focusId` if given. */
 // TODO(#66): place reports without a point at their barangay's centroid.
 export function IncidentsMap({ focusId }: { focusId?: string }) {
-  const container = useRef<HTMLDivElement>(null);
-  const map = useRef<maplibregl.Map | null>(null);
+  const [map, setMap] = useState<maplibregl.Map | null>(null);
   const { data, isError, refetch } = useQuery(reportQueries.feed());
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
 
@@ -112,40 +97,29 @@ export function IncidentsMap({ focusId }: { focusId?: string }) {
   const setFilter = (key: keyof Filters) => (value: string) =>
     setFilters((current) => ({ ...current, [key]: value }));
 
-  /* Create the map on mount; remove it on unmount. */
-  useEffect(() => {
-    if (!container.current) return;
-    map.current = new maplibregl.Map({
-      container: container.current,
+  /* Create the map when its container mounts; remove it when it unmounts. */
+  const mountMap = useCallback((container: HTMLDivElement) => {
+    const instance = new maplibregl.Map({
+      container,
       style: STYLE_URL,
       center: MIAGAO_CENTER,
       zoom: START_ZOOM,
     });
+    setMap(instance);
     return () => {
-      map.current?.remove();
-      map.current = null;
+      instance.remove();
+      setMap(null);
     };
   }, []);
 
-  /* Redraw pins when the reports or filters change. */
+  /* Reports that pass the filters; the linked report stays even when they'd hide it. */
   // TODO(#38): pins follow live updates once the feed query refetches on report events.
-  useEffect(() => {
-    if (!map.current || !data) return;
+  const pinned = useMemo(() => {
+    if (!data) return [];
     const shown = applyFilters(data, filters);
-    /* The linked report stays pinned even when the filters would hide it. */
     const focused = data.find((report) => report.id === focusId);
     if (focused && !shown.includes(focused)) shown.push(focused);
-    const markers = shown
-      .filter((report) => report.location)
-      .map((report) =>
-        // TODO(#66): show the report's popup on click.
-        new maplibregl.Marker({
-          element: pinElement(report.severity, report === focused),
-        })
-          .setLngLat([report.location!.lng, report.location!.lat])
-          .addTo(map.current!),
-      );
-    return () => markers.forEach((marker) => marker.remove());
+    return shown;
   }, [data, filters, focusId]);
 
   /* Center on the linked report once it loads. */
@@ -153,11 +127,9 @@ export function IncidentsMap({ focusId }: { focusId?: string }) {
   const focusLng = focusPoint?.lng;
   const focusLat = focusPoint?.lat;
   useEffect(() => {
-    if (!map.current || focusLng === undefined || focusLat === undefined) {
-      return;
-    }
-    map.current.flyTo({ center: [focusLng, focusLat], zoom: FOCUS_ZOOM });
-  }, [focusLng, focusLat]);
+    if (!map || focusLng === undefined || focusLat === undefined) return;
+    map.flyTo({ center: [focusLng, focusLat], zoom: FOCUS_ZOOM });
+  }, [map, focusLng, focusLat]);
 
   /* -m-4 cancels the layout's padding. */
   return (
@@ -226,7 +198,20 @@ export function IncidentsMap({ focusId }: { focusId?: string }) {
 
       {/* Map with legend and load error */}
       <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg border bg-card">
-        <div ref={container} className="size-full" />
+        <div ref={mountMap} className="size-full" />
+        {map &&
+          pinned.map(
+            (report) =>
+              report.location && (
+                <ReportMarker
+                  key={report.id}
+                  map={map}
+                  report={report}
+                  lngLat={report.location}
+                  focused={report.id === focusId}
+                />
+              ),
+          )}
         <div className="absolute top-4 left-4 flex flex-col gap-1.5 rounded-lg border bg-card px-3 py-2.5 text-xs">
           <span className="font-medium text-muted-foreground">Severity</span>
           {SEVERITIES.map((severity) => (

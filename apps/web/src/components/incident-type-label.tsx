@@ -1,31 +1,5 @@
-import {
-  Activity,
-  CarFront,
-  CircleHelp,
-  Flame,
-  HeartPulse,
-  type LucideIcon,
-  Mountain,
-  Tent,
-  Waves,
-  Wind,
-} from 'lucide-react';
 import { IconText } from '@/components/icon-text';
-
-/**
- * Icons for the common incident type codes. Admins manage the types, so any
- * code missing here (including "other") falls back to a question mark.
- */
-const ICONS: Record<string, LucideIcon> = {
-  fire: Flame,
-  flood: Waves,
-  storm_surge: Wind,
-  landslide: Mountain,
-  earthquake: Activity,
-  accident: CarFront,
-  medical: HeartPulse,
-  evacuation: Tent,
-};
+import { incidentTypeIcon } from '@/lib/incident-types';
 
 /** An incident type's icon and name; a report without one reads "Unclassified incident". */
 export function IncidentTypeLabel({
@@ -39,10 +13,7 @@ export function IncidentTypeLabel({
   children?: React.ReactNode;
 }) {
   return (
-    <IconText
-      icon={(type && ICONS[type.code]) ?? CircleHelp}
-      className={className}
-    >
+    <IconText icon={incidentTypeIcon(type)} className={className}>
       {children ?? type?.name ?? 'Unclassified incident'}
     </IconText>
   );
