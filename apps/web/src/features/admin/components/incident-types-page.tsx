@@ -1,84 +1,13 @@
-import type { IncidentType } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
-import { Pencil, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
-import { IncidentTypeLabel } from '@/components/incident-type-label';
 import { LoadError } from '@/components/load-error';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Switch } from '@/components/ui/switch';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  useCreateIncidentTypeMutation,
-  useUpdateIncidentTypeMutation,
-} from '../mutations';
+import { useCreateIncidentTypeMutation } from '../mutations';
 import { adminQueries } from '../queries';
-import { DeleteIncidentTypeButton } from './delete-incident-type-button';
 import { IncidentTypeNameDialog } from './incident-type-name-dialog';
-
-function IncidentTypeRow({ type }: { type: IncidentType }) {
-  const { mutate, mutateAsync, isPending } = useUpdateIncidentTypeMutation(
-    type.id,
-  );
-  const [renaming, setRenaming] = useState(false);
-  const setActive = (isActive: boolean) =>
-    mutate(
-      { isActive },
-      {
-        onError: () =>
-          toast.error(
-            `Couldn't ${isActive ? 'restore' : 'retire'} ${type.name}. Try again.`,
-          ),
-      },
-    );
-
-  return (
-    <TableRow>
-      <TableCell className="font-medium">
-        <IncidentTypeLabel type={type} />
-      </TableCell>
-      <TableCell className="font-mono text-muted-foreground">
-        {type.code}
-      </TableCell>
-      <TableCell>
-        <Switch
-          aria-label={`${type.name} is active`}
-          checked={type.isActive}
-          disabled={isPending}
-          onCheckedChange={setActive}
-        />
-      </TableCell>
-      <TableCell className="text-right">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={`Rename ${type.name}`}
-          onClick={() => setRenaming(true)}
-        >
-          <Pencil />
-        </Button>
-        {!type.inUse && <DeleteIncidentTypeButton type={type} />}
-        <IncidentTypeNameDialog
-          open={renaming}
-          onOpenChange={setRenaming}
-          title={`Rename ${type.name}`}
-          description="Reports keep this type; only its name changes."
-          initialName={type.name}
-          submitLabel="Rename"
-          onSave={(name) => mutateAsync({ name })}
-        />
-      </TableCell>
-    </TableRow>
-  );
-}
+import { IncidentTypesTable } from './incident-types-data-table';
 
 export function IncidentTypesPage() {
   const { data, isPending, isError, refetch } = useQuery(
@@ -116,33 +45,7 @@ export function IncidentTypesPage() {
       ) : isError ? (
         <LoadError what="incident types" onRetry={() => void refetch()} />
       ) : (
-        <div className="overflow-hidden rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Code</TableHead>
-                <TableHead>Active</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.length ? (
-                data.map((type) => (
-                  <IncidentTypeRow key={type.id} type={type} />
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center">
-                    No incident types yet.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        <IncidentTypesTable data={data} />
       )}
     </div>
   );
