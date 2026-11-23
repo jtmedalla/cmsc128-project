@@ -14,7 +14,13 @@ import { IncidentTypesService } from './incident-types.service.js';
 vi.mock('../config/env.js', () => ({ env: {} }));
 
 const id = '3b241101-e2bb-4255-8caf-4136c566a962';
-const fire: IncidentType = { id, code: 'fire', name: 'Fire', isActive: true };
+const fire: IncidentType = {
+  id,
+  code: 'fire',
+  name: 'Fire',
+  isActive: true,
+  inUse: true,
+};
 
 describe('/admin/incident-types', () => {
   const { auth, signUp } = createTestAuth();
@@ -22,6 +28,7 @@ describe('/admin/incident-types', () => {
     findIncidentTypes: vi.fn(),
     insertIncidentType: vi.fn(),
     updateIncidentType: vi.fn(),
+    deleteIncidentType: vi.fn(),
   };
   let app: INestApplication;
   let admin: string;
@@ -64,6 +71,7 @@ describe('/admin/incident-types', () => {
       code: 'storm_surge',
       name: 'Storm surge',
       isActive: true,
+      inUse: false,
     };
     repository.insertIncidentType.mockResolvedValue(surge);
     const res = await http()
@@ -125,6 +133,31 @@ describe('/admin/incident-types', () => {
       (await patch('/admin/incident-types/nope', { name: 'X' })).status,
     ).toBe(400);
     expect((await patch(`/admin/incident-types/${id}`, {})).status).toBe(400);
+  });
+
+  it('deletes an unused type', async () => {
+    repository.deleteIncidentType.mockResolvedValue('deleted');
+    const res = await http()
+      .delete(`/admin/incident-types/${id}`)
+      .set('Cookie', admin);
+    expect(res.status).toBe(204);
+    expect(repository.deleteIncidentType).toHaveBeenCalledWith(id);
+  });
+
+  it('returns 409 when deleting a type in use', async () => {
+    repository.deleteIncidentType.mockResolvedValue('in_use');
+    const res = await http()
+      .delete(`/admin/incident-types/${id}`)
+      .set('Cookie', admin);
+    expect(res.status).toBe(409);
+  });
+
+  it('returns 404 when deleting an unknown type', async () => {
+    repository.deleteIncidentType.mockResolvedValue('missing');
+    const res = await http()
+      .delete(`/admin/incident-types/${id}`)
+      .set('Cookie', admin);
+    expect(res.status).toBe(404);
   });
 
   it('rejects responders', async () => {

@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import {
   incidentTypeCreateSchema,
   incidentTypeIdParamsSchema,
@@ -40,5 +49,12 @@ export class IncidentTypesController {
     @Body() body: IncidentTypeUpdateDto,
   ) {
     return this.incidentTypes.update(id, body);
+  }
+
+  /** Deletes an unused type; 409 when reports use it. */
+  @Delete(':id')
+  @HttpCode(204)
+  async delete(@Param() { id }: IncidentTypeIdParamsDto) {
+    await this.incidentTypes.delete(id);
   }
 }

@@ -8,6 +8,11 @@ export const incidentTypeSchema = z.object({
   name: z.string(),
   /** False once retired: hidden from intake and report forms. */
   isActive: z.boolean(),
+  /**
+   * Whether a report has it or a report correction names it. Only types not
+   * in use can be deleted; the rest are retired.
+   */
+  inUse: z.boolean(),
 });
 export type IncidentType = z.infer<typeof incidentTypeSchema>;
 
