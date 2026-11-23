@@ -1,3 +1,4 @@
+export * from './admin/index.js';
 export * from './broadcasts/index.js';
 export * from './channels/index.js';
 export * from './codecs.js';
