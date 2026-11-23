@@ -144,13 +144,16 @@ describe('/admin/incident-types', () => {
     expect(repository.deleteIncidentType).toHaveBeenCalledWith(id);
   });
 
-  it('returns 409 when deleting a type in use', async () => {
-    repository.deleteIncidentType.mockResolvedValue('in_use');
-    const res = await http()
-      .delete(`/admin/incident-types/${id}`)
-      .set('Cookie', admin);
-    expect(res.status).toBe(409);
-  });
+  it.each(['active', 'in_use'])(
+    'returns 409 when deleting a type that is %s',
+    async (result) => {
+      repository.deleteIncidentType.mockResolvedValue(result);
+      const res = await http()
+        .delete(`/admin/incident-types/${id}`)
+        .set('Cookie', admin);
+      expect(res.status).toBe(409);
+    },
+  );
 
   it('returns 404 when deleting an unknown type', async () => {
     repository.deleteIncidentType.mockResolvedValue('missing');

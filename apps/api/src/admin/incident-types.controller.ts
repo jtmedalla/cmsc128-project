@@ -51,7 +51,7 @@ export class IncidentTypesController {
     return this.incidentTypes.update(id, body);
   }
 
-  /** Deletes an unused type; 409 when reports use it. */
+  /** Deletes a retired, unused type; 409 when it's active or in use. */
   @Delete(':id')
   @HttpCode(204)
   async delete(@Param() { id }: IncidentTypeIdParamsDto) {

@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { ApiError } from '@/lib/api';
 import { useDeleteIncidentTypeMutation } from '../mutations';
 
-/** Deletes an unused type, such as a mistake or a test entry, after a confirm. */
+/** Deletes a retired, unused type, such as a mistake or a test entry. */
 export function DeleteIncidentTypeButton({ type }: { type: IncidentType }) {
   const { mutate, isPending } = useDeleteIncidentTypeMutation(type.id);
   const [open, setOpen] = useState(false);
@@ -28,7 +28,7 @@ export function DeleteIncidentTypeButton({ type }: { type: IncidentType }) {
       onError: (error) =>
         toast.error(
           error instanceof ApiError && error.status === 409
-            ? `A report now uses ${type.name}. Retire it instead.`
+            ? `${type.name} was restored or a report now uses it.`
             : `Couldn't delete ${type.name}. Try again.`,
         ),
     });
@@ -52,7 +52,8 @@ export function DeleteIncidentTypeButton({ type }: { type: IncidentType }) {
         <AlertDialogHeader>
           <AlertDialogTitle>Delete {type.name}?</AlertDialogTitle>
           <AlertDialogDescription>
-            No report uses it, so nothing is lost. This can't be undone.
+            It's retired and no report uses it, so nothing is lost. This can't
+            be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

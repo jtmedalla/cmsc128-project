@@ -13,8 +13,8 @@ import { AdminRepository } from './admin.repository.js';
 
 /**
  * Incident types admins add, rename and retire (FR45). Retiring hides a type
- * from intake; only a type nothing uses, such as a mistaken or test entry,
- * can be deleted.
+ * from intake; only a retired type nothing uses, such as a mistaken or test
+ * entry, can be deleted.
  */
 @Injectable()
 export class IncidentTypesService {
@@ -42,11 +42,16 @@ export class IncidentTypesService {
     return row;
   }
 
-  /** Deletes a type no report or report correction uses. */
+  /** Deletes a retired type no report or report correction uses. */
   async delete(id: string): Promise<void> {
     const result = await this.repository.deleteIncidentType(id);
     if (result === 'missing') {
       throw new NotFoundException('Incident type not found');
+    }
+    if (result === 'active') {
+      throw new ConflictException(
+        'This incident type is active; retire it first',
+      );
     }
     if (result === 'in_use') {
       throw new ConflictException(

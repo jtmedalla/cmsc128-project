@@ -31,7 +31,7 @@ const columns = {
   inUse,
 };
 
-export type DeleteResult = 'deleted' | 'missing' | 'in_use';
+export type DeleteResult = 'deleted' | 'missing' | 'active' | 'in_use';
 
 @Injectable()
 export class AdminRepository {
@@ -81,7 +81,7 @@ export class AdminRepository {
   }
 
   /**
-   * Deletes a type nothing uses. The row lock makes a report that's being
+   * Deletes a retired type nothing uses. The row lock makes a report that's being
    * filed with the type wait, so the check and the delete can't race it.
    */
   deleteIncidentType(id: string): Promise<DeleteResult> {
@@ -93,6 +93,7 @@ export class AdminRepository {
         .for('update');
       if (!locked) return 'missing';
       const row = await this.findIncidentType(id, tx);
+      if (row!.isActive) return 'active';
       if (row!.inUse) return 'in_use';
       await tx.delete(incidentType).where(eq(incidentType.id, id));
       return 'deleted';

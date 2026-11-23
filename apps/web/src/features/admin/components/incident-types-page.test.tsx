@@ -154,13 +154,20 @@ describe('IncidentTypesPage', () => {
     expect(writes(fetch)[0]!.body).toEqual({ name: 'Structural fire' });
   });
 
-  it('offers delete only for types no report uses', async () => {
-    respondWith(200, [fire, flood]);
+  it('offers delete only for retired types no report uses', async () => {
+    const storm = {
+      ...flood,
+      id: crypto.randomUUID(),
+      name: 'Storm',
+      isActive: true,
+    };
+    respondWith(200, [fire, flood, storm]);
     renderWithProviders(<IncidentTypesPage />);
     expect(
       await screen.findByRole('button', { name: 'Delete Flood' }),
     ).toBeDefined();
     expect(screen.queryByRole('button', { name: 'Delete Fire' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Delete Storm' })).toBeNull();
   });
 
   it('deletes an unused type after confirming', async () => {

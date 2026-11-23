@@ -47,7 +47,7 @@ export const columns = columnHelper.columns([
     header: () => <span className="sr-only">Actions</span>,
     cell: ({ row }) => (
       <div className="text-right">
-        {!row.original.inUse && (
+        {!row.original.isActive && !row.original.inUse && (
           <DeleteIncidentTypeButton type={row.original} />
         )}
         <RenameIncidentTypeButton type={row.original} />
