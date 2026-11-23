@@ -21,6 +21,7 @@ import {
   useUpdateIncidentTypeMutation,
 } from '../mutations';
 import { adminQueries } from '../queries';
+import { DeleteIncidentTypeButton } from './delete-incident-type-button';
 import { IncidentTypeNameDialog } from './incident-type-name-dialog';
 
 function IncidentTypeRow({ type }: { type: IncidentType }) {
@@ -64,6 +65,7 @@ function IncidentTypeRow({ type }: { type: IncidentType }) {
         >
           <Pencil />
         </Button>
+        {!type.inUse && <DeleteIncidentTypeButton type={type} />}
         <IncidentTypeNameDialog
           open={renaming}
           onOpenChange={setRenaming}
@@ -92,7 +94,8 @@ export function IncidentTypesPage() {
           <h1 className="text-2xl font-semibold">Incident types</h1>
           <p className="text-sm text-muted-foreground">
             What residents and responders pick from. Retired types stay on past
-            reports but aren't offered for new ones.
+            reports but aren't offered for new ones; types no report uses can be
+            deleted.
           </p>
         </div>
         <Button onClick={() => setAdding(true)}>

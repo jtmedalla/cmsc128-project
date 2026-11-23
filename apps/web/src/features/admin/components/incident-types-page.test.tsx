@@ -9,12 +9,14 @@ const fire: IncidentType = {
   code: 'fire',
   name: 'Fire',
   isActive: true,
+  inUse: true,
 };
 const flood: IncidentType = {
   id: '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
   code: 'flood',
   name: 'Flood',
   isActive: false,
+  inUse: false,
 };
 
 const json = (body: unknown, status = 200) =>
@@ -150,6 +152,41 @@ describe('IncidentTypesPage', () => {
       expect(screen.getByLabelText('Structural fire is active')).toBeDefined(),
     );
     expect(writes(fetch)[0]!.body).toEqual({ name: 'Structural fire' });
+  });
+
+  it('offers delete only for types no report uses', async () => {
+    respondWith(200, [fire, flood]);
+    renderWithProviders(<IncidentTypesPage />);
+    expect(
+      await screen.findByRole('button', { name: 'Delete Flood' }),
+    ).toBeDefined();
+    expect(screen.queryByRole('button', { name: 'Delete Fire' })).toBeNull();
+  });
+
+  it('deletes an unused type after confirming', async () => {
+    let rows = [fire, flood];
+    const fetch = stubApi(
+      () => rows,
+      () => {
+        rows = [fire];
+        return Promise.resolve(new Response(null, { status: 204 }));
+      },
+    );
+    renderWithProviders(<IncidentTypesPage />);
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Delete Flood' }),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+    await waitFor(() =>
+      expect(screen.queryByLabelText('Flood is active')).toBeNull(),
+    );
+    const [url, init] = fetch.mock.calls.find(
+      ([, init]) => init?.method === 'DELETE',
+    )!;
+    expect(url).toMatch(/\/admin\/incident-types\/9b1d.+$/);
+    expect(init!.method).toBe('DELETE');
   });
 
   it('offers a retry when loading fails', async () => {

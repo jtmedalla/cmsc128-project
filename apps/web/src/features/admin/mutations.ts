@@ -36,3 +36,12 @@ export function useUpdateIncidentTypeMutation(id: string) {
     onSuccess: invalidate,
   });
 }
+
+/** Deletes a type nothing uses; the API answers 409 for one in use. */
+export function useDeleteIncidentTypeMutation(id: string) {
+  const invalidate = useInvalidateIncidentTypes();
+  return useMutation({
+    mutationFn: () => api.delete(`/admin/incident-types/${id}`),
+    onSuccess: invalidate,
+  });
+}
