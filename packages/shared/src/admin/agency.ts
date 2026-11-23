@@ -10,7 +10,7 @@ export const agencySchema = z.object({
   isPublic: z.boolean(),
   /** False once retired: hidden from hotlines and referrals. */
   isActive: z.boolean(),
-  /** True once a referral names it; only an unused, private agency can be deleted. */
+  /** True once a referral names it; only a retired, private, unused agency can be deleted. */
   inUse: z.boolean(),
 });
 export type Agency = z.infer<typeof agencySchema>;

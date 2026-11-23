@@ -47,7 +47,7 @@ export class AgenciesController {
     return this.agencies.update(id, body);
   }
 
-  /** Deletes a private, unused agency; 409 when it's public or referred to. */
+  /** Deletes a retired, private, unused agency; 409 otherwise. */
   @Delete(':id')
   @HttpCode(204)
   async delete(@Param() { id }: AgencyIdParamsDto) {

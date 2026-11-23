@@ -130,13 +130,13 @@ describe('/admin/agencies', () => {
 
   const del = () => http().delete(`/admin/agencies/${id}`).set('Cookie', admin);
 
-  it('deletes a private, unused agency', async () => {
+  it('deletes a retired, private, unused agency', async () => {
     repository.deleteAgency.mockResolvedValue('deleted');
     expect((await del()).status).toBe(204);
     expect(repository.deleteAgency).toHaveBeenCalledWith(id);
   });
 
-  it.each(['public', 'in_use'])(
+  it.each(['active', 'public', 'in_use'])(
     'returns 409 when deleting an agency that is %s',
     async (result) => {
       repository.deleteAgency.mockResolvedValue(result);

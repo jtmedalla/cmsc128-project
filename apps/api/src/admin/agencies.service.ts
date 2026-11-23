@@ -8,7 +8,7 @@ import { AgenciesRepository, NAME_TAKEN } from './agencies.repository.js';
 
 /**
  * Partner agencies admins add, edit and retire (FR46). Retiring hides an
- * agency from hotlines; only a private one no referral names, such as a
+ * agency from hotlines; only a retired, private one no referral names, such as a
  * mistaken or test entry, can be deleted.
  */
 @Injectable()
@@ -35,6 +35,9 @@ export class AgenciesService {
   async delete(id: string): Promise<void> {
     const result = await this.repository.deleteAgency(id);
     if (result === 'missing') throw new NotFoundException('Agency not found');
+    if (result === 'active') {
+      throw new ConflictException('This agency is active; retire it first');
+    }
     if (result === 'public') {
       throw new ConflictException(
         'This agency is listed on hotlines; unlist it first',

@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { ApiError } from '@/lib/api';
 import { useDeleteAgencyMutation } from '../mutations';
 
-/** Deletes a private, unused agency, such as a mistake or a test entry. */
+/** Deletes a retired, private, unused agency, such as a test entry. */
 export function DeleteAgencyButton({ agency }: { agency: Agency }) {
   const { mutate, isPending } = useDeleteAgencyMutation(agency.id);
   const [open, setOpen] = useState(false);
@@ -28,7 +28,7 @@ export function DeleteAgencyButton({ agency }: { agency: Agency }) {
       onError: (error) =>
         toast.error(
           error instanceof ApiError && error.status === 409
-            ? `${agency.name} is now listed or referred to. Retire it instead.`
+            ? `${agency.name} was restored, listed or referred to.`
             : `Couldn't delete ${agency.name}. Try again.`,
         ),
     });
@@ -52,8 +52,8 @@ export function DeleteAgencyButton({ agency }: { agency: Agency }) {
         <AlertDialogHeader>
           <AlertDialogTitle>Delete {agency.name}?</AlertDialogTitle>
           <AlertDialogDescription>
-            It isn't on hotlines and no referral names it, so nothing is lost.
-            This can't be undone.
+            It's retired, off hotlines and no referral names it, so nothing is
+            lost. This can't be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

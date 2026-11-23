@@ -51,9 +51,9 @@ export const columns = columnHelper.columns([
     header: () => <span className="sr-only">Actions</span>,
     cell: ({ row }) => (
       <div className="text-right">
-        {!row.original.isPublic && !row.original.inUse && (
-          <DeleteAgencyButton agency={row.original} />
-        )}
+        {!row.original.isActive &&
+          !row.original.isPublic &&
+          !row.original.inUse && <DeleteAgencyButton agency={row.original} />}
         <EditAgencyButton agency={row.original} />
       </div>
     ),

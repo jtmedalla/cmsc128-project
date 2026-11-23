@@ -90,7 +90,7 @@ export function useUpdateAgencyMutation(id: string) {
   return { mutate, mutateAsync, isPending };
 }
 
-/** Deletes a private, unused agency; the API answers 409 otherwise. */
+/** Deletes a retired, private, unused agency; the API answers 409 otherwise. */
 export function useDeleteAgencyMutation(id: string) {
   const invalidate = useInvalidateAgencies();
   return useMutation({

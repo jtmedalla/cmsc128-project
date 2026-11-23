@@ -226,15 +226,22 @@ describe('AgenciesPage', () => {
     });
   });
 
-  it('offers delete only for private agencies no referral names', async () => {
+  it('offers delete only for retired, private agencies no referral names', async () => {
     const pnp = { ...afp, id: crypto.randomUUID(), name: 'PNP', inUse: true };
-    respondWith(200, [afp, bfp, pnp]);
+    const ocd = {
+      ...afp,
+      id: crypto.randomUUID(),
+      name: 'OCD',
+      isActive: true,
+    };
+    respondWith(200, [afp, bfp, pnp, ocd]);
     renderWithProviders(<AgenciesPage />);
     expect(
       await screen.findByRole('button', { name: 'Delete AFP' }),
     ).toBeDefined();
     expect(screen.queryByRole('button', { name: 'Delete BFP' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Delete PNP' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Delete OCD' })).toBeNull();
   });
 
   it('deletes an agency after confirming', async () => {

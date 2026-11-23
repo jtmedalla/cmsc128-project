@@ -27,7 +27,8 @@ const columns = {
   inUse,
 };
 
-export type DeleteResult = 'deleted' | 'missing' | 'public' | 'in_use';
+export type DeleteResult =
+  'deleted' | 'missing' | 'active' | 'public' | 'in_use';
 
 @Injectable()
 export class AgenciesRepository {
@@ -77,7 +78,7 @@ export class AgenciesRepository {
   }
 
   /**
-   * Deletes a private agency no referral names. The row lock makes a referral
+   * Deletes a retired, private agency no referral names. The row lock makes a referral
    * or a listing on hotlines wait, so neither can race the check.
    */
   deleteAgency(id: string): Promise<DeleteResult> {
@@ -89,6 +90,7 @@ export class AgenciesRepository {
         .for('update');
       if (!locked) return 'missing';
       const row = await this.findAgency(id, tx);
+      if (row!.isActive) return 'active';
       if (row!.isPublic) return 'public';
       if (row!.inUse) return 'in_use';
       await tx.delete(agency).where(eq(agency.id, id));
