@@ -11,6 +11,7 @@ const bfp: Agency = {
   contactNumber: '(033) 000-0101',
   isPublic: true,
   isActive: true,
+  inUse: false,
 };
 const afp: Agency = {
   id: '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
@@ -18,6 +19,7 @@ const afp: Agency = {
   contactNumber: null,
   isPublic: false,
   isActive: false,
+  inUse: false,
 };
 
 const json = (body: unknown, status = 200) =>
@@ -222,6 +224,40 @@ describe('AgenciesPage', () => {
       isPublic: true,
       isActive: true,
     });
+  });
+
+  it('offers delete only for private agencies no referral names', async () => {
+    const pnp = { ...afp, id: crypto.randomUUID(), name: 'PNP', inUse: true };
+    respondWith(200, [afp, bfp, pnp]);
+    renderWithProviders(<AgenciesPage />);
+    expect(
+      await screen.findByRole('button', { name: 'Delete AFP' }),
+    ).toBeDefined();
+    expect(screen.queryByRole('button', { name: 'Delete BFP' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Delete PNP' })).toBeNull();
+  });
+
+  it('deletes an agency after confirming', async () => {
+    let rows = [afp, bfp];
+    const fetch = stubApi(
+      () => rows,
+      () => {
+        rows = [bfp];
+        return Promise.resolve(new Response(null, { status: 204 }));
+      },
+    );
+    renderWithProviders(<AgenciesPage />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete AFP' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+    await waitFor(() =>
+      expect(screen.queryByLabelText('AFP is active')).toBeNull(),
+    );
+    const [url] = fetch.mock.calls.find(
+      ([, init]) => init?.method === 'DELETE',
+    )!;
+    expect(url).toMatch(new RegExp(`/admin/agencies/${afp.id}$`));
   });
 
   it('offers a retry when loading fails', async () => {

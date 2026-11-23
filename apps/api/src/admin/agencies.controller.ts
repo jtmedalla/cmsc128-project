@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
 import {
   agencyCreateSchema,
   agencyIdParamsSchema,
@@ -36,5 +45,12 @@ export class AgenciesController {
   @ZodResponse({ type: AgencyDto })
   update(@Param() { id }: AgencyIdParamsDto, @Body() body: AgencyUpdateDto) {
     return this.agencies.update(id, body);
+  }
+
+  /** Deletes a private, unused agency; 409 when it's public or referred to. */
+  @Delete(':id')
+  @HttpCode(204)
+  async delete(@Param() { id }: AgencyIdParamsDto) {
+    await this.agencies.delete(id);
   }
 }

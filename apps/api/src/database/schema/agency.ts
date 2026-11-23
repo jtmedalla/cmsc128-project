@@ -12,7 +12,8 @@ import { report } from './report.js';
 
 /**
  * Partner agencies for referrals and the public hotlines page. Seeded by
- * migration; retired with `isActive`, never deleted.
+ * migration; retired with `isActive`. Only a private agency no referral names
+ * can be deleted.
  */
 export const agency = pgTable('agency', {
   id: uuid('id').primaryKey().defaultRandom(),

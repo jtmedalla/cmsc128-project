@@ -4,6 +4,7 @@ import { ContactNumber } from '@/components/contact-number';
 import { DataTableColumnHeader } from '@/components/ui/data-table-column-header';
 import type { DataTableFeatures } from '@/lib/data-table-features';
 import { ActiveSwitch, EditAgencyButton, PublicSwitch } from './agency-editors';
+import { DeleteAgencyButton } from './delete-agency-button';
 
 export const COLUMN_LABELS: Record<string, string> = {
   name: 'Name',
@@ -51,6 +52,9 @@ export const columns = columnHelper.columns([
     cell: ({ row }) => (
       <div className="text-right">
         <EditAgencyButton agency={row.original} />
+        {!row.original.isPublic && !row.original.inUse && (
+          <DeleteAgencyButton agency={row.original} />
+        )}
       </div>
     ),
   }),

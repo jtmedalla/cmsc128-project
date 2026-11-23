@@ -20,6 +20,7 @@ const bfp: Agency = {
   contactNumber: '(033) 000-0101',
   isPublic: true,
   isActive: true,
+  inUse: false,
 };
 const update = {
   name: bfp.name,
@@ -34,6 +35,7 @@ describe('/admin/agencies', () => {
     findAgencies: vi.fn(),
     insertAgency: vi.fn(),
     updateAgency: vi.fn(),
+    deleteAgency: vi.fn(),
   };
   let app: INestApplication;
   let admin: string;
@@ -124,6 +126,27 @@ describe('/admin/agencies', () => {
 
   it('returns 400 for a malformed ID', async () => {
     expect((await put('/admin/agencies/nope')).status).toBe(400);
+  });
+
+  const del = () => http().delete(`/admin/agencies/${id}`).set('Cookie', admin);
+
+  it('deletes a private, unused agency', async () => {
+    repository.deleteAgency.mockResolvedValue('deleted');
+    expect((await del()).status).toBe(204);
+    expect(repository.deleteAgency).toHaveBeenCalledWith(id);
+  });
+
+  it.each(['public', 'in_use'])(
+    'returns 409 when deleting an agency that is %s',
+    async (result) => {
+      repository.deleteAgency.mockResolvedValue(result);
+      expect((await del()).status).toBe(409);
+    },
+  );
+
+  it('returns 404 when deleting an unknown agency', async () => {
+    repository.deleteAgency.mockResolvedValue('missing');
+    expect((await del()).status).toBe(404);
   });
 
   it('rejects responders', async () => {
