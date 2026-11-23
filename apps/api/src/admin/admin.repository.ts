@@ -6,17 +6,20 @@ import { DB } from '../database/database.module.js';
 import { incidentType, report, reportEdit } from '../database/schema/index.js';
 import type { Executor } from '../database/transaction.js';
 
+/** The outer row's ID, qualified: Drizzle drops table names in one-table selects. */
+const typeId = sql`${incidentType}.${sql.identifier(incidentType.id.name)}`;
+
 /**
  * Whether any report has the type, or any report correction names its ID as
  * the old or new value. `report_edit` values have no foreign key, so a type a
  * report was corrected away from counts too.
  */
 const inUse = sql<boolean>`(
-  exists (select 1 from ${report} where ${report.incidentTypeId} = ${incidentType.id})
+  exists (select 1 from ${report} r where r.incident_type_id = ${typeId})
   or exists (
-    select 1 from ${reportEdit}
-    where ${reportEdit.oldValue} = to_jsonb(${incidentType.id}::text)
-      or ${reportEdit.newValue} = to_jsonb(${incidentType.id}::text)
+    select 1 from ${reportEdit} e
+    where e.old_value = to_jsonb(${typeId}::text)
+      or e.new_value = to_jsonb(${typeId}::text)
   )
 )`;
 
