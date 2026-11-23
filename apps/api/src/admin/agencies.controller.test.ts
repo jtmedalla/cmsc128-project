@@ -75,38 +75,29 @@ describe('/admin/agencies', () => {
   });
 
   it('adds an agency', async () => {
-    repository.insertAgency.mockResolvedValue(bfp);
-    const res = await post({
-      name: ' BFP ',
-      contactNumber: '(033) 000-0101',
-      isPublic: true,
-    });
+    const added = { ...bfp, isPublic: false };
+    repository.insertAgency.mockResolvedValue(added);
+    const res = await post({ name: ' BFP ', contactNumber: '(033) 000-0101' });
     expect(res.status).toBe(201);
-    expect(res.body).toEqual(bfp);
+    expect(res.body).toEqual(added);
     expect(repository.insertAgency).toHaveBeenCalledWith({
       name: 'BFP',
       contactNumber: '(033) 000-0101',
-      isPublic: true,
     });
   });
 
   it('returns 409 when the name is taken', async () => {
     repository.insertAgency.mockResolvedValue(NAME_TAKEN);
-    const res = await post({
-      name: 'BFP',
-      contactNumber: null,
-      isPublic: false,
-    });
+    const res = await post({ name: 'BFP', contactNumber: null });
     expect(res.status).toBe(409);
     repository.updateAgency.mockResolvedValue(NAME_TAKEN);
     expect((await put(`/admin/agencies/${id}`)).status).toBe(409);
   });
 
   it('returns 400 for a public agency without a number', async () => {
-    const res = await post({
-      name: 'BFP',
+    const res = await put(`/admin/agencies/${id}`, {
+      ...update,
       contactNumber: null,
-      isPublic: true,
     });
     expect(res.status).toBe(400);
   });

@@ -1,6 +1,7 @@
 import type { Agency } from '@repo/shared';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { Toaster } from 'sonner';
 import { renderWithProviders, respondWith } from '@/testing/render';
 import { AgenciesPage } from './agencies-page';
 
@@ -52,11 +53,52 @@ describe('AgenciesPage', () => {
     expect(checked('AFP is active')).toBe('false');
   });
 
-  it("doesn't let an agency without a number go public", async () => {
-    respondWith(200, [afp]);
+  it('asks for a number before listing an agency on hotlines', async () => {
+    const fetch = stubApi(
+      () => [afp],
+      () => json({}),
+    );
+    renderWithProviders(
+      <>
+        <AgenciesPage />
+        <Toaster />
+      </>,
+    );
+
+    fireEvent.click(
+      await screen.findByRole('switch', { name: 'AFP is public' }),
+    );
+
+    expect(
+      await screen.findByText('Add a contact number to AFP before listing it.'),
+    ).toBeDefined();
+    expect(checked('AFP is public')).toBe('false');
+    expect(writes(fetch)).toEqual([]);
+  });
+
+  it('lists an agency on hotlines', async () => {
+    const mho = { ...bfp, name: 'MHO', isPublic: false };
+    let rows = [mho];
+    const fetch = stubApi(
+      () => rows,
+      () => {
+        rows = [{ ...mho, isPublic: true }];
+        return json(rows[0]);
+      },
+    );
     renderWithProviders(<AgenciesPage />);
-    const toggle = await screen.findByLabelText('AFP is public');
-    expect(toggle.hasAttribute('data-disabled')).toBe(true);
+
+    fireEvent.click(
+      await screen.findByRole('switch', { name: 'MHO is public' }),
+    );
+
+    await waitFor(() => expect(checked('MHO is public')).toBe('true'));
+    expect(writes(fetch)[0]!.body).toEqual({
+      name: 'MHO',
+      contactNumber: '(033) 000-0101',
+      isPublic: true,
+      isActive: true,
+    });
   });
 
   it('retires an agency, sending its other fields unchanged', async () => {
@@ -106,33 +148,32 @@ describe('AgenciesPage', () => {
     fireEvent.change(screen.getByLabelText('Contact number'), {
       target: { value: '(033) 000-0101' },
     });
-    fireEvent.click(screen.getByRole('switch', { name: 'Public' }));
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
 
     expect(await screen.findByLabelText('MDRRMO is active')).toBeDefined();
     expect(writes(fetch)[0]!.body).toEqual({
       name: 'MDRRMO',
       contactNumber: '(033) 000-0101',
-      isPublic: true,
     });
   });
 
-  it('asks for a number before making an agency public', async () => {
+  it("won't remove a listed agency's number", async () => {
     const fetch = stubApi(
-      () => [],
+      () => [bfp],
       () => json({}),
     );
     renderWithProviders(<AgenciesPage />);
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Add agency' }));
-    fireEvent.change(screen.getByLabelText('Name'), {
-      target: { value: 'MDRRMO' },
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit BFP' }));
+    fireEvent.change(screen.getByLabelText('Contact number'), {
+      target: { value: '' },
     });
-    fireEvent.click(screen.getByRole('switch', { name: 'Public' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(
-      await screen.findByText('A public agency needs a contact number'),
+      await screen.findByText(
+        'Unlist this agency from hotlines before removing its number.',
+      ),
     ).toBeDefined();
     expect(writes(fetch)).toEqual([]);
   });

@@ -1,4 +1,4 @@
-import { type AgencyCreate, agencyCreateSchema } from '@repo/shared';
+import { type AgencyDetails, agencyDetailsSchema } from '@repo/shared';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,56 +12,64 @@ import {
 } from '@/components/ui/dialog';
 import {
   Field,
-  FieldContent,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 import { ApiError } from '@/lib/api';
 
-type Errors = Partial<Record<keyof AgencyCreate | 'form', string>>;
+type Errors = Partial<Record<keyof AgencyDetails | 'form', string>>;
 
-const blank: AgencyCreate = { name: '', contactNumber: null, isPublic: false };
+const blank: AgencyDetails = { name: '', contactNumber: null };
 
 /**
- * Adds or edits an agency's name, number and visibility. `onSave` resolves
- * once saved; a 409 shows as a taken name.
+ * Adds or edits an agency's name and number; the table sets visibility.
+ * `onSave` resolves once saved; a 409 shows as a taken name. `isPublic` keeps
+ * a public agency from losing its number.
  */
 export function AgencyDialog({
   open,
   onOpenChange,
   title,
   initial = blank,
+  isPublic = false,
   submitLabel,
   onSave,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
-  initial?: AgencyCreate;
+  initial?: AgencyDetails;
+  isPublic?: boolean;
   submitLabel: string;
-  onSave: (values: AgencyCreate) => Promise<unknown>;
+  onSave: (values: AgencyDetails) => Promise<unknown>;
 }) {
   const [values, setValues] = useState(initial);
   const [errors, setErrors] = useState<Errors>({});
   const [pending, setPending] = useState(false);
-  const set = (changes: Partial<AgencyCreate>) => {
+  const set = (changes: Partial<AgencyDetails>) => {
     setValues((current) => ({ ...current, ...changes }));
     setErrors({});
   };
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const parsed = agencyCreateSchema.safeParse(values);
+    const parsed = agencyDetailsSchema.safeParse(values);
     if (!parsed.success) {
       const next: Errors = {};
       for (const issue of parsed.error.issues) {
-        next[(issue.path[0] as keyof AgencyCreate) ?? 'form'] ??= issue.message;
+        next[(issue.path[0] as keyof AgencyDetails) ?? 'form'] ??=
+          issue.message;
       }
       setErrors(next);
+      return;
+    }
+    if (isPublic && parsed.data.contactNumber === null) {
+      setErrors({
+        contactNumber:
+          'Unlist this agency from hotlines before removing its number.',
+      });
       return;
     }
     setPending(true);
@@ -95,7 +103,7 @@ export function AgencyDialog({
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription>
-              Public agencies' numbers are listed on the hotlines page.
+              Set whether it's listed on the hotlines page from the table.
             </DialogDescription>
           </DialogHeader>
           <FieldGroup>
@@ -124,19 +132,6 @@ export function AgencyDialog({
               {errors.contactNumber && (
                 <FieldError>{errors.contactNumber}</FieldError>
               )}
-            </Field>
-            <Field orientation="horizontal">
-              <FieldContent>
-                <FieldLabel htmlFor="agency-public">Public</FieldLabel>
-                <FieldDescription>
-                  List this number on the hotlines page.
-                </FieldDescription>
-              </FieldContent>
-              <Switch
-                id="agency-public"
-                checked={values.isPublic}
-                onCheckedChange={(isPublic) => set({ isPublic })}
-              />
             </Field>
           </FieldGroup>
           {errors.form && <FieldError>{errors.form}</FieldError>}

@@ -29,6 +29,13 @@ function AgencyRow({ agency }: { agency: Agency }) {
       { ...current, ...changes },
       { onError: () => toast.error(`Couldn't ${verb} ${name}. Try again.`) },
     );
+  const setPublic = (checked: boolean) => {
+    if (checked && !contactNumber) {
+      toast.error(`Add a contact number to ${name} before listing it.`);
+      return;
+    }
+    toggle({ isPublic: checked }, checked ? 'list' : 'unlist');
+  };
 
   return (
     <TableRow>
@@ -40,11 +47,8 @@ function AgencyRow({ agency }: { agency: Agency }) {
         <Switch
           aria-label={`${name} is public`}
           checked={isPublic}
-          // A public agency needs a number; edit to add one first.
-          disabled={isPending || !contactNumber}
-          onCheckedChange={(checked) =>
-            toggle({ isPublic: checked }, checked ? 'publish' : 'hide')
-          }
+          disabled={isPending}
+          onCheckedChange={setPublic}
         />
       </TableCell>
       <TableCell>
@@ -70,9 +74,10 @@ function AgencyRow({ agency }: { agency: Agency }) {
           open={editing}
           onOpenChange={setEditing}
           title={`Edit ${name}`}
-          initial={{ name, contactNumber, isPublic }}
+          initial={{ name, contactNumber }}
+          isPublic={isPublic}
           submitLabel="Save"
-          onSave={(values) => mutateAsync({ ...values, isActive })}
+          onSave={(values) => mutateAsync({ ...current, ...values })}
         />
       </TableCell>
     </TableRow>
