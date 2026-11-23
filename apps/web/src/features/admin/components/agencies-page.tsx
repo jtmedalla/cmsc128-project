@@ -22,8 +22,7 @@ export function AgenciesPage() {
         <div>
           <h1 className="text-2xl font-semibold">Agencies</h1>
           <p className="text-sm text-muted-foreground">
-            Partner agencies for referrals. Public ones are listed on the
-            hotlines page while active; retired ones stay on past referrals.
+            Partner agencies for referrals and hotlines.
           </p>
         </div>
         <Button onClick={() => setAdding(true)}>
