@@ -6,6 +6,7 @@ export * from './constants.js';
 export * from './enums.js';
 export * from './geo/index.js';
 export * from './health/index.js';
+export * from './info/index.js';
 export * from './intake/index.js';
 export * from './residents/index.js';
 export * from './triage/index.js';
