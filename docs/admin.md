@@ -5,11 +5,18 @@ Accounts, invites, incident types and agencies (EP10).
 - API: `apps/api/src/admin/`
 - Web: `apps/web/src/features/admin/`
 
+## Users
+
+`GET /admin/users` lists accounts; `PATCH /admin/users/:id` changes `role`, `active`, or both. Both are admin-only.
+
+- Deactivating sets Better Auth's `banned` flag, which blocks sign-in, and deletes the user's sessions. Accounts are never deleted, so their reports and messages keep their author.
+- Admins can't change their own account (403), so the acting admin always remains an admin.
+
 ## Dashboard
 
 All `/dashboard/admin/*` pages are admin-only (`requireRole` on the `admin` layout route). `/dashboard/admin` redirects to Users.
 
-- `/dashboard/admin/users`: accounts and roles; invites open as a dialog here (stub).
+- `/dashboard/admin/users`: every account with its role and an active switch. Invites will open as a dialog here.
 - `/dashboard/admin/incident-types`: lists every incident type; admins add, rename, retire and delete retired, unused ones (see below).
 - `/dashboard/admin/agencies`: lists every partner agency; admins add, edit, retire and delete retired, unused private ones (see below).
 - `/dashboard/help`: in-app help, for every role, opened from the user menu (stub).
