@@ -1,4 +1,4 @@
-import { agencySchema, incidentTypeSchema } from '@repo/shared';
+import { accountSchema, agencySchema, incidentTypeSchema } from '@repo/shared';
 import { queryOptions } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 
@@ -8,6 +8,14 @@ import { api } from '@/lib/api';
  */
 export const adminQueries = {
   all: () => ['admin'] as const,
+
+  /** Every dashboard account with its role and whether it's active. */
+  users: () =>
+    queryOptions({
+      queryKey: [...adminQueries.all(), 'users'],
+      queryFn: ({ signal }) =>
+        api.get('/admin/users', accountSchema.array(), { signal }),
+    }),
 
   /** Every incident type, retired ones included, by name. */
   incidentTypes: () =>
