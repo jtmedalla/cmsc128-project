@@ -11,7 +11,7 @@ All `/dashboard/admin/*` pages are admin-only (`requireRole` on the `admin` layo
 
 - `/dashboard/admin/users`: accounts and roles; invites open as a dialog here (stub).
 - `/dashboard/admin/incident-types`: lists every incident type; admins add, rename, retire and delete retired, unused ones (see below).
-- `/dashboard/admin/agencies`: lists every partner agency; admins add, edit and retire them (see below).
+- `/dashboard/admin/agencies`: lists every partner agency; admins add, edit, retire and delete unused private ones (see below).
 - `/dashboard/help`: in-app help, for every role, opened from the user menu (stub).
 
 ## Incident types
@@ -34,5 +34,8 @@ Retiring sets `is_active` to false: intake's `GET /intake/incident-types`, chat'
 - `GET` lists every agency, retired ones included, by name.
 - `POST { name, contactNumber }` adds an active, private agency.
 - `PUT /:id { name, contactNumber, isPublic, isActive }` replaces every editable field, so the page's switches send the other values unchanged. 404 for an unknown ID.
+- `DELETE /:id` deletes a private agency no referral names, such as a mistaken or test entry; 409 when it's public or referred to, 404 for an unknown ID.
 
-A taken name returns 409. A public agency needs a contact number (400 otherwise). The add and edit dialog sets the name and number; listing on hotlines and retiring are the table's Public and Active switches. Turning Public on without a number, or clearing a listed agency's number, asks for the number first. Agencies are never deleted, since referrals reference them; retiring sets `is_active` to false and takes the agency off `/info/hotlines`.
+A taken name returns 409. A public agency needs a contact number (400 otherwise). The add and edit dialog sets the name and number; listing on hotlines and retiring are the table's Public and Active switches. Turning Public on without a number, or clearing a listed agency's number, asks for the number first. Retiring sets `is_active` to false and takes the agency off `/info/hotlines`.
+
+Each agency carries `inUse`: true when an `agency_referral` names it. The page offers delete only for agencies that are neither public nor in use, so a listed hotline must be unlisted first. The delete locks the row and checks again, so a referral or listing at the same moment wins.
