@@ -6,6 +6,7 @@ import {
   type RecordedMessage,
 } from '../channels/channels.service.js';
 import { BarangayService } from '../geo/barangay.service.js';
+import { GeocodingService } from '../geo/geocoding.service.js';
 import { IntakeService } from './intake.service.js';
 import {
   firstVictimDraft,
@@ -49,8 +50,9 @@ export class ChatIntakeService implements OnModuleInit {
     private readonly channels: ChannelsService,
     intake: IntakeService,
     barangays: BarangayService,
+    geocoding: GeocodingService,
   ) {
-    this.deps = { intake, barangays };
+    this.deps = { intake, barangays, geocoding };
   }
 
   onModuleInit() {

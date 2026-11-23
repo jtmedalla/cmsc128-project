@@ -17,6 +17,7 @@ import {
   type SourceChannel,
 } from '@repo/shared';
 import type { BarangayService } from '../geo/barangay.service.js';
+import type { GeocodingService } from '../geo/geocoding.service.js';
 import type { IntakeService } from './intake.service.js';
 
 /** The resident and report a chat message belongs to. */
@@ -30,6 +31,7 @@ export interface Turn {
 export interface QuestionDeps {
   intake: IntakeService;
   barangays: BarangayService;
+  geocoding: GeocodingService;
 }
 
 export interface Question {
@@ -64,12 +66,23 @@ export const QUESTIONS: Record<Exclude<IntakeField, 'victims'>, Question> = {
   },
 
   barangay: {
-    ask: 'Which barangay is it in?',
-    retry: "We couldn't find that barangay. Please check the spelling.",
-    async answer(text, turn, { intake, barangays }) {
-      const barangay = text ? await barangays.findByName(text) : null;
-      if (!barangay) return false;
-      await intake.answer(turn.reportId, { barangayId: barangay.id });
+    ask: 'Where is it? Send the barangay, or a street or landmark.',
+    retry: "We couldn't find that place in Miagao. Please send the barangay.",
+    // A barangay name first, then Nominatim (docs/geo.md).
+    async answer(text, turn, { intake, barangays, geocoding }) {
+      if (!text) return false;
+      const barangay = await barangays.findByName(text);
+      if (barangay) {
+        await intake.answer(turn.reportId, { barangayId: barangay.id });
+        return true;
+      }
+      const place = await geocoding.geocode(text);
+      if (!place?.barangay) return false;
+      await intake.answer(turn.reportId, {
+        barangayId: place.barangay.id,
+        locationText: text,
+        location: place.point,
+      });
       return true;
     },
   },
