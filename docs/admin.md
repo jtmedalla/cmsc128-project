@@ -32,7 +32,7 @@ Retiring sets `is_active` to false: intake's `GET /intake/incident-types`, chat'
 `/admin/agencies` (admin only) backs the page (FR46):
 
 - `GET` lists every agency, retired ones included, by name.
-- `POST { name, contactNumber, isPublic }` adds an active agency.
+- `POST { name, contactNumber }` adds an active, private agency.
 - `PUT /:id { name, contactNumber, isPublic, isActive }` replaces every editable field, so the page's switches send the other values unchanged. 404 for an unknown ID.
 
-A taken name returns 409. A public agency needs a contact number (400 otherwise), so the page disables the Public switch until one is set. Agencies are never deleted, since referrals reference them; retiring sets `is_active` to false and takes the agency off `/info/hotlines`.
+A taken name returns 409. A public agency needs a contact number (400 otherwise). The add and edit dialog sets the name and number; listing on hotlines and retiring are the table's Public and Active switches. Turning Public on without a number, or clearing a listed agency's number, asks for the number first. Agencies are never deleted, since referrals reference them; retiring sets `is_active` to false and takes the agency off `/info/hotlines`.
