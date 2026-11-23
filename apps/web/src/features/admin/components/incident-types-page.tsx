@@ -22,9 +22,7 @@ export function IncidentTypesPage() {
         <div>
           <h1 className="text-2xl font-semibold">Incident types</h1>
           <p className="text-sm text-muted-foreground">
-            What residents and responders pick from. Retired types stay on past
-            reports but aren't offered for new ones; types no report uses can be
-            deleted.
+            Types residents and responders pick from.
           </p>
         </div>
         <Button onClick={() => setAdding(true)}>
