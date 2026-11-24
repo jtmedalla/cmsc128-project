@@ -1,4 +1,4 @@
-import { incidentTypeSchema } from '@repo/shared';
+import { agencySchema, incidentTypeSchema } from '@repo/shared';
 import { queryOptions } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 
@@ -17,5 +17,13 @@ export const adminQueries = {
         api.get('/admin/incident-types', incidentTypeSchema.array(), {
           signal,
         }),
+    }),
+
+  /** Every agency, retired ones included, by name. */
+  agencies: () =>
+    queryOptions({
+      queryKey: [...adminQueries.all(), 'agencies'],
+      queryFn: ({ signal }) =>
+        api.get('/admin/agencies', agencySchema.array(), { signal }),
     }),
 };
