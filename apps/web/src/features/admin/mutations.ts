@@ -1,6 +1,8 @@
 import {
+  type AccountUpdate,
   type AgencyCreate,
   type AgencyUpdate,
+  accountSchema,
   agencySchema,
   type IncidentTypeCreate,
   type IncidentTypeUpdate,
@@ -96,5 +98,19 @@ export function useDeleteAgencyMutation(id: string) {
   return useMutation({
     mutationFn: () => api.delete(`/admin/agencies/${id}`),
     onSuccess: invalidate,
+  });
+}
+
+/** Changes another user's role or active flag, patching the cached list. */
+export function useUpdateUserMutation(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (changes: AccountUpdate) =>
+      api.patch(`/admin/users/${id}`, changes, accountSchema),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(adminQueries.users().queryKey, (rows) =>
+        rows?.map((row) => (row.id === updated.id ? updated : row)),
+      );
+    },
   });
 }
