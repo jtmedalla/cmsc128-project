@@ -24,7 +24,7 @@ After a rebase that brings in someone else's migration, delete yours and regener
 
 - Tables and columns: singular `snake_case`.
 - Primary keys: `uuid`. Responder foreign keys: `text` → `user.id`.
-- No `DELETE`. Foreign keys are `ON DELETE RESTRICT`; retire rows by status.
+- No `DELETE`. Foreign keys are `ON DELETE RESTRICT`; retire rows by status. Retired reference data nothing references (no foreign key and no `report_edit` value) may be deleted, as admins do with unused incident types.
 - Timestamps are UTC, without time zone. `created_at` and `updated_at` come from the `timestamps` helper in `schema/columns.ts`.
 - Enums are Zod enums in `packages/shared/src/enums.ts`, and the `pgEnum`s are built from them. Only add values; removing or renaming one breaks older releases.
 - Spatial columns: `geometry` (SRID 4326) via the `customType`s in `schema/columns.ts`, not Drizzle's built-in `geometry`, which drops the SRID. Points read as `{ lng, lat }`, multipolygons as GeoJSON.

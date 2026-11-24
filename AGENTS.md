@@ -30,7 +30,7 @@ pnpm + Turborepo. Run scripts from the root (`pnpm <script>`), or one package wi
 - `src/database/schema/auth.ts` is generated. After changing auth config or plugins, run `pnpm --filter api auth:generate`, then `pnpm db:generate`.
 - Generate migrations locally with `pnpm db:generate`; each one is reviewed SQL in `apps/api/drizzle/`. After a rebase that brings in someone else's migration, delete yours and regenerate.
 - PostGIS columns are `geometry` in SRID 4326 through the `customType`s in `schema/columns.ts`; spatial queries use the `sql` template.
-- Records are permanent: record every correction in `ReportEdit` and retire rows through status (e.g. `invalid`), never `DELETE`.
+- Records are permanent: record every correction in `ReportEdit` and retire rows through status (e.g. `invalid`), never `DELETE`. The one exception is retired reference data nothing references, such as a retired incident type no report or `ReportEdit` uses.
 
 ## Web
 
